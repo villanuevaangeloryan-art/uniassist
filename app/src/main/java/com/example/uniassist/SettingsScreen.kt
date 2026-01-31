@@ -378,7 +378,7 @@ fun SettingsTitleSection() {
             painter = painterResource(id = R.drawable.settingsicon),
             contentDescription = null,
             contentScale = ContentScale.Fit,
-            modifier = Modifier.size(40.dp)
+            modifier = Modifier.size(60.dp)
         )
         
         Spacer(modifier = Modifier.width(12.dp))
