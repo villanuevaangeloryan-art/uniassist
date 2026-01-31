@@ -15,6 +15,8 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -152,14 +154,14 @@ fun HeaderSection() {
                 imageVector = Icons.Default.Notifications,
                 contentDescription = "Notifications",
                 tint = Color(0xFF1B5E20),
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.width(16.dp))
             Icon(
                 imageVector = Icons.Default.AccountCircle,
                 contentDescription = "Profile",
                 tint = Color(0xFF1B5E20),
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(32.dp)
             )
         }
     }
@@ -362,6 +364,12 @@ fun SettingsScreen() {
             
             // Settings Content
             SettingsContent(isDarkMode = isDarkMode, onDarkModeChange = { isDarkMode = it })
+            
+            // Spacer to push logout button to bottom
+            Spacer(modifier = Modifier.weight(1f))
+            
+            // Logout Button at bottom
+            LogoutButton()
         }
     }
 }
@@ -378,7 +386,7 @@ fun SettingsTitleSection() {
             painter = painterResource(id = R.drawable.settingsicon),
             contentDescription = null,
             contentScale = ContentScale.Fit,
-            modifier = Modifier.size(60.dp)
+            modifier = Modifier.size(40.dp)
         )
         
         Spacer(modifier = Modifier.width(12.dp))
@@ -386,7 +394,7 @@ fun SettingsTitleSection() {
         Text(
             text = "Settings",
             color = Color(0xFF1B5E20), // Dark green
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.ExtraBold, // Extra bold to match reference
             fontSize = 30.sp
         )
     }
@@ -394,23 +402,63 @@ fun SettingsTitleSection() {
 
 @Composable
 fun SettingsContent(isDarkMode: Boolean, onDarkModeChange: (Boolean) -> Unit) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 20.dp, vertical = 8.dp)
+    ) {
+        // Dark mode toggle
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Dark mode",
+                color = Color(0xFF1B5E20), // Dark green
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium
+            )
+            
+            Switch(
+                checked = isDarkMode,
+                onCheckedChange = onDarkModeChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = Color(0xFF1B5E20),
+                    uncheckedThumbColor = Color.White,
+                    uncheckedTrackColor = Color(0xFFCCCCCC)
+                ),
+                modifier = Modifier.size(48.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun LogoutButton() {
+    Button(
+        onClick = { /* Handle logout logic here */ },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 16.dp)
+            .height(56.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xFF1B5E20), // Dark green to match UI theme
+            contentColor = Color.White
+        ),
+        shape = RoundedCornerShape(12.dp),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 4.dp,
+            pressedElevation = 8.dp
+        )
     ) {
         Text(
-            text = "Dark mode",
-            color = Color(0xFF1B5E20), // Dark green
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Normal
-        )
-        
-        Switch(
-            checked = isDarkMode,
-            onCheckedChange = onDarkModeChange
+            text = "Log Out",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold
         )
     }
 }
