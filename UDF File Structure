@@ -1,0 +1,16 @@
+app/
+├── domain/
+│   ├── actions/
+│   │   └── LoginAction.kt          (Updated: UsernameChanged → EmailChanged)
+│   ├── state/
+│   │   └── LoginState.kt           (Updated: username → email)
+│   ├── reducer/
+│   │   └── LoginReducer.kt         (Updated to use email)
+│   └── utils/
+│       └── ValidationRules.kt      (Updated: validateUsername → validateEmail)
+├── ui/
+│   ├── viewmodel/
+│   │   └── LoginStore.kt           (No changes needed)
+│   └── screens/
+│       └── LoginScreen.kt          (Updated UI for email)
+└── MainActivity.kt
