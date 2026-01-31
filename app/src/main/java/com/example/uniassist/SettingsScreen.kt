@@ -15,11 +15,6 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Computer
-import androidx.compose.material.icons.filled.Engineering
-import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -58,28 +53,28 @@ fun CampusInformationScreen() {
             representative = "Mr. Alvin M. Dimaunahan",
             email = "alvinccsdimauanahan@gmail.com",
             phone = "+639829901987",
-            icon = Icons.Default.Computer
+            icon = Icons.Default.Info
         ),
         Department(
             name = "College of Engineering",
             representative = "Ms. Jennelyn V. Tan",
             email = "tanjennelyncoe@gmail.com",
             phone = "+639549932855",
-            icon = Icons.Default.Engineering
+            icon = Icons.Default.Info
         ),
         Department(
             name = "College of Business Administration / Accountancy",
             representative = "Ms. Vilma R. Cacho",
             email = "rcachocbaa@gmail.com",
             phone = "+639549932855",
-            icon = Icons.Default.Business
+            icon = Icons.Default.Info
         ),
         Department(
             name = "College of Education",
             representative = "Ms. George C. Bacsa",
             email = "geocalmacoedue@gmail.com",
             phone = "+639877718241",
-            icon = Icons.Default.MenuBook
+            icon = Icons.Default.Info
         )
     )
 
@@ -379,18 +374,12 @@ fun SettingsTitleSection() {
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Surface(
-            color = Color(0xFFA5D6A7), // Lime green background
-            shape = RoundedCornerShape(8.dp),
+        Image(
+            painter = painterResource(id = R.drawable.settingsicon),
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
             modifier = Modifier.size(40.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.padding(8.dp)
-            )
-        }
+        )
         
         Spacer(modifier = Modifier.width(12.dp))
         
