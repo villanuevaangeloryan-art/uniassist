@@ -2,6 +2,7 @@ package com.example.uniassist
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.uniassist.ui.theme.DarkGreen
 import com.example.uniassist.ui.theme.LightGreenBorder
-import androidx.compose.material3.Text
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -53,7 +53,6 @@ val announcementList = listOf(
         ),
         "Stay safe everyone!"
     ),
-
     Announcement(
         "Scholarship Applications Open",
         "January 25, 2026",
@@ -65,7 +64,6 @@ val announcementList = listOf(
         ),
         "Don't miss this opportunity!"
     ),
-
     Announcement(
         "Intramurals 2026",
         "February 2, 2026",
@@ -82,11 +80,21 @@ val announcementList = listOf(
 // ---------------- DASHBOARD ----------------
 
 @Composable
-fun DashboardScreen() {
+fun DashboardScreen(
+    onScheduleClick: () -> Unit = {},
+    onCampusClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
+) {
 
     Scaffold(
-        topBar = { HeaderSection() }, // ✅ Fixed header
-        bottomBar = { FloatingBottomNavigationBar() }
+        topBar = { HeaderSection() },
+        bottomBar = {
+            FloatingBottomNavigationBar(
+                onScheduleClick = onScheduleClick,
+                onCampusClick = onCampusClick,
+                onSettingsClick = onSettingsClick
+            )
+        }
     ) { paddingValues ->
 
         LazyColumn(
@@ -290,7 +298,11 @@ fun BulletItem(title: String, description: String) {
 // ---------------- BOTTOM NAV ----------------
 
 @Composable
-fun FloatingBottomNavigationBar() {
+fun FloatingBottomNavigationBar(
+    onScheduleClick: () -> Unit,
+    onCampusClick: () -> Unit,
+    onSettingsClick: () -> Unit
+) {
 
     Surface(
         modifier = Modifier
@@ -306,20 +318,51 @@ fun FloatingBottomNavigationBar() {
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomNavItem(icon = Icons.Default.Home, label = "Dashboard")
-            BottomNavItem(icon = Icons.Default.DateRange, label = "Schedules")
-            BottomNavItem(icon = Icons.Default.Info, label = "Campus")
-            BottomNavItem(icon = Icons.Default.Settings, label = "Settings")
+            // Dashboard (Current Screen)
+            BottomNavItem(
+                icon = Icons.Default.Home,
+                label = "Dashboard",
+                isSelected = true,
+                onClick = {}
+            )
+
+            // Schedules
+            BottomNavItem(
+                icon = Icons.Default.DateRange,
+                label = "Schedules",
+                onClick = onScheduleClick
+            )
+
+            // Campus Info
+            BottomNavItem(
+                icon = Icons.Default.Info,
+                label = "Campus",
+                onClick = onCampusClick
+            )
+
+            // Settings
+            BottomNavItem(
+                icon = Icons.Default.Settings,
+                label = "Settings",
+                onClick = onSettingsClick
+            )
         }
     }
 }
 
 @Composable
-fun BottomNavItem(icon: ImageVector, label: String, isSelected: Boolean = false) {
+fun BottomNavItem(
+    icon: ImageVector,
+    label: String,
+    isSelected: Boolean = false,
+    onClick: () -> Unit
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.padding(8.dp)
+        modifier = Modifier
+            .clickable(onClick = onClick) // ✅ Made clickable
+            .padding(8.dp)
     ) {
 
         Box(
@@ -351,6 +394,7 @@ fun BottomNavItem(icon: ImageVector, label: String, isSelected: Boolean = false)
         }
     }
 }
+
 // ---------------- PREVIEW ----------------
 
 @Preview(showBackground = true)
