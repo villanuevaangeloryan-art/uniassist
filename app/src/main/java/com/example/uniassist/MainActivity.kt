@@ -38,6 +38,10 @@ class MainActivity : ComponentActivity(){
                     composable("register"){
                         RegisterScreen(navController)
                     }
+
+                    composable("dashboard") {
+                        DashboardScreen()
+                    }
                 }
             }
         }

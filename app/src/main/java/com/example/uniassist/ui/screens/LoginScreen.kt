@@ -340,7 +340,13 @@ fun LoginScreen(navController: NavController) {
             Button(
                 onClick = {
                     focusManager.clearFocus()
-                    loginStore.dispatch(LoginAction.LoginButtonClicked)
+                    if (state.email.isNotEmpty() && state.password.isNotEmpty()) {
+                        navController.navigate("dashboard") {
+                            popUpTo("get_started") { inclusive = true }
+                        }
+                    } else {
+                        loginStore.dispatch(LoginAction.LoginButtonClicked)
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
