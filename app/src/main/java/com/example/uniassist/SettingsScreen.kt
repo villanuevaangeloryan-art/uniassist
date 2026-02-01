@@ -2,10 +2,8 @@ package com.example.uniassist
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -15,8 +13,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,100 +29,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.uniassist.ui.theme.UniassistTheme
-
-// DATA MODEL for each department (draft)
-data class Department(
-    val name: String,
-    val representative: String,
-    val email: String,
-    val phone: String,
-    val icon: ImageVector
-)
-
-@Composable
-fun CampusInformationScreen() {
-    val departments = listOf(
-        Department(
-            name = "College of Computer Studies / Information Technology",
-            representative = "Mr. Alvin M. Dimaunahan",
-            email = "alvinccsdimauanahan@gmail.com",
-            phone = "+639829901987",
-            icon = Icons.Default.Info
-        ),
-        Department(
-            name = "College of Engineering",
-            representative = "Ms. Jennelyn V. Tan",
-            email = "tanjennelyncoe@gmail.com",
-            phone = "+639549932855",
-            icon = Icons.Default.Info
-        ),
-        Department(
-            name = "College of Business Administration / Accountancy",
-            representative = "Ms. Vilma R. Cacho",
-            email = "rcachocbaa@gmail.com",
-            phone = "+639549932855",
-            icon = Icons.Default.Info
-        ),
-        Department(
-            name = "College of Education",
-            representative = "Ms. George C. Bacsa",
-            email = "geocalmacoedue@gmail.com",
-            phone = "+639877718241",
-            icon = Icons.Default.Info
-        )
-    )
-
-    // SCAFFOLD
-    Scaffold(
-        // STICKY TOP BAR
-        topBar = {
-            HeaderSection()
-        },
-        // FLOATING BOTTOM NAVBAR
-        bottomBar = {
-            FloatingBottomNavigationBar()
-        },
-        containerColor = Color.White
-    ) { innerPadding ->
-
-        // THE SCROLLABLE CONTENT
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(Color.White),
-            contentPadding = PaddingValues(bottom = 20.dp) // Extra spacing at the very bottom
-        ) {
-
-            // The Title & Description
-            item {
-                TitleSection()
-            }
-
-            // The "College Departments" Subheader
-            item {
-                Text(
-                    text = "College Departments",
-                    color = Color(0xFF1B5E20),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
-
-            //The List of Departments
-            items(departments) { department ->
-                DepartmentCard(department)
-            }
-        }
-    }
-}
-
 
 @Composable
 fun HeaderSection() {
@@ -133,7 +40,8 @@ fun HeaderSection() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(65.dp)
+            .height(90.dp)
+            .padding(top = 35.dp)
             .background(
                 brush = Brush.horizontalGradient(
                     colors = listOf(
@@ -145,10 +53,10 @@ fun HeaderSection() {
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .align(Alignment.Center),
-            horizontalArrangement = Arrangement.End
+                .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.Bottom
         ) {
             Icon(
                 imageVector = Icons.Default.Notifications,
@@ -159,7 +67,7 @@ fun HeaderSection() {
             Spacer(modifier = Modifier.width(16.dp))
             Icon(
                 imageVector = Icons.Default.AccountCircle,
-                contentDescription = "Profile",
+                contentDescription = "Profile Picture",
                 tint = Color(0xFF1B5E20),
                 modifier = Modifier.size(32.dp)
             )
@@ -231,118 +139,9 @@ fun BottomNavItem(icon: ImageVector, label: String, isSelected: Boolean = false)
 }
 
 @Composable
-fun TitleSection() {
-    Column(
-        modifier = Modifier.padding(20.dp),
-        horizontalAlignment = Alignment.Start
-    ) {
-        // Logo and Title Row
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Surface(
-                color = Color(0xFFD32F2F),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.size(40.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Text(
-                text = "Campus Information",
-                color = Color(0xFF1B5E20),
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 30.sp,
-                textAlign = TextAlign.Left
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "To assist with your inquiries and help you navigate our academic offerings, we have provided an overview of our university's structure below. Our institution is organized into distinct colleges, each dedicated to specific fields of study. Should you need to reach the main administration or a specific department, please refer to the official university contact channels",
-            textAlign = TextAlign.Justify,
-            color = Color(0xFF2E7D32),
-            fontSize = 14.sp,
-            lineHeight = 16.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(all = 2.dp)
-        )
-    }
-}
-
-@Composable
-fun DepartmentCard(dept: Department) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .border(2.dp, Color(0xFF66BB6A), RoundedCornerShape(12.dp)),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F3F3))
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                color = Color(0xFF66BB6A),
-                shape = CircleShape,
-                modifier = Modifier.size(85.dp)
-            ) {
-                Icon(
-                    imageVector = dept.icon,
-                    contentDescription = "Dept Logo",
-                    tint = Color.White,
-                    modifier = Modifier
-                        .size(50.dp)
-                        .padding(17.5.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column {
-                Text(
-                    text = dept.name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color.Black
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "Department representative: ${dept.representative}",
-                    fontSize = 12.sp,
-                    color = Color.Black
-                )
-                Text(
-                    text = "Email: ${dept.email}",
-                    fontSize = 12.sp,
-                    color = Color.Black
-                )
-                Text(
-                    text = "Phone number: ${dept.phone}",
-                    fontSize = 12.sp,
-                    color = Color.Black
-                )
-            }
-        }
-    }
-}
-
-@Composable
 fun SettingsScreen() {
-    var isDarkMode by remember { mutableStateOf(false) }
+    var showEditProfileDialog by remember { mutableStateOf(false) }
+    var showChangePasswordDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -363,7 +162,10 @@ fun SettingsScreen() {
             SettingsTitleSection()
             
             // Settings Content
-            SettingsContent(isDarkMode = isDarkMode, onDarkModeChange = { isDarkMode = it })
+            SettingsContent(
+                onEditProfileClick = { showEditProfileDialog = true },
+                onChangePasswordClick = { showChangePasswordDialog = true }
+            )
             
             // Spacer to push logout button to bottom
             Spacer(modifier = Modifier.weight(1f))
@@ -371,6 +173,20 @@ fun SettingsScreen() {
             // Logout Button at bottom
             LogoutButton()
         }
+    }
+
+    // Edit Profile Dialog
+    if (showEditProfileDialog) {
+        EditProfileDialog(
+            onDismiss = { showEditProfileDialog = false }
+        )
+    }
+
+    // Change Password Dialog
+    if (showChangePasswordDialog) {
+        ChangePasswordDialog(
+            onDismiss = { showChangePasswordDialog = false }
+        )
     }
 }
 
@@ -401,38 +217,148 @@ fun SettingsTitleSection() {
 }
 
 @Composable
-fun SettingsContent(isDarkMode: Boolean, onDarkModeChange: (Boolean) -> Unit) {
+fun SettingsContent(
+    onEditProfileClick: () -> Unit,
+    onChangePasswordClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp)
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Dark mode toggle
+        // Profile Section
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(vertical = 24.dp)
+        ) {
+            // Profile Picture
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF66BB6A))
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.profile),
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // User Name
+            Text(
+                text = "Juan Dela Cruz",
+                color = Color(0xFF1B5E20),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // User Email/Role
+            Text(
+                text = "juan.delacruz@university.edu",
+                color = Color(0xFF666666),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Settings Options
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Edit Profile Option
+            SettingsOptionCard(
+                icon = Icons.Default.AccountCircle,
+                title = "Edit Profile",
+                subtitle = "Update name, email, profile picture",
+                onClick = onEditProfileClick
+            )
+            
+            // Change Password Option
+            SettingsOptionCard(
+                icon = Icons.Default.Lock,
+                title = "Change Password",
+                subtitle = "Update your account password",
+                onClick = onChangePasswordClick
+            )
+        }
+    }
+}
+
+@Composable
+fun SettingsOptionCard(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFF8F8F8)
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        )
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Dark mode",
-                color = Color(0xFF1B5E20), // Dark green
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium
-            )
+            // Icon
+            Surface(
+                modifier = Modifier.size(48.dp),
+                shape = CircleShape,
+                color = Color(0xFF1B5E20)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .padding(12.dp)
+                )
+            }
             
-            Switch(
-                checked = isDarkMode,
-                onCheckedChange = onDarkModeChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = Color(0xFF1B5E20),
-                    uncheckedThumbColor = Color.White,
-                    uncheckedTrackColor = Color(0xFFCCCCCC)
-                ),
-                modifier = Modifier.size(48.dp)
-            )
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            // Text Content
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = title,
+                    color = Color(0xFF1B5E20),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                Text(
+                    text = subtitle,
+                    color = Color(0xFF666666),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal
+                )
+            }
         }
     }
 }
@@ -446,7 +372,7 @@ fun LogoutButton() {
             .padding(horizontal = 20.dp, vertical = 16.dp)
             .height(56.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF1B5E20), // Dark green to match UI theme
+            containerColor = Color(0xFFD32F2F), // Red color for logout
             contentColor = Color.White
         ),
         shape = RoundedCornerShape(12.dp),
@@ -463,11 +389,258 @@ fun LogoutButton() {
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun CampusScreenPreview() {
-    UniassistTheme {
-        CampusInformationScreen()
+fun EditProfileDialog(
+    onDismiss: () -> Unit
+) {
+    var username by remember { mutableStateOf("Juan Dela Cruz") }
+    var email by remember { mutableStateOf("juan.delacruz@university.edu") }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.5f))
+            .clickable { onDismiss() },
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp)
+            ) {
+                // Top Bar
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(
+                            text = "Cancel",
+                            color = Color(0xFF1B5E20),
+                            fontSize = 16.sp
+                        )
+                    }
+                    
+                    Text(
+                        text = "Edit Profile",
+                        color = Color(0xFF1B5E20),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    TextButton(onClick = onDismiss) {
+                        Text(
+                            text = "Back",
+                            color = Color(0xFF1B5E20),
+                            fontSize = 16.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Profile Picture Section
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF66BB6A))
+                        .align(Alignment.CenterHorizontally)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.profile),
+                        contentDescription = "Profile Picture",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Change Photo",
+                    color = Color(0xFF1B5E20),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Username Field
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text("Username") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF1B5E20),
+                        unfocusedBorderColor = Color(0xFFCCCCCC)
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Email Field
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF1B5E20),
+                        unfocusedBorderColor = Color(0xFFCCCCCC)
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Save Button
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF1B5E20),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = "Save Changes",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ChangePasswordDialog(
+    onDismiss: () -> Unit
+) {
+    var currentPassword by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.5f))
+            .clickable { onDismiss() },
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp)
+            ) {
+                // Top Bar
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(
+                            text = "Cancel",
+                            color = Color(0xFF1B5E20),
+                            fontSize = 16.sp
+                        )
+                    }
+                    
+                    Text(
+                        text = "Change Password",
+                        color = Color(0xFF1B5E20),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    TextButton(onClick = onDismiss) {
+                        Text(
+                            text = "Back",
+                            color = Color(0xFF1B5E20),
+                            fontSize = 16.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Current Password Field
+                OutlinedTextField(
+                    value = currentPassword,
+                    onValueChange = { currentPassword = it },
+                    label = { Text("Current Password") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF1B5E20),
+                        unfocusedBorderColor = Color(0xFFCCCCCC)
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // New Password Field
+                OutlinedTextField(
+                    value = newPassword,
+                    onValueChange = { newPassword = it },
+                    label = { Text("New Password") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF1B5E20),
+                        unfocusedBorderColor = Color(0xFFCCCCCC)
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Confirm Password Field
+                OutlinedTextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = { Text("Confirm New Password") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF1B5E20),
+                        unfocusedBorderColor = Color(0xFFCCCCCC)
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Update Password Button
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF1B5E20),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = "Update Password",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
     }
 }
 
