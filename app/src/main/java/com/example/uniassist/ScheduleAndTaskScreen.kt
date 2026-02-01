@@ -96,62 +96,34 @@ fun ScheduleAndTaskScreen(
     }
     Scaffold(
         topBar = {
-            Column(modifier = Modifier.fillMaxWidth().statusBarsPadding()) {
-                // Green gradient header with notification and profile icons
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.horizontalGradient(
-                                colors = listOf(HeaderGreenStart, HeaderGreenEnd)
-                            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .height(65.dp)
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(HeaderGreenStart, HeaderGreenEnd)
                         )
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            Icons.Default.Notifications,
-                            contentDescription = "Notifications",
-                            tint = DarkGreenText
-                        )
-                    }
-                    IconButton(onClick = {}) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = "Profile",
-                            tint = DarkGreenText
-                        )
-                    }
+                    )
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = {}, modifier = Modifier.size(40.dp)) {
+                    Icon(
+                        Icons.Default.Notifications,
+                        contentDescription = "Notifications",
+                        tint = DarkGreenText,
+                        modifier = Modifier.size(22.dp)
+                    )
                 }
-                // Title row: red calendar icon (like Campus logo) + "Schedule & Tasks"
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(RedAccent),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Default.CalendarMonth,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Schedule & Tasks",
-                        color = DarkGreenText,
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.ExtraBold
+                IconButton(onClick = {}, modifier = Modifier.size(40.dp)) {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = "Profile",
+                        tint = DarkGreenText,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
@@ -173,6 +145,36 @@ fun ScheduleAndTaskScreen(
                 .padding(screenContentPadding)
                 .background(Color.White)
         ) {
+            // Title row: red calendar icon + "Schedule & Tasks" (below top bar)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(RedAccent),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.CalendarMonth,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Text(
+                    text = "Schedule & Tasks",
+                    color = DarkGreenText,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(screenContentPadding))
+
             // Calendar card (design only - not clickable)
             CalendarCard(
                 currentMonth = currentMonth,
