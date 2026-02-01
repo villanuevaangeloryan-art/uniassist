@@ -1,6 +1,7 @@
 package com.example.uniassist
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -24,10 +24,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.uniassist.ui.theme.DarkGreen
 import com.example.uniassist.ui.theme.LightGreenBorder
+import androidx.compose.material3.Text
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-// ---------------------------
-// DATA CLASS
-// ---------------------------
+// ---------------- DATA CLASS ----------------
 
 data class Announcement(
     val title: String,
@@ -37,23 +39,9 @@ data class Announcement(
     val footer: String
 )
 
-// ---------------------------
-// SAMPLE DATA
-// ---------------------------
+// ---------------- SAMPLE DATA ----------------
 
 val announcementList = listOf(
-    Announcement(
-        title = "IMPORTANT: Campus Operations & Class Suspension Update",
-        date = "January 19, 2026",
-        content = "Please be advised that all on-campus classes and office operations at University of Cabuyao are suspended tomorrow, January 20, due to the forecasted inclement weather.",
-        bullets = listOf(
-            "Online Classes:" to "Asynchronous learning will be conducted via the student portal.",
-            "Offices:" to "Administrative offices will operate on a skeletal workforce.",
-            "Campus Access:" to "Only essential personnel will be allowed entry."
-        ),
-        footer = "Regular operations are expected to resume on Wednesday, January 21. Stay safe, everyone!"
-    ),
-
     Announcement(
         "Campus Operations & Class Suspension",
         "January 19, 2026",
@@ -91,95 +79,126 @@ val announcementList = listOf(
     )
 )
 
-// ---------------------------
-// DASHBOARD SCREEN
-// ---------------------------
+// ---------------- DASHBOARD ----------------
 
 @Composable
 fun DashboardScreen() {
+
     Scaffold(
+        topBar = { HeaderSection() }, // ✅ Fixed header
         bottomBar = { FloatingBottomNavigationBar() }
     ) { paddingValues ->
 
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
-                .padding(paddingValues)
+                .padding(paddingValues),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(bottom = 100.dp)
         ) {
 
-            HeaderSection()
+            item { WelcomeSection() }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            item { AnnouncementHeader() }
 
-
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            AnnouncementHeader()
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            AnnouncementsList()
+            items(announcementList) {
+                AnnouncementCard(it)
+            }
         }
     }
 }
 
-// ---------------------------
-// HEADER
-// ---------------------------
+// ---------------- FIXED HEADER ----------------
 
 @Composable
 fun HeaderSection() {
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(65.dp)
             .background(
-                Brush.horizontalGradient(
-                    listOf(Color(0xFF7CA786), Color(0xFFE2F1C6))
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color(0xFF7CA786),
+                        Color(0xFFE2F1C6)
+                    )
                 )
             )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(16.dp)
+                .align(Alignment.Center),
             horizontalArrangement = Arrangement.End
         ) {
-            Icon(Icons.Default.Notifications, null, tint = Color(0xFF1B5E20))
+            Icon(
+                imageVector = Icons.Default.Notifications,
+                contentDescription = "Notifications",
+                tint = Color(0xFF1B5E20),
+                modifier = Modifier.size(28.dp)
+            )
             Spacer(modifier = Modifier.width(16.dp))
-            Icon(Icons.Default.AccountCircle, null, tint = Color(0xFF1B5E20))
+            Icon(
+                imageVector = Icons.Default.AccountCircle,
+                contentDescription = "Profile",
+                tint = Color(0xFF1B5E20),
+                modifier = Modifier.size(28.dp)
+            )
         }
     }
 }
 
-// ---------------------------
-// WELCOME
-// ---------------------------
+// ---------------- WELCOME ----------------
 
 @Composable
 fun WelcomeSection() {
-    Column(Modifier.padding(horizontal = 24.dp)) {
-        Text("Welcome back,", fontSize = 18.sp, color = DarkGreen)
+
+    val currentDate = Date()
+
+    val dayFormatter = SimpleDateFormat("EEEE", Locale.getDefault())
+    val dateFormatter = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
+
+    val day = dayFormatter.format(currentDate)
+    val date = dateFormatter.format(currentDate)
+
+    Column(
+        Modifier
+            .padding(horizontal = 24.dp)
+            .padding(top = 16.dp)
+    ) {
+
         Text(
-            "Angelo Villanueva",
+            text = "Welcome back,",
+            fontSize = 18.sp,
+            color = DarkGreen
+        )
+
+        Text(
+            text = "Angelo Villanueva",
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
+            color = DarkGreen
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // ✅ Day + Date in GREEN
+        Text(
+            text = "$day, $date",
+            fontSize = 14.sp,
             color = DarkGreen
         )
     }
 }
 
-// ---------------------------
-// ANNOUNCEMENT HEADER
-// ---------------------------
+
+// ---------------- ANNOUNCEMENT HEADER ----------------
 
 @Composable
 fun AnnouncementHeader() {
-
-    WelcomeSection()
-
     Row(
         Modifier.padding(horizontal = 24.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -208,25 +227,7 @@ fun AnnouncementHeader() {
     }
 }
 
-// ---------------------------
-// ANNOUNCEMENT LIST
-// ---------------------------
-
-@Composable
-fun AnnouncementsList() {
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(bottom = 100.dp)
-    ) {
-        items(announcementList) {
-            AnnouncementCard(it)
-        }
-    }
-}
-
-// ---------------------------
-// ANNOUNCEMENT CARD
-// ---------------------------
+// ---------------- ANNOUNCEMENT CARD ----------------
 
 @Composable
 fun AnnouncementCard(announcement: Announcement) {
@@ -270,9 +271,7 @@ fun AnnouncementCard(announcement: Announcement) {
     }
 }
 
-// ---------------------------
-// BULLET ITEM
-// ---------------------------
+// ---------------- BULLET ITEM ----------------
 
 @Composable
 fun BulletItem(title: String, description: String) {
@@ -288,44 +287,71 @@ fun BulletItem(title: String, description: String) {
     )
 }
 
-// ---------------------------
-// BOTTOM NAV
-// ---------------------------
+// ---------------- BOTTOM NAV ----------------
 
 @Composable
 fun FloatingBottomNavigationBar() {
+
     Surface(
-        Modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
             .height(58.dp),
         shape = RoundedCornerShape(35.dp),
-        color = Color(0xFF245B3D)
+        color = Color(0xFF245B3D),
+        shadowElevation = 8.dp
     ) {
         Row(
-            Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomNavItem(Icons.Default.Home, "Dashboard")
-            BottomNavItem(Icons.Default.DateRange, "Schedules")
-            BottomNavItem(Icons.Default.Info, "Campus")
-            BottomNavItem(Icons.Default.Settings, "Settings")
+            BottomNavItem(icon = Icons.Default.Home, label = "Dashboard")
+            BottomNavItem(icon = Icons.Default.DateRange, label = "Schedules")
+            BottomNavItem(icon = Icons.Default.Info, label = "Campus")
+            BottomNavItem(icon = Icons.Default.Settings, label = "Settings")
         }
     }
 }
 
 @Composable
-fun BottomNavItem(icon: ImageVector, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(icon, label, tint = Color.White)
-        Text(label, fontSize = 10.sp, color = Color.White)
+fun BottomNavItem(icon: ImageVector, label: String, isSelected: Boolean = false) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.padding(8.dp)
+    ) {
+
+        Box(
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = if (isSelected) Color(0xFF1B5E20) else Color.White,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        // Label Text
+        if (!isSelected) {
+            Text(
+                text = label,
+                color = Color.White,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium
+            )
+        } else {
+            Text(
+                text = label,
+                color = Color.White,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
-
-// ---------------------------
-// PREVIEW
-// ---------------------------
+// ---------------- PREVIEW ----------------
 
 @Preview(showBackground = true)
 @Composable
