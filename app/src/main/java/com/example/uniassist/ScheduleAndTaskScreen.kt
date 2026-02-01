@@ -182,7 +182,7 @@ fun ScheduleAndTaskScreen(
                 onNextMonth = { }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(screenContentPadding))
 
             // Task input row (design only - not clickable)
             TaskInputRow(
@@ -192,7 +192,7 @@ fun ScheduleAndTaskScreen(
                 enabled = false
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(screenContentPadding))
 
             // Task list (design only - not clickable)
             LazyColumn(
