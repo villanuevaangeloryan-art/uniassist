@@ -3,45 +3,48 @@ package com.example.uniassist
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.uniassist.ui.theme.UniassistTheme
+import com.example.uniassist.ui.screens.GetStartedScreen
+import com.example.uniassist.ui.screens.LoginOrRegisterScreen
+import com.example.uniassist.ui.screens.LoginScreen
+import com.example.uniassist.ui.screens.RegisterScreen
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
+class MainActivity : ComponentActivity(){
+    override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             UniassistTheme {
-                Scaffold( modifier = Modifier.fillMaxSize() ) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                val navController = rememberNavController()
+
+                NavHost(
+                    navController = navController,
+                    startDestination = "get_started"
+                ){
+                    composable("get_started"){
+                        GetStartedScreen(navController)
+                    }
+
+                    composable("login_register"){
+                        LoginOrRegisterScreen(navController)
+                    }
+
+                    composable("login"){
+                        LoginScreen(navController)
+                    }
+
+                    composable("register"){
+                        RegisterScreen(navController)
+                    }
+
+                    composable("dashboard") {
+                        DashboardScreen()
+                    }
                 }
             }
         }
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    UniassistTheme {
-        Greeting("Android")
-    }
-}
