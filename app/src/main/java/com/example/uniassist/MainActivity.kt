@@ -10,6 +10,7 @@ import com.example.uniassist.ui.theme.UniassistTheme
 import com.example.uniassist.ui.screens.GetStartedScreen
 import com.example.uniassist.ui.screens.LoginOrRegisterScreen
 import com.example.uniassist.ui.screens.LoginScreen
+import com.example.uniassist.ui.screens.RegisterScreen
 
 class MainActivity : ComponentActivity(){
     override fun onCreate(savedInstanceState: Bundle?){
@@ -32,6 +33,10 @@ class MainActivity : ComponentActivity(){
 
                     composable("login"){
                         LoginScreen(navController)
+                    }
+
+                    composable("register"){
+                        RegisterScreen(navController)
                     }
                 }
             }

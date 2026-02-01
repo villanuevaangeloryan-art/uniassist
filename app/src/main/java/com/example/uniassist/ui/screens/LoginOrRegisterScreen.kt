@@ -71,13 +71,13 @@ fun LoginOrRegisterScreen (navController: NavController, modifier: Modifier = Mo
                 modifier = Modifier
                     .background(Color.White.copy(alpha = 0.6f), shape = RoundedCornerShape(50))
                     .padding(8.dp)
-                    .size(40.dp) // Make icon button smaller
+                    .size(40.dp)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
                     tint = Color(0xFF1B5E3C),
-                    modifier = Modifier.size(20.dp) // Make back icon smaller
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
@@ -87,7 +87,7 @@ fun LoginOrRegisterScreen (navController: NavController, modifier: Modifier = Mo
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Add this spacer to push content down
+
             Spacer(modifier = Modifier.weight(1f))
 
             // Main content
@@ -101,6 +101,7 @@ fun LoginOrRegisterScreen (navController: NavController, modifier: Modifier = Mo
 
                 Spacer(modifier = Modifier.height(40.dp))
 
+                //Log in button
                 Button(
                     onClick = {
                         navController.navigate("login")
@@ -152,8 +153,11 @@ fun LoginOrRegisterScreen (navController: NavController, modifier: Modifier = Mo
 
                 Spacer(modifier = Modifier.height(3.dp))
 
+                //Register button
                 Button(
-                    onClick = {},
+                    onClick = {
+                        navController.navigate("register")
+                    },
                     shape = RoundedCornerShape(50.dp),
                     modifier = Modifier
                         .size(290.dp, 49.dp),

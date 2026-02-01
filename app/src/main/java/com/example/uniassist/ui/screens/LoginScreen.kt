@@ -42,7 +42,7 @@ fun LoginScreen(navController: NavController) {
     val state = loginStore.state.collectAsState().value
     val focusManager = LocalFocusManager.current
 
-    // Animation states (local to UI - animations don't need to be in state)
+    // Animation states
     var showLine by remember { mutableStateOf(false) }
     var showText by remember { mutableStateOf(false) }
 
