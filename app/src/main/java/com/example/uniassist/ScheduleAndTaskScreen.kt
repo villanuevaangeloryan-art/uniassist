@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -90,11 +91,9 @@ fun ScheduleAndTaskScreen(
             TaskItem(3, "Capstone meeting", false)
         )
     }
-    var taskInputText by remember { mutableStateOf("") }
-
     Scaffold(
         topBar = {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.fillMaxWidth().statusBarsPadding()) {
                 // Green gradient header with notification and profile icons
                 Row(
                     modifier = Modifier
@@ -171,48 +170,38 @@ fun ScheduleAndTaskScreen(
                 .padding(16.dp)
                 .background(Color.White)
         ) {
-            // Calendar card
+            // Calendar card (design only - not clickable)
             CalendarCard(
                 currentMonth = currentMonth,
                 selectedDate = selectedDate,
-                onDateSelect = { selectedDate = it },
-                onPrevMonth = {
-                    currentMonth = (currentMonth.clone() as Calendar).apply { add(Calendar.MONTH, -1) }
-                },
-                onNextMonth = {
-                    currentMonth = (currentMonth.clone() as Calendar).apply { add(Calendar.MONTH, 1) }
-                }
+                onDateSelect = { },
+                onPrevMonth = { },
+                onNextMonth = { }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Task input row
+            // Task input row (design only - not clickable)
             TaskInputRow(
-                taskText = taskInputText,
-                onTaskTextChange = { taskInputText = it },
-                onAddClick = {
-                    if (taskInputText.isNotBlank()) {
-                        taskList.add(TaskItem(taskList.maxOfOrNull { t -> t.id }?.plus(1) ?: 1, taskInputText.trim(), false))
-                        taskInputText = ""
-                    }
-                }
+                taskText = "",
+                onTaskTextChange = { },
+                onAddClick = { },
+                enabled = false
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Task list
+            // Task list (design only - not clickable)
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(taskList, key = { it.id }) { task ->
                     TaskRow(
                         task = task,
-                        onCheckedChange = { checked ->
-                            val index = taskList.indexOfFirst { it.id == task.id }
-                            if (index >= 0) taskList[index] = task.copy(completed = checked)
-                        },
+                        onCheckedChange = { },
                         onEditClick = { },
-                        onDeleteClick = { taskList.remove(task) }
+                        onDeleteClick = { },
+                        enabled = false
                     )
                 }
             }
@@ -267,10 +256,10 @@ private fun CalendarCard(
                 )
             }
             Row {
-                IconButton(onClick = onPrevMonth) {
+                IconButton(onClick = onPrevMonth, enabled = false) {
                     Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous month", tint = Color.Black)
                 }
-                IconButton(onClick = onNextMonth) {
+                IconButton(onClick = onNextMonth, enabled = false) {
                     Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next month", tint = Color.Black)
                 }
             }
@@ -318,8 +307,7 @@ private fun CalendarCard(
                                         if (isSelected) Modifier.background(BottomNavGreen)
                                         else if (isTodayOrHighlight) Modifier.border(1.dp, GreenAccent, CircleShape)
                                         else Modifier
-                                    )
-                                    .clickable { onDateSelect(day) },
+                                    ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -340,7 +328,8 @@ private fun CalendarCard(
 private fun TaskInputRow(
     taskText: String,
     onTaskTextChange: (String) -> Unit,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit,
+    enabled: Boolean = true
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -350,6 +339,7 @@ private fun TaskInputRow(
         BasicTextField(
             value = taskText,
             onValueChange = onTaskTextChange,
+            readOnly = !enabled,
             modifier = Modifier
                 .weight(1f)
                 .clip(RoundedCornerShape(8.dp))
@@ -378,7 +368,10 @@ private fun TaskInputRow(
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
                 .background(BottomNavGreen)
-                .clickable(onClick = onAddClick)
+                .then(
+                    if (enabled) Modifier.clickable(onClick = onAddClick)
+                    else Modifier
+                )
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
@@ -395,7 +388,8 @@ private fun TaskRow(
     task: TaskItem,
     onCheckedChange: (Boolean) -> Unit,
     onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    enabled: Boolean = true
 ) {
     Row(
         modifier = Modifier
@@ -409,6 +403,7 @@ private fun TaskRow(
         Checkbox(
             checked = task.completed,
             onCheckedChange = onCheckedChange,
+            enabled = enabled,
             colors = CheckboxDefaults.colors(
                 checkedColor = BottomNavGreen,
                 uncheckedColor = LightGreyBorder
@@ -422,7 +417,7 @@ private fun TaskRow(
             color = Color.Black,
             textDecoration = if (task.completed) TextDecoration.LineThrough else null
         )
-        IconButton(onClick = onEditClick) {
+        IconButton(onClick = onEditClick, enabled = enabled) {
             Icon(
                 Icons.Default.Edit,
                 contentDescription = "Edit",
@@ -430,7 +425,7 @@ private fun TaskRow(
                 modifier = Modifier.size(24.dp)
             )
         }
-        IconButton(onClick = onDeleteClick) {
+        IconButton(onClick = onDeleteClick, enabled = enabled) {
             Icon(
                 Icons.Default.Delete,
                 contentDescription = "Delete",
