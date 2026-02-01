@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -21,6 +22,9 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,14 +46,14 @@ fun RegisterScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-
+        // Background overlay
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFDEF8CB).copy(alpha = 0.5f))
         )
 
-        // Layer of the Content
+        // Content Layer
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -62,7 +66,7 @@ fun RegisterScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-                // Back Button Icon
+                // Back Button
                 IconButton(
                     onClick = onBackClick,
                     modifier = Modifier
@@ -77,7 +81,7 @@ fun RegisterScreen(
                     )
                 }
 
-                // Logo of Uniassist
+                // Logo
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Image(
                         painter = painterResource(id = R.drawable.img),
@@ -122,7 +126,7 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Row for Names
+            // Name Row
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
                     AuthLabel("First Name", poppinsBold)
@@ -153,7 +157,7 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Register button
+            // Register Button
             Button(
                 onClick = { },
                 modifier = Modifier
@@ -175,7 +179,7 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Login link if you dont have an account
+            // Login Link
             val annotatedString = buildAnnotatedString {
                 append("Already have an account? ")
                 withStyle(style = SpanStyle(color = PrimaryGreen, fontFamily = poppinsBold)) {
@@ -191,7 +195,7 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Footer for techspace
+            // Footer
             Text(
                 text = "By TechSpace",
                 fontSize = 13.sp,
@@ -201,4 +205,57 @@ fun RegisterScreen(
             )
         }
     }
+}
+
+// ==========================================
+// MISSING DEFINITIONS ADDED HERE
+// ==========================================
+
+// Colors
+val PrimaryGreen = Color(0xFF245B3D)
+val DarkGreenTint = Color(0xFF1B5E3C)
+val FooterGray = Color(0xFF898989)
+
+// Custom Text Field Helper
+@Composable
+fun AuthTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    isPassword: Boolean = false,
+    keyboardType: KeyboardType = KeyboardType.Text
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(text = placeholder, color = Color.Gray, fontSize = 14.sp) },
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(15.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedContainerColor = Color.White,
+            focusedContainerColor = Color.White,
+            unfocusedBorderColor = Color(0xFFA0A0A0),
+            focusedBorderColor = PrimaryGreen,
+            cursorColor = PrimaryGreen,
+            focusedTextColor = Color.Black,
+            unfocusedTextColor = Color.Black
+        ),
+        visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        singleLine = true
+    )
+}
+
+// Custom Label Helper
+@Composable
+fun AuthLabel(text: String, fontFamily: FontFamily) {
+    Text(
+        text = text,
+        fontFamily = fontFamily,
+        color = PrimaryGreen,
+        fontSize = 16.sp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 6.dp, start = 2.dp)
+    )
 }
