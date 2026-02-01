@@ -122,7 +122,7 @@ fun ScheduleAndTaskScreen(
                         )
                     }
                 }
-                // Title row: red calendar icon (like Campus logo) + "Schedule Manager"
+                // Title row: red calendar icon (like Campus logo) + "Schedule & Tasks"
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -145,7 +145,7 @@ fun ScheduleAndTaskScreen(
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "Schedule Manager",
+                        text = "Schedule & Tasks",
                         color = DarkGreenText,
                         fontSize = 30.sp,
                         fontWeight = FontWeight.ExtraBold
