@@ -2,11 +2,9 @@ package com.example.uniassist
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,17 +19,13 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-// Define the brand colors based on the image design
-val DarkGreen = Color(0xFF1B4332)
-val LightGreenBorder = Color(0xFF99C24D)
-val HeaderGradientStart = Color(0xFF2D6A4F)
-val HeaderGradientEnd = Color(0xFFD8E2DC)
+import com.example.uniassist.ui.theme.DarkGreen
+import com.example.uniassist.ui.theme.LightGreenBorder
 
 @Composable
 fun DashboardScreen() {
     Scaffold(
-        bottomBar = { BottomNavigationBar() }
+        bottomBar = { FloatingBottomNavigationBar() }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -63,42 +57,40 @@ fun DashboardScreen() {
 
 @Composable
 fun HeaderSection() {
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(70.dp)
+            .height(65.dp)
             .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(HeaderGradientStart.copy(alpha = 0.7f), HeaderGradientEnd),
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color(0xFF7CA786),
+                        Color(0xFFE2F1C6)
+                    )
                 )
             )
-            .padding(horizontal = 24.dp),
-        contentAlignment = Alignment.CenterEnd
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(top = 20.dp) // Offset for status bar area
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .align(Alignment.Center),
+            horizontalArrangement = Arrangement.End
         ) {
             Icon(
-                imageVector = Icons.Outlined.Notifications,
+                imageVector = Icons.Default.Notifications,
                 contentDescription = "Notifications",
-                tint = DarkGreen,
-                modifier = Modifier.size(24.dp)
+                tint = Color(0xFF1B5E20),
+                modifier = Modifier.size(28.dp)
             )
-            Spacer(modifier = Modifier.width(10.dp))
-            Surface(
-                shape = CircleShape,
-                color = Color.Transparent,
-                modifier = Modifier.size(40.dp),
-                border = BorderStroke(1.5.dp, DarkGreen)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Profile",
-                    tint = DarkGreen,
-                    modifier = Modifier.padding(2.dp).fillMaxSize()
-                )
-            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Icon(
+                imageVector = Icons.Default.AccountCircle,
+                contentDescription = "Profile",
+                tint = Color(0xFF1B5E20),
+                modifier = Modifier.size(28.dp)
+            )
         }
     }
 }
@@ -232,53 +224,65 @@ fun BulletItem(title: String, description: String) {
 }
 
 @Composable
-fun BottomNavigationBar() {
-    Box(
+fun FloatingBottomNavigationBar() {
+
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 20.dp, start = 20.dp, end = 20.dp) // Creates the floating effect
+            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+            .height(58.dp),
+        shape = RoundedCornerShape(35.dp),
+        color = Color(0xFF245B3D),
+        shadowElevation = 8.dp
     ) {
-        Surface(
-            color = DarkGreen,
-            shape = CircleShape, // Capsule shape
-            shadowElevation = 8.dp,
-            modifier = Modifier.fillMaxWidth()
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier
-                    .padding(vertical = 12.dp, horizontal = 12.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BottomNavItem(Icons.Default.Home, "Dashboard", true)
-                BottomNavItem(Icons.Default.EventAvailable, "Schedules", false)
-                BottomNavItem(Icons.Default.Info, "Campus", false)
-                BottomNavItem(Icons.Default.Settings, "Settings", false)
-            }
+            BottomNavItem(icon = Icons.Default.Home, label = "Dashboard")
+            BottomNavItem(icon = Icons.Default.DateRange, label = "Schedules")
+            BottomNavItem(icon = Icons.Default.Info, label = "Campus")
+            BottomNavItem(icon = Icons.Default.Settings, label = "Settings")
         }
     }
 }
 
 @Composable
-fun BottomNavItem(icon: ImageVector, label: String, isSelected: Boolean) {
+fun BottomNavItem(icon: ImageVector, label: String, isSelected: Boolean = false) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.padding(horizontal = 4.dp)
+        modifier = Modifier.padding(8.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = if (isSelected) Color.White else Color.White.copy(alpha = 0.6f),
-            modifier = Modifier.size(26.dp)
-        )
-        Text(
-            text = label,
-            color = if (isSelected) Color.White else Color.White.copy(alpha = 0.6f),
-            fontSize = 10.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-        )
+
+        Box(
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = if (isSelected) Color(0xFF1B5E20) else Color.White,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        // Label Text
+        if (!isSelected) {
+            Text(
+                text = label,
+                color = Color.White,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium
+            )
+        } else {
+            Text(
+                text = label,
+                color = Color.White,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
