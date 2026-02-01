@@ -68,6 +68,9 @@ import com.example.uniassist.ui.theme.OrangeAccent
 import com.example.uniassist.ui.theme.RedAccent
 import java.util.Calendar
 
+// Content padding used for the schedule screen body
+private val screenContentPadding = 16.dp
+
 // Data class for a single task
 data class TaskItem(
     val id: Int,
@@ -167,7 +170,7 @@ fun ScheduleAndTaskScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp)
+                .padding(screenContentPadding)
                 .background(Color.White)
         ) {
             // Calendar card (design only - not clickable)
