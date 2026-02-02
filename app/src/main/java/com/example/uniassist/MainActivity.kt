@@ -13,6 +13,7 @@ import com.example.uniassist.ui.screens.LoginOrRegisterScreen
 import com.example.uniassist.ui.screens.LoginScreen
 import com.example.uniassist.ui.screens.RegisterScreen
 import com.example.uniassist.ui.screens.ScheduleAndTaskScreen
+import com.example.uniassist.ui.screens.SettingsScreen
 import androidx.core.view.WindowCompat
 class MainActivity : ComponentActivity(){
     override fun onCreate(savedInstanceState: Bundle?){
@@ -83,6 +84,20 @@ class MainActivity : ComponentActivity(){
                             },
                             onSettingsClick = {
                                 navController.navigate("settings") { launchSingleTop = true }
+                            }
+                        )
+                    }
+
+                    composable("settings") {
+                        SettingsScreen(
+                            onDashboardClick = {
+                                navController.navigate("dashboard") { launchSingleTop = true }
+                            },
+                            onScheduleClick = {
+                                navController.navigate("schedule") { launchSingleTop = true }
+                            },
+                            onCampusClick =  {
+                                navController.navigate("campus") { launchSingleTop = true }
                             }
                         )
                     }

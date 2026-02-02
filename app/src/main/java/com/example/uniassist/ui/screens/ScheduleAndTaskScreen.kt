@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
@@ -18,13 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.uniassist.BottomNavItem
 import com.example.uniassist.ui.theme.BottomNavGreen
 import com.example.uniassist.ui.theme.DarkGreenText
 import com.example.uniassist.ui.theme.GreenAccent
@@ -33,6 +30,7 @@ import com.example.uniassist.ui.theme.LightGreyBackground
 import com.example.uniassist.ui.theme.LightGreyBorder
 import com.example.uniassist.ui.theme.OrangeAccent
 import com.example.uniassist.ui.theme.RedAccent
+import com.example.uniassist.BottomNavItem
 
 
 private val screenContentPadding = 16.dp

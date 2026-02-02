@@ -30,8 +30,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 // IMPORTS
-import com.example.uniassist.BottomNavItem
 import com.example.uniassist.R
+import com.example.uniassist.BottomNavItem
 import com.example.uniassist.ui.theme.UniassistTheme
 
 
