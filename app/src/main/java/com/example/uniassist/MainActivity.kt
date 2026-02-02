@@ -98,11 +98,14 @@ class MainActivity : ComponentActivity(){
                             },
                             onCampusClick =  {
                                 navController.navigate("campus") { launchSingleTop = true }
+                            },
+                            onLogoutClick = {
+                                navController.navigate("login") {
+                                    popUpTo(0) { inclusive = true }
+                                }
                             }
                         )
                     }
-
-
                 }
             }
         }
