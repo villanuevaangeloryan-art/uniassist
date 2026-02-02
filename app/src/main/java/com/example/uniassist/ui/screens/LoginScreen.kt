@@ -71,7 +71,9 @@ fun LoginScreen(navController: NavController) {
 
     LaunchedEffect(state.navigateBack) {
         if (state.navigateBack) {
-            navController.popBackStack()
+            navController.navigate("login_register") {
+                popUpTo("login") { inclusive = true }
+            }
             loginStore.resetNavigation()
         }
     }
