@@ -77,7 +77,9 @@ fun LoginScreen(navController: NavController) {
     }
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding(),
         color = Color(0xFFDEF8CB).copy(alpha = 0.5f)
     ) {
         Column(

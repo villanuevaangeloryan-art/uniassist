@@ -57,6 +57,7 @@ fun RegisterScreen(navController: NavController) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .statusBarsPadding()
                 .background(Color(0xFFDEF8CB).copy(alpha = 0.5f))
         )
 

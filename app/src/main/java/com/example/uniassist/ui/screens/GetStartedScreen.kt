@@ -30,7 +30,7 @@ import kotlinx.coroutines.delay
 fun GetStartedScreen(navController: NavController) {
     var isStarting by remember { mutableStateOf(false) }
 
-    // Use AnimatedContent for a more sophisticated transition than Crossfade
+    // Used AnimatedContent for a more sophisticated transition than Crossfade
     AnimatedContent(
         targetState = isStarting,
         transitionSpec = {
@@ -53,7 +53,9 @@ fun GetStartedScreen(navController: NavController) {
 
 @Composable
 fun LandingPageContent(onGetStarted: () -> Unit) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box( modifier = Modifier
+        .fillMaxSize()
+        .statusBarsPadding()) {
         Image(
             painter = painterResource(id = R.drawable.gts_bg_background),
             contentDescription = null,
@@ -84,7 +86,7 @@ fun LandingPageContent(onGetStarted: () -> Unit) {
             Button(
                 onClick = onGetStarted,
                 shape = RoundedCornerShape(50.dp),
-                modifier = Modifier.size(290.dp, 54.dp), // Slightly taller for better touch target
+                modifier = Modifier.size(290.dp, 54.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF245B3D)),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp, pressedElevation = 2.dp)
             ) {
@@ -145,12 +147,12 @@ fun UniAssistLoader(onComplete: () -> Unit) {
             contentDescription = null,
             modifier = Modifier
                 .size(250.dp)
-                .offset(y = bobbing.dp) // Pen "floats" while writing
+                .offset(y = bobbing.dp)
         )
 
         Spacer(modifier = Modifier.height(60.dp))
 
-        // Creative Progress Bar (The "Ink Stroke")
+        // Creative Progress Bar
         Box(
             modifier = Modifier
                 .width(200.dp)

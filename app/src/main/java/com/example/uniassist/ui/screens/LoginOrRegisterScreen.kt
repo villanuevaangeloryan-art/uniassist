@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -37,10 +38,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.uniassist.R
 
+
 @Composable
 fun LoginOrRegisterScreen (navController: NavController, modifier: Modifier = Modifier){
+
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
     ){
         Image(
             contentDescription = "Background Image",

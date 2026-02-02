@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape // Added CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.uniassist.ui.screens.HeaderSection
 import com.example.uniassist.ui.theme.DarkGreen
 import com.example.uniassist.ui.theme.LightGreenBorder
 import java.text.SimpleDateFormat
@@ -86,8 +88,12 @@ fun DashboardScreen(
     onSettingsClick: () -> Unit = {}
 ) {
 
-    Scaffold(
-        topBar = { HeaderSection() },
+    Scaffold( modifier = Modifier
+        .fillMaxSize()
+        .statusBarsPadding(),
+
+        topBar = {
+            HeaderSection() },
         bottomBar = {
             FloatingBottomNavigationBar(
                 onScheduleClick = onScheduleClick,
@@ -185,7 +191,7 @@ fun WelcomeSection() {
         )
 
         Text(
-            text = "Angelo Villanueva",
+            text = "Jhon Delmundo",
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
             color = DarkGreen
@@ -193,7 +199,6 @@ fun WelcomeSection() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // ✅ Day + Date in GREEN
         Text(
             text = "$day, $date",
             fontSize = 14.sp,
@@ -328,7 +333,7 @@ fun FloatingBottomNavigationBar(
 
             // Schedules
             BottomNavItem(
-                icon = Icons.Default.DateRange,
+                icon = Icons.Default.CalendarMonth,
                 label = "Schedules",
                 onClick = onScheduleClick
             )
@@ -361,37 +366,40 @@ fun BottomNavItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
-            .clickable(onClick = onClick) // ✅ Made clickable
+            .clickable(onClick = onClick)
             .padding(8.dp)
     ) {
 
         Box(
             contentAlignment = Alignment.Center
         ) {
+            // White Circle Indicator if selected
+            if (isSelected) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(Color.White, shape = CircleShape)
+                )
+            }
+
             Icon(
                 imageVector = icon,
                 contentDescription = label,
+                // Icon becomes Green if selected
                 tint = if (isSelected) Color(0xFF1B5E20) else Color.White,
                 modifier = Modifier.size(24.dp)
             )
         }
 
+        Spacer(modifier = Modifier.height(2.dp))
+
         // Label Text
-        if (!isSelected) {
-            Text(
-                text = label,
-                color = Color.White,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Medium
-            )
-        } else {
-            Text(
-                text = label,
-                color = Color.White,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
+        Text(
+            text = label,
+            color = Color.White,
+            fontSize = if (isSelected) 12.sp else 10.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+        )
     }
 }
 
