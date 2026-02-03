@@ -2,7 +2,7 @@
 
 ## App Description
 
-**Smart Campus Companion** is an Android application designed to help university students manage their academic life more efficiently.  
+**UNIASSIST** is an Android application designed to help university students manage their academic life more efficiently.  
 The app provides easy access to campus information, academic tasks, schedules, and announcements in one place.
 
 During the Prelim phase, the app focuses on:
@@ -23,7 +23,7 @@ The app is developed using **Kotlin**, **Android Studio**, and follows the **MVV
 | **Angelo Villanueva**       | Team Leader       | Oversees progress, approves merges, coordinates tasks     |
 | **Prince Jay Rex Usalla**   | Git Manager       | Manages branches, pull requests, and repository structure |
 | **Chelsea Urbina**          | UI/UX Developer   | Designs layouts, themes, and user experience              |
-| **Christian Hero Valinado & Chamniel Velante** | Feature Developer | Implements app logic and functionality                    |
+| **Christian Hero Valinado & Chamniel Velante** | Feature Developer | Implements app logic and functionality |
 | **Holian Isaac Zaspa**      | QA / Documenter   | Testing and documentation                                 |
 
 > ⚠️ Roles may rotate in the Midterm and Finals periods as required by the course.
