@@ -1,4 +1,4 @@
-# Smart Campus Companion
+# UNIASSIST
 
 ## App Description
 
