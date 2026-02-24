@@ -41,7 +41,7 @@ fun GetStartedScreen(navController: NavController) {
     ) { loading ->
         if (loading) {
             UniAssistLoader {
-                navController.navigate("login_register") {
+                navController.navigate("role_pick") {
                     popUpTo("get_started") { inclusive = true }
                 }
             }

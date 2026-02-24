@@ -2,5 +2,5 @@
     <string name="app_name">uniassist</string>
     <string name="title_activity_get_started_screen">GetStartedScreen</string>
     <string name="title_activity_login_or_register_screen">LoginOrRegisterScreen</string>
-    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_main">UNIASSIST</string>
 </resources>

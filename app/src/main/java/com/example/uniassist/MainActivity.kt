@@ -14,6 +14,7 @@ import com.example.uniassist.ui.screens.LoginScreen
 import com.example.uniassist.ui.screens.RegisterScreen
 import com.example.uniassist.ui.screens.ScheduleAndTaskScreen
 import com.example.uniassist.ui.screens.SettingsScreen
+import com.example.uniassist.ui.screens.RolePickScreen
 import androidx.core.view.WindowCompat
 class MainActivity : ComponentActivity(){
     override fun onCreate(savedInstanceState: Bundle?){
@@ -44,6 +45,10 @@ class MainActivity : ComponentActivity(){
 
                     composable("register"){
                         RegisterScreen(navController)
+                    }
+
+                    composable("role_pick") {
+                        RolePickScreen(navController)
                     }
 
                     composable("dashboard") {

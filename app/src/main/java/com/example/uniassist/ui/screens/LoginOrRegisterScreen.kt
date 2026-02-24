@@ -71,7 +71,7 @@ fun LoginOrRegisterScreen (navController: NavController, modifier: Modifier = Mo
         ){
             IconButton(
                 onClick = {
-                    navController.navigate("get_started")
+                    navController.navigate("role_pick")
                 },
                 modifier = Modifier
                     .background(Color.White.copy(alpha = 0.6f), shape = RoundedCornerShape(50))
