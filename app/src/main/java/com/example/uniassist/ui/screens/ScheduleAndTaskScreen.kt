@@ -22,16 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.uniassist.ui.theme.BottomNavGreen
-import com.example.uniassist.ui.theme.DarkGreenText
-import com.example.uniassist.ui.theme.GreenAccent
-import com.example.uniassist.ui.theme.GreyText
-import com.example.uniassist.ui.theme.LightGreyBackground
-import com.example.uniassist.ui.theme.LightGreyBorder
-import com.example.uniassist.ui.theme.OrangeAccent
-import com.example.uniassist.ui.theme.RedAccent
-import com.example.uniassist.BottomNavItem
-
+import com.example.uniassist.ui.theme.*
 
 private val screenContentPadding = 16.dp
 
@@ -48,7 +39,6 @@ fun ScheduleAndTaskScreen(
     onCampusClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {}
 ) {
-    //  Material3 DatePickerState
     val datePickerState = rememberDatePickerState()
 
     val taskList = remember {
@@ -146,12 +136,10 @@ fun ScheduleAndTaskScreen(
 
             Spacer(modifier = Modifier.height(screenContentPadding))
 
-            //  DATEPICKER COMPONENT
             CalendarCard(datePickerState = datePickerState)
 
             Spacer(modifier = Modifier.height(screenContentPadding))
 
-            // Task input row
             TaskInputRow(
                 taskText = "",
                 onTaskTextChange = { },
@@ -161,7 +149,6 @@ fun ScheduleAndTaskScreen(
 
             Spacer(modifier = Modifier.height(screenContentPadding))
 
-            // Task list
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -178,8 +165,6 @@ fun ScheduleAndTaskScreen(
         }
     }
 }
-
-// ---------------- REUSABLE COMPONENTS ----------------
 
 @Composable
 fun ScheduleBottomNavigationBar(
@@ -207,21 +192,18 @@ fun ScheduleBottomNavigationBar(
                 isSelected = false,
                 onClick = onDashboardClick
             )
-
             BottomNavItem(
                 icon = Icons.Default.CalendarMonth,
                 label = "Schedules",
                 isSelected = true,
                 onClick = {}
             )
-
             BottomNavItem(
                 icon = Icons.Default.Info,
                 label = "Campus",
                 isSelected = false,
                 onClick = onCampusClick
             )
-
             BottomNavItem(
                 icon = Icons.Default.Settings,
                 label = "Settings",
@@ -232,26 +214,18 @@ fun ScheduleBottomNavigationBar(
     }
 }
 
-// ---------------- CALENDAR COMPONENTS ----------------
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CalendarCard(
-    datePickerState: DatePickerState
-) {
-    // wrap the DatePicker in  styled container
+private fun CalendarCard(datePickerState: DatePickerState) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(LightGreyBackground)
             .border(2.dp, GreenAccent, RoundedCornerShape(12.dp))
-
     ) {
-        // Native Material3 DatePicker
         DatePicker(
             state = datePickerState,
-            // Customizing colors to match theme
             colors = DatePickerDefaults.colors(
                 containerColor = LightGreyBackground,
                 titleContentColor = DarkGreenText,
@@ -270,7 +244,6 @@ private fun CalendarCard(
                 todayDateBorderColor = GreenAccent,
                 todayContentColor = BottomNavGreen
             ),
-
             title = null,
             headline = null,
             showModeToggle = false

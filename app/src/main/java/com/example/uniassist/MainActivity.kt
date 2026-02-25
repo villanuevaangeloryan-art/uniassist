@@ -16,8 +16,10 @@ import com.example.uniassist.ui.screens.ScheduleAndTaskScreen
 import com.example.uniassist.ui.screens.SettingsScreen
 import com.example.uniassist.ui.screens.RolePickScreen
 import androidx.core.view.WindowCompat
-class MainActivity : ComponentActivity(){
-    override fun onCreate(savedInstanceState: Bundle?){
+import com.example.uniassist.ui.screens.DashboardScreen
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         WindowCompat.setDecorFitsSystemWindows(window, true)
@@ -30,82 +32,115 @@ class MainActivity : ComponentActivity(){
                 NavHost(
                     navController = navController,
                     startDestination = "get_started"
-                ){
-                    composable("get_started"){
-                        GetStartedScreen(navController)
-                    }
-
-                    composable("login_register"){
-                        LoginOrRegisterScreen(navController)
-                    }
-
-                    composable("login"){
-                        LoginScreen(navController)
-                    }
-
-                    composable("register"){
-                        RegisterScreen(navController)
+                ) {
+                    composable("get_started") {
+                        GetStartedScreen(navController = navController)
                     }
 
                     composable("role_pick") {
-                        RolePickScreen(navController)
+                        RolePickScreen(navController = navController)
                     }
 
-                    composable("dashboard") {
+                    composable("login_register/{role}") { backStackEntry ->
+                        val role = backStackEntry.arguments?.getString("role") ?: "Student"
+                        LoginOrRegisterScreen(
+                            navController = navController,
+                            role = role
+                        )
+                    }
+
+                    composable("login/{role}") { backStackEntry ->
+                        val role = backStackEntry.arguments?.getString("role") ?: "Student"
+                        LoginScreen(
+                            navController = navController,
+                            role = role
+                        )
+                    }
+
+                    composable("register/{role}") { backStackEntry ->
+                        val role = backStackEntry.arguments?.getString("role") ?: "Student"
+                        RegisterScreen(
+                            navController = navController,
+                            role = role
+                        )
+                    }
+
+                    // Dashboard with role
+                    composable("dashboard/{role}") { backStackEntry ->
+                        val role = backStackEntry.arguments?.getString("role") ?: "Student"
                         DashboardScreen(
+                            role = role,
                             onScheduleClick = {
-                                navController.navigate("schedule") { launchSingleTop = true }
+                                navController.navigate("schedule/${role}") {
+                                    launchSingleTop = true
+                                }
                             },
                             onCampusClick = {
-                                navController.navigate("campus") { launchSingleTop = true }
+                                navController.navigate("campus/${role}") {
+                                    launchSingleTop = true
+                                }
                             },
                             onSettingsClick = {
-                                navController.navigate("settings") { launchSingleTop = true }
+                                navController.navigate("settings/${role}") {
+                                    launchSingleTop = true
+                                }
                             }
                         )
                     }
 
-                    composable("schedule") {
+                    // Schedule with role
+                    composable("schedule/{role}") { backStackEntry ->
+                        val role = backStackEntry.arguments?.getString("role") ?: "Student"
                         ScheduleAndTaskScreen(
                             onDashboardClick = {
-                                navController.navigate("dashboard") { launchSingleTop = true }
+                                navController.navigate("dashboard/${role}") {
+                                    popUpTo("dashboard/${role}") { inclusive = true }
+                                }
                             },
                             onCampusClick = {
-                                navController.navigate("campus") { launchSingleTop = true }
+                                navController.navigate("campus/${role}")
                             },
                             onSettingsClick = {
-                                navController.navigate("settings") { launchSingleTop = true }
+                                navController.navigate("settings/${role}")
                             }
                         )
                     }
 
-                    composable("campus") {
+                    // Campus with role
+                    composable("campus/{role}") { backStackEntry ->
+                        val role = backStackEntry.arguments?.getString("role") ?: "Student"
                         CampusInformationScreen(
                             onDashboardClick = {
-                                navController.navigate("dashboard") { launchSingleTop = true }
+                                navController.navigate("dashboard/${role}") {
+                                    popUpTo("dashboard/${role}") { inclusive = true }
+                                }
                             },
                             onScheduleClick = {
-                                navController.navigate("schedule") { launchSingleTop = true }
+                                navController.navigate("schedule/${role}")
                             },
                             onSettingsClick = {
-                                navController.navigate("settings") { launchSingleTop = true }
+                                navController.navigate("settings/${role}")
                             }
                         )
                     }
 
-                    composable("settings") {
+                    // Settings with role
+                    composable("settings/{role}") { backStackEntry ->
+                        val role = backStackEntry.arguments?.getString("role") ?: "Student"
                         SettingsScreen(
                             onDashboardClick = {
-                                navController.navigate("dashboard") { launchSingleTop = true }
+                                navController.navigate("dashboard/${role}") {
+                                    popUpTo("dashboard/${role}") { inclusive = true }
+                                }
                             },
                             onScheduleClick = {
-                                navController.navigate("schedule") { launchSingleTop = true }
+                                navController.navigate("schedule/${role}")
                             },
-                            onCampusClick =  {
-                                navController.navigate("campus") { launchSingleTop = true }
+                            onCampusClick = {
+                                navController.navigate("campus/${role}")
                             },
                             onLogoutClick = {
-                                navController.navigate("login") {
+                                navController.navigate("login_register/Student") {
                                     popUpTo(0) { inclusive = true }
                                 }
                             }
@@ -116,4 +151,3 @@ class MainActivity : ComponentActivity(){
         }
     }
 }
-

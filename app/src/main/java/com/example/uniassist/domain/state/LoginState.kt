@@ -14,7 +14,7 @@ data class LoginState(
     val isLoading: Boolean = false,
 
     // Navigation Flags
-    val navigateToHome: Boolean = false,
+    val navigateToDashboard: Boolean = false,   // Changed from navigateToHome
     val navigateToRegister: Boolean = false,
     val navigateBack: Boolean = false,
 

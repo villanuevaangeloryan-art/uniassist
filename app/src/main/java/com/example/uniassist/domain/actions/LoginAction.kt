@@ -10,8 +10,9 @@ sealed class LoginAction {
     data object LoginButtonClicked : LoginAction()
 
     // Navigation Actions
-    data object NavigateToHome : LoginAction()
+    data object NavigateToDashboard : LoginAction()   // Changed from NavigateToHome
     data object NavigateToRegister : LoginAction()
     data object NavigateBack : LoginAction()
     data object NavigationHandled : LoginAction()
+    data object ResetNavigation : LoginAction()
 }

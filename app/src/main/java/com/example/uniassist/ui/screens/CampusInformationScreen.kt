@@ -29,13 +29,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-// IMPORTS
 import com.example.uniassist.R
-import com.example.uniassist.BottomNavItem
 import com.example.uniassist.ui.theme.UniassistTheme
 
-
-// DATA MODEL
 data class Department(
     val name: String,
     val representative: String,
@@ -86,7 +82,7 @@ fun CampusInformationScreen(
             .fillMaxSize()
             .statusBarsPadding(),
         topBar = {
-            HeaderSection()
+            CampusHeaderSection()   // RENAMED
         },
         bottomBar = {
             CampusBottomNavigationBar(
@@ -124,8 +120,9 @@ fun CampusInformationScreen(
     }
 }
 
+// RENAMED from HeaderSection to CampusHeaderSection
 @Composable
-fun HeaderSection() {
+fun CampusHeaderSection() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -183,41 +180,33 @@ fun CampusBottomNavigationBar(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Dashboard
             BottomNavItem(
                 icon = Icons.Default.Home,
                 label = "Dashboard",
-                isSelected = false, // Not selected
+                isSelected = false,
                 onClick = onDashboardClick
             )
-
-            // Schedules
             BottomNavItem(
                 icon = Icons.Default.DateRange,
                 label = "Schedules",
-                isSelected = false, // Not selected
+                isSelected = false,
                 onClick = onScheduleClick
             )
-
-            // Campus Info (THIS IS THE CURRENT SCREEN)
             BottomNavItem(
                 icon = Icons.Default.Info,
                 label = "Campus",
-                isSelected = true, // Selected
-                onClick = {} // No action needed
+                isSelected = true,
+                onClick = {}
             )
-
-            // Settings
             BottomNavItem(
                 icon = Icons.Default.Settings,
                 label = "Settings",
-                isSelected = false, // Not selected
+                isSelected = false,
                 onClick = onSettingsClick
             )
         }
     }
 }
-
 
 @Composable
 fun TitleSection() {

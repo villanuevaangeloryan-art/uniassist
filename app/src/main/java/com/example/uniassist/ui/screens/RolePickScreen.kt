@@ -142,9 +142,12 @@ fun RolePickScreen(
 
             Spacer(modifier = Modifier.height(90.dp))
 
-            // ✅ Continue Button
+            // ✅ Continue Button - MODIFIED to pass role
             Button(
-                onClick  = { navController.navigate("login_register") },
+                onClick  = {
+                    // Pass the selected role to login_register screen
+                    navController.navigate("login_register/$selectedRole")
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF245B3D)),
                 shape = RoundedCornerShape(50),
                 modifier = Modifier
@@ -257,7 +260,7 @@ fun RoleCard(
                         .height(40.dp)
                 ) {
                     Text(
-                         text = title,
+                        text = title,
                         fontSize = 12.sp,
                         color = if (isSelected) selectedColor else Color.DarkGray
                     )

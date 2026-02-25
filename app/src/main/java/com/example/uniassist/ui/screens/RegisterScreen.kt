@@ -1,5 +1,7 @@
 package com.example.uniassist.ui.screens
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,9 +16,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -29,36 +31,79 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.uniassist.R
-
+import com.example.uniassist.domain.actions.RegisterAction
+import com.example.uniassist.ui.viewmodel.RegisterStore
+import kotlinx.coroutines.delay
 
 val PrimaryGreen = Color(0xFF245B3D)
 val DarkGreenTint = Color(0xFF1B5E3C)
 val FooterGray = Color(0xFF898989)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterScreen(navController: NavController) {
-    // Form State
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
+fun RegisterScreen(
+    navController: NavController,
+    role: String
+) {
+    val registerStore: RegisterStore = viewModel()
+    val state = registerStore.state.collectAsState().value
+    val focusManager = LocalFocusManager.current
+
+    // Separate visibility states for password and confirm password
+    var isPasswordVisible by remember { mutableStateOf(false) }
+    var isConfirmPasswordVisible by remember { mutableStateOf(false) }
+
+    // Animation states
+    var showLine by remember { mutableStateOf(false) }
+    var showText by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        showLine = true
+        delay(400)
+        showText = true
+    }
 
     val poppinsBold = FontFamily(Font(R.font.poppins_bold))
     val poppinsMedium = FontFamily(Font(R.font.poppins_medium))
+    val poppinsRegular = FontFamily(Font(R.font.poppins_regular))
+
+    // Determine which model image to show based on role
+    val modelImage = when (role) {
+        "Teacher" -> R.drawable.uniassist_teacher
+        else -> R.drawable.uniassist_student
+    }
+
+    // Handle navigation to dashboard
+    LaunchedEffect(state.navigateToDashboard) {
+        if (state.navigateToDashboard) {
+            navController.navigate("dashboard/$role") {
+                popUpTo("register") { inclusive = true }
+            }
+            registerStore.resetNavigation()
+        }
+    }
+
+    LaunchedEffect(state.navigateBack) {
+        if (state.navigateBack) {
+            navController.navigate("login_register/$role") {
+                popUpTo("register") { inclusive = true }
+            }
+            registerStore.resetNavigation()
+        }
+    }
 
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Background overlay
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .background(Color(0xFFDEF8CB).copy(alpha = 0.5f))
+        // Background Image Placeholder
+        Image(
+            painter = painterResource(id = R.drawable.background_rolepick),
+            contentDescription = "Background Image",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
         )
 
         // Content Layer
@@ -73,123 +118,199 @@ fun RegisterScreen(navController: NavController) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 24.dp),
+                    .padding(top = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Back Button
                 IconButton(
-                    onClick = {
-                        navController.popBackStack()
-                    },
+                    onClick = { registerStore.dispatch(RegisterAction.NavigateBack) },
                     modifier = Modifier
                         .background(Color.White.copy(alpha = 0.6f), shape = RoundedCornerShape(50))
-                        .size(40.dp)
+                        .padding(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = DarkGreenTint,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                // Logo
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(
-                        painter = painterResource(id = R.drawable.gts_uniassist_logo),
-                        contentDescription = "Logo",
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier
-                            .size(50.dp)
-                            .scale(1.5f)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Title Section
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Box(
-                    modifier = Modifier
-                        .width(4.dp)
-                        .height(70.dp)
-                        .background(PrimaryGreen, RoundedCornerShape(2.dp))
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column {
-                    Text(
-                        text = "Join now !",
-                        fontSize = 28.sp,
-                        fontFamily = poppinsBold,
-                        color = PrimaryGreen
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Register and experience handy features\nof the app. Please register to continue.",
-                        fontSize = 13.sp,
-                        color = PrimaryGreen,
-                        lineHeight = 18.sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = poppinsMedium
-                    )
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color(0xFF1B5E3C))
                 }
             }
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Form Fields
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.weight(1f)) {
-                    AuthLabel("First Name", poppinsBold)
-                    AuthTextField(firstName, { firstName = it }, "Enter first name")
+            // Animated Title Section
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(end = 100.dp)
+                ) {
+                    // Animated green line
+                    AnimatedVisibility(
+                        visible = showLine,
+                        enter = expandVertically(
+                            animationSpec = tween(500),
+                            expandFrom = Alignment.Top
+                        )
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .width(4.dp)
+                                .height(100.dp)
+                                .background(PrimaryGreen, RoundedCornerShape(2.dp))
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    // Animated text
+                    AnimatedVisibility(
+                        visible = showText,
+                        enter = slideInHorizontally(
+                            initialOffsetX = { -it / 2 }
+                        ) + fadeIn()
+                    ) {
+                        Column {
+                            Text(
+                                text = "Join now !",
+                                fontSize = 31.sp,
+                                fontFamily = poppinsMedium,
+                                color = PrimaryGreen
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Register and experience handy features\nof the app. Please register to continue.",
+                                fontSize = 11.sp,
+                                color = PrimaryGreen,
+                                lineHeight = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = poppinsMedium
+                            )
+                        }
+                    }
                 }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    AuthLabel("Last Name", poppinsBold)
-                    AuthTextField(lastName, { lastName = it }, "Enter last name")
-                }
+
+                // Role-based model image
+                Image(
+                    painter = painterResource(id = modelImage),
+                    contentDescription = "Role model image",
+                    modifier = Modifier
+                        .size(175.dp)
+                        .align(Alignment.CenterEnd)
+                        .offset(x = 30.dp, y = (-40).dp)
+                )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // Form Fields
+            AuthLabel("First Name", poppinsBold)
+            AuthTextFieldWithValidation(
+                value = state.firstName,
+                onValueChange = { registerStore.dispatch(RegisterAction.FirstNameChanged(it)) },
+                placeholder = "Enter first name",
+                isError = state.hasFirstNameError,
+                errorMessage = state.firstNameError,
+                poppinsRegular = poppinsRegular
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            AuthLabel("Last Name", poppinsBold)
+            AuthTextFieldWithValidation(
+                value = state.lastName,
+                onValueChange = { registerStore.dispatch(RegisterAction.LastNameChanged(it)) },
+                placeholder = "Enter last name",
+                isError = state.hasLastNameError,
+                errorMessage = state.lastNameError,
+                poppinsRegular = poppinsRegular
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             AuthLabel("Email", poppinsBold)
-            AuthTextField(email, { email = it }, "Enter your email", keyboardType = KeyboardType.Email)
+            AuthTextFieldWithValidation(
+                value = state.email,
+                onValueChange = { registerStore.dispatch(RegisterAction.EmailChanged(it)) },
+                placeholder = "Enter your email",
+                keyboardType = KeyboardType.Email,
+                isError = state.hasEmailError,
+                errorMessage = state.emailError,
+                poppinsRegular = poppinsRegular
+            )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
             AuthLabel("Username", poppinsBold)
-            AuthTextField(username, { username = it }, "Enter username")
+            AuthTextFieldWithValidation(
+                value = state.username,
+                onValueChange = { registerStore.dispatch(RegisterAction.UsernameChanged(it)) },
+                placeholder = "Enter username",
+                isError = state.hasUsernameError,
+                errorMessage = state.usernameError,
+                poppinsRegular = poppinsRegular
+            )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
             AuthLabel("Password", poppinsBold)
-            AuthTextField(password, { password = it }, "Enter password", isPassword = true)
+            AuthTextFieldWithValidation(
+                value = state.password,
+                onValueChange = { registerStore.dispatch(RegisterAction.PasswordChanged(it)) },
+                placeholder = "Enter password",
+                isPassword = true,
+                isPasswordVisible = isPasswordVisible,
+                onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
+                isError = state.hasPasswordError,
+                errorMessage = state.passwordError,
+                poppinsRegular = poppinsRegular
+            )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
             AuthLabel("Confirm Password", poppinsBold)
-            AuthTextField(confirmPassword, { confirmPassword = it }, "Confirm password", isPassword = true)
+            AuthTextFieldWithValidation(
+                value = state.confirmPassword,
+                onValueChange = { registerStore.dispatch(RegisterAction.ConfirmPasswordChanged(it)) },
+                placeholder = "Confirm password",
+                isPassword = true,
+                isPasswordVisible = isConfirmPasswordVisible,
+                onTogglePasswordVisibility = { isConfirmPasswordVisible = !isConfirmPasswordVisible },
+                isError = state.hasConfirmPasswordError,
+                errorMessage = state.confirmPasswordError,
+                poppinsRegular = poppinsRegular
+            )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             // Register Button
             Button(
                 onClick = {
+                    focusManager.clearFocus()
+                    registerStore.dispatch(RegisterAction.RegisterButtonClicked)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(49.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = PrimaryGreen,
-                    contentColor = Color.White
+                    contentColor = Color.White,
+                    disabledContainerColor = PrimaryGreen.copy(alpha = 0.5f),
+                    disabledContentColor = Color.White.copy(alpha = 0.5f)
                 ),
                 shape = RoundedCornerShape(50.dp),
-                elevation = ButtonDefaults.buttonElevation(1.dp)
+                elevation = ButtonDefaults.buttonElevation(1.dp),
+                enabled = !state.isLoading
             ) {
-                Text(
-                    text = "Register",
-                    fontSize = 19.sp,
-                    fontFamily = poppinsBold
-                )
+                if (state.isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    Text(
+                        text = "Register",
+                        fontSize = 19.sp,
+                        fontFamily = poppinsBold
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -203,12 +324,11 @@ fun RegisterScreen(navController: NavController) {
             }
             Text(
                 text = annotatedString,
-                fontSize = 12.sp,
+                fontSize = 11.sp,
                 color = PrimaryGreen,
                 fontFamily = poppinsMedium,
                 modifier = Modifier.clickable {
-                    // Navigate to login
-                    navController.navigate("login") {
+                    navController.navigate("login/$role") {
                         popUpTo("register") { inclusive = true }
                     }
                 }
@@ -228,35 +348,97 @@ fun RegisterScreen(navController: NavController) {
     }
 }
 
-//Composables
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AuthTextField(
+fun AuthTextFieldWithValidation(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
     isPassword: Boolean = false,
-    keyboardType: KeyboardType = KeyboardType.Text
+    isPasswordVisible: Boolean = false,
+    onTogglePasswordVisibility: (() -> Unit)? = null,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    isError: Boolean,
+    errorMessage: String,
+    poppinsRegular: FontFamily
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(text = placeholder, color = Color.Gray, fontSize = 14.sp) },
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(15.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            unfocusedContainerColor = Color.White,
-            focusedContainerColor = Color.White,
-            unfocusedBorderColor = Color(0xFFA0A0A0),
-            focusedBorderColor = PrimaryGreen,
-            cursorColor = PrimaryGreen,
-            focusedTextColor = Color.Black,
-            unfocusedTextColor = Color.Black
-        ),
-        visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        singleLine = true
-    )
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = {
+                Text(
+                    text = placeholder,
+                    color = if (isError) Color(0xFF666666) else Color(0XFF757575),
+                    fontSize = 14.sp,
+                    fontFamily = poppinsRegular
+                )
+            },
+            textStyle = LocalTextStyle.current.copy(
+                color = Color.Black,
+                fontSize = 16.sp,
+                fontFamily = poppinsRegular
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(15.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = if (isError) Color(0xFFFFEBEE) else Color.White,
+                focusedContainerColor = if (isError) Color(0xFFFFEBEE) else Color.White,
+                unfocusedBorderColor = if (isError) Color(0xFFD32F2F) else Color(0xFFA0A0A0),
+                focusedBorderColor = if (isError) Color(0xFFD32F2F) else PrimaryGreen,
+                cursorColor = PrimaryGreen,
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black,
+                errorBorderColor = Color(0xFFD32F2F),
+                errorContainerColor = Color(0xFFFFEBEE),
+                focusedLabelColor = PrimaryGreen,
+                unfocusedLabelColor = Color.Gray,
+                errorTextColor = Color.Black,
+                errorCursorColor = Color.Black
+            ),
+            visualTransformation = if (isPassword && !isPasswordVisible)
+                PasswordVisualTransformation()
+            else
+                VisualTransformation.None,
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            trailingIcon = {
+                if (isPassword && onTogglePasswordVisibility != null) {
+                    val icon = if (isPasswordVisible) {
+                        painterResource(id = R.drawable.eye_solid_full)
+                    } else {
+                        painterResource(id = R.drawable.eye_slash_solid_full)
+                    }
+
+                    IconButton(
+                        onClick = onTogglePasswordVisibility,
+                        modifier = Modifier.size(25.dp)
+                    ) {
+                        Icon(
+                            painter = icon,
+                            contentDescription = if (isPasswordVisible) "Hide password" else "Show password",
+                            tint = PrimaryGreen,
+                            modifier = Modifier.size(25.dp)
+                        )
+                    }
+                }
+            },
+            isError = isError,
+            singleLine = true,
+            supportingText = {
+                if (isError && errorMessage.isNotBlank()) {
+                    Text(
+                        text = errorMessage,
+                        color = Color(0xFFD32F2F),
+                        fontSize = 11.sp,
+                        fontFamily = poppinsRegular,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -264,8 +446,8 @@ fun AuthLabel(text: String, fontFamily: FontFamily) {
     Text(
         text = text,
         fontFamily = fontFamily,
-        color = PrimaryGreen,
-        fontSize = 16.sp,
+        color = Color(0XFF245B3D),
+        fontSize = 17.sp,
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 6.dp, start = 2.dp)

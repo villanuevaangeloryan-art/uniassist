@@ -1,4 +1,4 @@
-package com.example.uniassist.domain.reducer
+package com.example.uniassist.domain.reducers
 
 import com.example.uniassist.domain.actions.LoginAction
 import com.example.uniassist.domain.state.LoginState
@@ -10,72 +10,74 @@ class LoginReducer {
         return when (action) {
             // Form Input Actions
             is LoginAction.EmailChanged -> {
-                val errorMessage = ValidationRules.validateEmail(action.email)
+                val validationResult = ValidationRules.validateEmail(action.email)
                 state.copy(
                     email = action.email,
-                    emailError = errorMessage,
-                    isFormValid = errorMessage.isEmpty() &&
-                            ValidationRules.validatePassword(state.password).isEmpty()
-                )
+                    emailError = validationResult.errorMessage
+                ).validateForm()
             }
 
             is LoginAction.PasswordChanged -> {
-                val errorMessage = ValidationRules.validatePassword(action.password)
+                val validationResult = ValidationRules.validatePassword(action.password)
                 state.copy(
                     password = action.password,
-                    passwordError = errorMessage,
-                    isFormValid = ValidationRules.validateEmail(state.email).isEmpty() &&
-                            errorMessage.isEmpty()
-                )
+                    passwordError = validationResult.errorMessage
+                ).validateForm()
             }
 
             is LoginAction.TogglePasswordVisibility -> {
-                state.copy(
-                    isPasswordVisible = !state.isPasswordVisible
-                )
+                state.copy(isPasswordVisible = !state.isPasswordVisible)
             }
 
             // Form Submission
             is LoginAction.LoginButtonClicked -> {
-                val emailError = ValidationRules.validateEmail(state.email)
-                val passwordError = ValidationRules.validatePassword(state.password)
-                val isFormValid = emailError.isEmpty() && passwordError.isEmpty()
+                val emailValidation = ValidationRules.validateEmail(state.email)
+                val passwordValidation = ValidationRules.validatePassword(state.password)
 
                 state.copy(
-                    emailError = emailError,
-                    passwordError = passwordError,
-                    isLoading = isFormValid,
-                    isFormValid = isFormValid
-                )
+                    emailError = emailValidation.errorMessage,
+                    passwordError = passwordValidation.errorMessage,
+                    isLoading = emailValidation.isValid && passwordValidation.isValid
+                ).validateForm()
             }
 
             // Navigation Actions
-            is LoginAction.NavigateToHome -> {
+            is LoginAction.NavigateToDashboard -> {
                 state.copy(
                     isLoading = false,
-                    navigateToHome = true
+                    navigateToDashboard = true
                 )
             }
 
             is LoginAction.NavigateToRegister -> {
-                state.copy(
-                    navigateToRegister = true
-                )
+                state.copy(navigateToRegister = true)
             }
 
             is LoginAction.NavigateBack -> {
-                state.copy(
-                    navigateBack = true
-                )
+                state.copy(navigateBack = true)
             }
 
             is LoginAction.NavigationHandled -> {
                 state.copy(
-                    navigateToHome = false,
+                    navigateToDashboard = false,
+                    navigateToRegister = false,
+                    navigateBack = false
+                )
+            }
+
+            is LoginAction.ResetNavigation -> {
+                state.copy(
+                    navigateToDashboard = false,
                     navigateToRegister = false,
                     navigateBack = false
                 )
             }
         }
+    }
+
+    private fun LoginState.validateForm(): LoginState {
+        val isFormValid = !hasEmailError && !hasPasswordError &&
+                email.isNotBlank() && password.isNotBlank()
+        return this.copy(isFormValid = isFormValid)
     }
 }

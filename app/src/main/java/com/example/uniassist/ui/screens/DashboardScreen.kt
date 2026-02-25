@@ -1,12 +1,13 @@
-package com.example.uniassist
+package com.example.uniassist.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape // Added CircleShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -14,25 +15,33 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.uniassist.ui.screens.HeaderSection
-import com.example.uniassist.ui.theme.DarkGreen
-import com.example.uniassist.ui.theme.LightGreenBorder
+import com.example.uniassist.R
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
+
+// ---------------- FONT FAMILY ----------------
+val Poppins = FontFamily(
+    Font(R.font.poppins_regular, FontWeight.Normal),
+    Font(R.font.poppins_medium, FontWeight.Medium),
+    Font(R.font.poppins_bold, FontWeight.Bold),
+    Font(R.font.poppins_extrabold, FontWeight.ExtraBold)
+)
 
 // ---------------- DATA CLASS ----------------
-
 data class Announcement(
     val title: String,
     val date: String,
@@ -41,8 +50,7 @@ data class Announcement(
     val footer: String
 )
 
-// ---------------- SAMPLE DATA ----------------
-
+// ---------------- SAMPLE DATA (with new announcement) ----------------
 val announcementList = listOf(
     Announcement(
         "Campus Operations & Class Suspension",
@@ -67,42 +75,44 @@ val announcementList = listOf(
         "Don't miss this opportunity!"
     ),
     Announcement(
-        "Intramurals 2026",
-        "February 2, 2026",
-        "University intramurals start next month.",
+        "Library Hours Extended",
+        "February 1, 2026",
+        "The university library will be open until 10 PM during exam week.",
         listOf(
-            "Registration:" to "PE Office",
-            "Tryouts:" to "Feb 10–15",
-            "Events:" to "Basketball, Volleyball"
+            "New Hours:" to "8 AM – 10 PM",
+            "Quiet Zones:" to "Available on 3rd floor",
+            "Book Reservations:" to "Online portal"
         ),
-        "Represent your department!"
+        "Good luck with your exams!"
     )
 )
 
 // ---------------- DASHBOARD ----------------
-
 @Composable
 fun DashboardScreen(
+    role: String = "Student",
     onScheduleClick: () -> Unit = {},
     onCampusClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {}
 ) {
+    // Determine mascot image based on role
+    val mascotRes = when (role) {
+        "Teacher" -> R.drawable.uniassist_teacher
+        else -> R.drawable.uniassist_student
+    }
 
-    Scaffold( modifier = Modifier
-        .fillMaxSize()
-        .statusBarsPadding(),
-
-        topBar = {
-            HeaderSection() },
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = { DashboardHeaderSection(role) },
         bottomBar = {
-            FloatingBottomNavigationBar(
+            DashboardBottomNavigationBar(
+                currentRoute = "dashboard",
                 onScheduleClick = onScheduleClick,
                 onCampusClick = onCampusClick,
                 onSettingsClick = onSettingsClick
             )
         }
     ) { paddingValues ->
-
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -111,11 +121,15 @@ fun DashboardScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 100.dp)
         ) {
-
-            item { WelcomeSection() }
-
-            item { AnnouncementHeader() }
-
+            item {
+                WelcomeSection(
+                    userName = if (role == "Teacher") "Prof. Angelo Villanueva" else "Angelo\nVillanueva",
+                    mascotRes = mascotRes
+                )
+            }
+            item {
+                AnnouncementHeader()
+            }
             items(announcementList) {
                 AnnouncementCard(it)
             }
@@ -123,93 +137,117 @@ fun DashboardScreen(
     }
 }
 
-// ---------------- FIXED HEADER ----------------
-
+// ---------------- HEADER (with role) ----------------
 @Composable
-fun HeaderSection() {
-
+fun DashboardHeaderSection(role: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(65.dp)
             .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        Color(0xFF7CA786),
-                        Color(0xFFE2F1C6)
-                    )
+                Brush.horizontalGradient(
+                    listOf(Color(0xFF7CA786), Color(0xFFE2F1C6))
                 )
             )
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .align(Alignment.Center),
-            horizontalArrangement = Arrangement.End
+                .fillMaxSize()
+                .padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.Notifications,
-                contentDescription = "Notifications",
-                tint = Color(0xFF1B5E20),
-                modifier = Modifier.size(28.dp)
+            Text(
+                text = role,
+                color = Color(0xFF1B5E20),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(end = 16.dp)
             )
+            Icon(Icons.Default.Notifications, null, tint = Color(0xFF1B5E20))
             Spacer(modifier = Modifier.width(16.dp))
-            Icon(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = "Profile",
-                tint = Color(0xFF1B5E20),
-                modifier = Modifier.size(28.dp)
-            )
+            Icon(Icons.Default.AccountCircle, null, tint = Color(0xFF1B5E20))
         }
     }
 }
 
-// ---------------- WELCOME ----------------
-
+// ---------------- WELCOME CARD (80% opacity gradient, cropped peeking image) ----------------
 @Composable
-fun WelcomeSection() {
-
+fun WelcomeSection(userName: String, mascotRes: Int) {
     val currentDate = Date()
+    val day = SimpleDateFormat("EEEE", Locale.getDefault()).format(currentDate)
+    val date = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(currentDate)
 
-    val dayFormatter = SimpleDateFormat("EEEE", Locale.getDefault())
-    val dateFormatter = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
-
-    val day = dayFormatter.format(currentDate)
-    val date = dateFormatter.format(currentDate)
-
-    Column(
-        Modifier
-            .padding(horizontal = 24.dp)
-            .padding(top = 16.dp)
+    Box(
+        modifier = Modifier
+            .padding(horizontal = 24.dp, vertical = 16.dp)
+            .fillMaxWidth()
+            .height(195.dp)
+            .clip(RoundedCornerShape(14.dp))  // Clips content to rounded corners
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color(0xFF377243).copy(alpha = 0.8f),  // 80% opacity
+                        Color(0xFF56A566).copy(alpha = 0.8f)
+                    )
+                ),
+                shape = RoundedCornerShape(14.dp)
+            )
     ) {
+        // Text content aligned to start
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp)
+                .align(Alignment.CenterStart),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                "Welcome back,",
+                fontFamily = Poppins,
+                fontWeight = FontWeight.Medium,
+                fontSize = 18.sp,
+                color = Color.White
+            )
+            Text(
+                userName,
+                fontFamily = Poppins,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 30.sp,
+                color = Color.White
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                day,
+                fontFamily = Poppins,
+                fontWeight = FontWeight.Medium,
+                fontSize = 16.sp,
+                color = Color.White
+            )
+            Text(
+                date,
+                fontFamily = Poppins,
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp,
+                color = Color.White.copy(alpha = 0.9f)
+            )
+        }
 
-        Text(
-            text = "Welcome back,",
-            fontSize = 18.sp,
-            color = DarkGreen
-        )
-
-        Text(
-            text = "Jhon Delmundo",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
-            color = DarkGreen
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "$day, $date",
-            fontSize = 14.sp,
-            color = DarkGreen
+        // Mascot image - larger and aligned bottom, will be cropped by parent clip
+        Image(
+            painter = painterResource(id = mascotRes),
+            contentDescription = "Mascot",
+            modifier = Modifier
+                .size(165.dp)                     // Larger size
+                .align(Alignment.BottomEnd)
+                .offset(y = 25.dp)                 // Push down to show only top part
+                .clip(RoundedCornerShape(16.dp)),
+            contentScale = ContentScale.Fit
         )
     }
 }
 
-
 // ---------------- ANNOUNCEMENT HEADER ----------------
-
 @Composable
 fun AnnouncementHeader() {
     Row(
@@ -228,92 +266,90 @@ fun AnnouncementHeader() {
                 modifier = Modifier.padding(8.dp)
             )
         }
-
         Spacer(modifier = Modifier.width(12.dp))
-
         Text(
             "Announcements",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = DarkGreen
+            fontFamily = Poppins,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 28.sp,
+            color = Color(0xFF1B5E20)
         )
     }
 }
 
 // ---------------- ANNOUNCEMENT CARD ----------------
-
 @Composable
 fun AnnouncementCard(announcement: Announcement) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
-            .border(1.5.dp, LightGreenBorder, RoundedCornerShape(12.dp)),
+            .border(1.dp, Color(0xFFDDE9E1), RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(Color(0xFFF8FAF8))
     ) {
         Column(
             Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-
             Text(
                 announcement.title,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                color = DarkGreen
+                fontFamily = Poppins,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 18.sp,
+                color = Color(0xFF1B5E20)
             )
-
             Text(
                 "Date: ${announcement.date}",
-                fontWeight = FontWeight.Medium,
-                color = DarkGreen
+                fontFamily = Poppins,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                color = Color(0xFF1B5E20).copy(alpha = 0.8f)
             )
-
-            Text(announcement.content, color = DarkGreen)
-
+            Text(
+                announcement.content,
+                fontFamily = Poppins,
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+                color = Color(0xFF1B5E20)
+            )
             announcement.bullets.forEach {
-                BulletItem(it.first, it.second)
+                Text(
+                    buildAnnotatedString {
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append("${it.first} ")
+                        }
+                        append(it.second)
+                    },
+                    fontFamily = Poppins,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                    color = Color(0xFF1B5E20)
+                )
             }
-
             Text(
                 announcement.footer,
-                fontWeight = FontWeight.Medium,
-                color = DarkGreen
+                fontFamily = Poppins,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                color = Color(0xFF1B5E20)
             )
         }
     }
 }
 
-// ---------------- BULLET ITEM ----------------
-
+// ---------------- BOTTOM NAV (with label hidden for selected item) ----------------
 @Composable
-fun BulletItem(title: String, description: String) {
-    Text(
-        buildAnnotatedString {
-            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                append("$title ")
-            }
-            append(description)
-        },
-        color = DarkGreen,
-        fontSize = 14.sp
-    )
-}
-
-// ---------------- BOTTOM NAV ----------------
-
-@Composable
-fun FloatingBottomNavigationBar(
+fun DashboardBottomNavigationBar(
+    currentRoute: String,
     onScheduleClick: () -> Unit,
     onCampusClick: () -> Unit,
     onSettingsClick: () -> Unit
 ) {
-
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-            .height(58.dp),
+            .padding(16.dp)
+            .height(64.dp),
         shape = RoundedCornerShape(35.dp),
         color = Color(0xFF245B3D),
         shadowElevation = 8.dp
@@ -323,32 +359,28 @@ fun FloatingBottomNavigationBar(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Dashboard (Current Screen)
             BottomNavItem(
                 icon = Icons.Default.Home,
                 label = "Dashboard",
-                isSelected = true,
-                onClick = {}
+                isSelected = currentRoute == "dashboard",
+                onClick = { /* no action */ }
             )
-
-            // Schedules
             BottomNavItem(
                 icon = Icons.Default.CalendarMonth,
                 label = "Schedules",
+                isSelected = currentRoute == "schedule",
                 onClick = onScheduleClick
             )
-
-            // Campus Info
             BottomNavItem(
                 icon = Icons.Default.Info,
                 label = "Campus",
+                isSelected = currentRoute == "campus",
                 onClick = onCampusClick
             )
-
-            // Settings
             BottomNavItem(
                 icon = Icons.Default.Settings,
                 label = "Settings",
+                isSelected = currentRoute == "settings",
                 onClick = onSettingsClick
             )
         }
@@ -359,21 +391,18 @@ fun FloatingBottomNavigationBar(
 fun BottomNavItem(
     icon: ImageVector,
     label: String,
-    isSelected: Boolean = false,
+    isSelected: Boolean,
     onClick: () -> Unit
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
-            .clickable(onClick = onClick)
+            .clickable { onClick() }
             .padding(8.dp)
     ) {
-
-        Box(
-            contentAlignment = Alignment.Center
-        ) {
-            // White Circle Indicator if selected
+        Box(contentAlignment = Alignment.Center) {
+            // White circle background when selected
             if (isSelected) {
                 Box(
                     modifier = Modifier
@@ -381,32 +410,23 @@ fun BottomNavItem(
                         .background(Color.White, shape = CircleShape)
                 )
             }
-
             Icon(
-                imageVector = icon,
+                icon,
                 contentDescription = label,
-                // Icon becomes Green if selected
                 tint = if (isSelected) Color(0xFF1B5E20) else Color.White,
                 modifier = Modifier.size(24.dp)
             )
         }
-
         Spacer(modifier = Modifier.height(2.dp))
-
-        // Label Text
-        Text(
-            text = label,
-            color = Color.White,
-            fontSize = if (isSelected) 12.sp else 10.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-        )
+        // Show label only when NOT selected (hides label for active tab)
+        if (!isSelected) {
+            Text(
+                text = label,
+                fontFamily = Poppins,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.White
+            )
+        }
     }
-}
-
-// ---------------- PREVIEW ----------------
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewDashboard() {
-    DashboardScreen()
 }

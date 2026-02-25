@@ -15,11 +15,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,7 +29,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.uniassist.BottomNavItem
 import com.example.uniassist.R
 import com.example.uniassist.ui.theme.UniassistTheme
 
@@ -82,7 +77,7 @@ fun SettingsBottomNavigationBar(
                 icon = Icons.Default.Settings,
                 label = "Settings",
                 isSelected = true,
-                onClick = {}
+                onClick = {} // No action needed for current screen
             )
         }
     }
@@ -104,7 +99,7 @@ fun SettingsScreen(
             .fillMaxSize()
             .statusBarsPadding(),
         topBar = {
-            HeaderSection()
+            SettingsHeaderSection()   // ✅ Fixed: renamed from HeaderSection
         },
         bottomBar = {
             SettingsBottomNavigationBar(
@@ -154,6 +149,46 @@ fun SettingsScreen(
             },
             onDismiss = { showLogoutDialog = false }
         )
+    }
+}
+
+// ✅ Renamed from HeaderSection to avoid conflict
+@Composable
+fun SettingsHeaderSection() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(65.dp)
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color(0xFF7CA786),
+                        Color(0xFFE2F1C6)
+                    )
+                )
+            )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .align(Alignment.Center),
+            horizontalArrangement = Arrangement.End
+        ) {
+            Icon(
+                imageVector = Icons.Default.Notifications,
+                contentDescription = "Notifications",
+                tint = Color(0xFF1B5E20),
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Icon(
+                imageVector = Icons.Default.AccountCircle,
+                contentDescription = "Profile",
+                tint = Color(0xFF1B5E20),
+                modifier = Modifier.size(28.dp)
+            )
+        }
     }
 }
 

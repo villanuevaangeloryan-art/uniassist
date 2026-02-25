@@ -38,10 +38,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.uniassist.R
 
-
 @Composable
-fun LoginOrRegisterScreen (navController: NavController, modifier: Modifier = Modifier){
-
+fun LoginOrRegisterScreen (
+    navController: NavController,
+    modifier: Modifier = Modifier,
+    role: String // Add role parameter
+){
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -106,10 +108,10 @@ fun LoginOrRegisterScreen (navController: NavController, modifier: Modifier = Mo
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-                //Log in button
+                //Log in button - Pass role to login
                 Button(
                     onClick = {
-                        navController.navigate("login")
+                        navController.navigate("login/$role")
                     },
                     shape = RoundedCornerShape(50.dp),
                     modifier = Modifier
@@ -158,10 +160,10 @@ fun LoginOrRegisterScreen (navController: NavController, modifier: Modifier = Mo
 
                 Spacer(modifier = Modifier.height(3.dp))
 
-                //Register button
+                //Register button - Pass role to register
                 Button(
                     onClick = {
-                        navController.navigate("register")
+                        navController.navigate("register/$role")
                     },
                     shape = RoundedCornerShape(50.dp),
                     modifier = Modifier
