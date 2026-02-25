@@ -14,7 +14,6 @@ object RegisterReducer {
                     firstNameError = validation.errorMessage
                 ).validateForm()
             }
-
             is RegisterAction.LastNameChanged -> {
                 val validation = ValidationRules.validateName(action.lastName)
                 state.copy(
@@ -22,7 +21,6 @@ object RegisterReducer {
                     lastNameError = validation.errorMessage
                 ).validateForm()
             }
-
             is RegisterAction.EmailChanged -> {
                 val validation = ValidationRules.validateEmail(action.email)
                 state.copy(
@@ -30,7 +28,6 @@ object RegisterReducer {
                     emailError = validation.errorMessage
                 ).validateForm()
             }
-
             is RegisterAction.UsernameChanged -> {
                 val validation = ValidationRules.validateUsername(action.username)
                 state.copy(
@@ -38,7 +35,6 @@ object RegisterReducer {
                     usernameError = validation.errorMessage
                 ).validateForm()
             }
-
             is RegisterAction.PasswordChanged -> {
                 val validation = ValidationRules.validatePassword(action.password)
                 val confirmValidation = if (state.confirmPassword.isNotBlank()) {
@@ -46,7 +42,6 @@ object RegisterReducer {
                 } else {
                     ValidationRules.ValidationResult(true, "")
                 }
-
                 state.copy(
                     password = action.password,
                     passwordError = validation.errorMessage,
@@ -56,7 +51,6 @@ object RegisterReducer {
                         state.confirmPasswordError
                 ).validateForm()
             }
-
             is RegisterAction.ConfirmPasswordChanged -> {
                 val validation = ValidationRules.validateConfirmPassword(state.password, action.confirmPassword)
                 state.copy(
@@ -64,11 +58,9 @@ object RegisterReducer {
                     confirmPasswordError = validation.errorMessage
                 ).validateForm()
             }
-
             is RegisterAction.TogglePasswordVisibility -> {
                 state.copy(isPasswordVisible = !state.isPasswordVisible)
             }
-
             is RegisterAction.RegisterButtonClicked -> {
                 val firstNameValidation = ValidationRules.validateName(state.firstName)
                 val lastNameValidation = ValidationRules.validateName(state.lastName)
@@ -89,19 +81,22 @@ object RegisterReducer {
                             passwordValidation.isValid && confirmValidation.isValid
                 ).validateForm()
             }
-
             is RegisterAction.NavigateToDashboard -> {
                 state.copy(navigateToDashboard = true)
             }
-
             is RegisterAction.NavigateBack -> {
                 state.copy(navigateBack = true)
             }
-
             is RegisterAction.ResetNavigation -> {
                 state.copy(
                     navigateToDashboard = false,
                     navigateBack = false
+                )
+            }
+            is RegisterAction.LoadingComplete -> {
+                // Keep isLoading true to avoid showing register UI during navigation
+                state.copy(
+                    navigateToDashboard = true
                 )
             }
         }
@@ -112,7 +107,6 @@ object RegisterReducer {
                 !hasUsernameError && !hasPasswordError && !hasConfirmPasswordError &&
                 firstName.isNotBlank() && lastName.isNotBlank() && email.isNotBlank() &&
                 username.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank()
-
         return this.copy(isFormValid = isFormValid)
     }
 }

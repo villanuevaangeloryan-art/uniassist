@@ -13,4 +13,6 @@ sealed class RegisterAction {
     object NavigateToDashboard : RegisterAction()
     object NavigateBack : RegisterAction()
     object ResetNavigation : RegisterAction()
+    object LoadingComplete : RegisterAction()   
+
 }

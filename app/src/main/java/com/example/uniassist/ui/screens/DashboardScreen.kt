@@ -33,7 +33,6 @@ import com.example.uniassist.R
 import java.text.SimpleDateFormat
 import java.util.*
 
-// ---------------- FONT FAMILY ----------------
 val Poppins = FontFamily(
     Font(R.font.poppins_regular, FontWeight.Normal),
     Font(R.font.poppins_medium, FontWeight.Medium),
@@ -41,7 +40,6 @@ val Poppins = FontFamily(
     Font(R.font.poppins_extrabold, FontWeight.ExtraBold)
 )
 
-// ---------------- DATA CLASS ----------------
 data class Announcement(
     val title: String,
     val date: String,
@@ -50,7 +48,6 @@ data class Announcement(
     val footer: String
 )
 
-// ---------------- SAMPLE DATA (with new announcement) ----------------
 val announcementList = listOf(
     Announcement(
         "Campus Operations & Class Suspension",
@@ -87,22 +84,29 @@ val announcementList = listOf(
     )
 )
 
-// ---------------- DASHBOARD ----------------
 @Composable
 fun DashboardScreen(
     role: String = "Student",
+    firstName: String = "",
+    lastName: String = "",
     onScheduleClick: () -> Unit = {},
     onCampusClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {}
 ) {
-    // Determine mascot image based on role
     val mascotRes = when (role) {
         "Teacher" -> R.drawable.uniassist_teacher
         else -> R.drawable.uniassist_student
     }
+    val fullName = if (firstName.isNotBlank() && lastName.isNotBlank()) {
+        "$firstName $lastName"
+    } else {
+        if (role == "Teacher") "Prof. Jane Doe" else "Jane Doe"
+    }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding(), // Added to leave space for status bar
         topBar = { DashboardHeaderSection(role) },
         bottomBar = {
             DashboardBottomNavigationBar(
@@ -123,7 +127,7 @@ fun DashboardScreen(
         ) {
             item {
                 WelcomeSection(
-                    userName = if (role == "Teacher") "Prof. Angelo Villanueva" else "Angelo\nVillanueva",
+                    userName = fullName,
                     mascotRes = mascotRes
                 )
             }
@@ -137,7 +141,6 @@ fun DashboardScreen(
     }
 }
 
-// ---------------- HEADER (with role) ----------------
 @Composable
 fun DashboardHeaderSection(role: String) {
     Box(
@@ -164,14 +167,13 @@ fun DashboardHeaderSection(role: String) {
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(end = 16.dp)
             )
-            Icon(Icons.Default.Notifications, null, tint = Color(0xFF1B5E20))
+            Icon(Icons.Default.Notifications, null, tint = Color(0xFF1B5E20), modifier = Modifier.size(32.dp))
             Spacer(modifier = Modifier.width(16.dp))
-            Icon(Icons.Default.AccountCircle, null, tint = Color(0xFF1B5E20))
+            Icon(Icons.Default.AccountCircle, null, tint = Color(0xFF1B5E20), modifier = Modifier.size(32.dp))
         }
     }
 }
 
-// ---------------- WELCOME CARD (80% opacity gradient, cropped peeking image) ----------------
 @Composable
 fun WelcomeSection(userName: String, mascotRes: Int) {
     val currentDate = Date()
@@ -183,18 +185,17 @@ fun WelcomeSection(userName: String, mascotRes: Int) {
             .padding(horizontal = 24.dp, vertical = 16.dp)
             .fillMaxWidth()
             .height(195.dp)
-            .clip(RoundedCornerShape(14.dp))  // Clips content to rounded corners
+            .clip(RoundedCornerShape(14.dp))
             .background(
                 brush = Brush.horizontalGradient(
                     colors = listOf(
-                        Color(0xFF377243).copy(alpha = 0.8f),  // 80% opacity
+                        Color(0xFF377243).copy(alpha = 0.8f),
                         Color(0xFF56A566).copy(alpha = 0.8f)
                     )
                 ),
                 shape = RoundedCornerShape(14.dp)
             )
     ) {
-        // Text content aligned to start
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -213,6 +214,7 @@ fun WelcomeSection(userName: String, mascotRes: Int) {
                 userName,
                 fontFamily = Poppins,
                 fontWeight = FontWeight.ExtraBold,
+                lineHeight = 32.sp,
                 fontSize = 30.sp,
                 color = Color.White
             )
@@ -233,21 +235,19 @@ fun WelcomeSection(userName: String, mascotRes: Int) {
             )
         }
 
-        // Mascot image - larger and aligned bottom, will be cropped by parent clip
         Image(
             painter = painterResource(id = mascotRes),
             contentDescription = "Mascot",
             modifier = Modifier
-                .size(165.dp)                     // Larger size
+                .size(165.dp)
                 .align(Alignment.BottomEnd)
-                .offset(y = 25.dp)                 // Push down to show only top part
+                .offset(y = 25.dp)
                 .clip(RoundedCornerShape(16.dp)),
             contentScale = ContentScale.Fit
         )
     }
 }
 
-// ---------------- ANNOUNCEMENT HEADER ----------------
 @Composable
 fun AnnouncementHeader() {
     Row(
@@ -277,7 +277,6 @@ fun AnnouncementHeader() {
     }
 }
 
-// ---------------- ANNOUNCEMENT CARD ----------------
 @Composable
 fun AnnouncementCard(announcement: Announcement) {
     Card(
@@ -337,7 +336,6 @@ fun AnnouncementCard(announcement: Announcement) {
     }
 }
 
-// ---------------- BOTTOM NAV (with label hidden for selected item) ----------------
 @Composable
 fun DashboardBottomNavigationBar(
     currentRoute: String,
@@ -402,7 +400,6 @@ fun BottomNavItem(
             .padding(8.dp)
     ) {
         Box(contentAlignment = Alignment.Center) {
-            // White circle background when selected
             if (isSelected) {
                 Box(
                     modifier = Modifier
@@ -418,7 +415,6 @@ fun BottomNavItem(
             )
         }
         Spacer(modifier = Modifier.height(2.dp))
-        // Show label only when NOT selected (hides label for active tab)
         if (!isSelected) {
             Text(
                 text = label,

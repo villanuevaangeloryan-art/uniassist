@@ -20,8 +20,6 @@ class RegisterStore : ViewModel() {
             _state.update { currentState ->
                 RegisterReducer.reduce(currentState, action)
             }
-
-            // Handle side effects
             when (action) {
                 is RegisterAction.RegisterButtonClicked -> {
                     if (_state.value.isFormValid) {
@@ -35,31 +33,9 @@ class RegisterStore : ViewModel() {
 
     private suspend fun performRegistration() {
         _state.update { it.copy(isLoading = true) }
-
-        // Simulate network delay
         delay(2000)
-
-        // Determine user type based on email domain
-        val userType = determineUserType(_state.value.email)
-
-        _state.update {
-            it.copy(
-                isLoading = false,
-                navigateToDashboard = true,
-                userType = userType
-            )
-        }
+        // No navigation set here – will be set by LoadingComplete
     }
 
-    private fun determineUserType(email: String): String {
-        return when {
-            email.endsWith("@pnc.edu.ph", ignoreCase = true) -> "admin"
-            email.endsWith("@gmail.com", ignoreCase = true) -> "student"
-            else -> "student" // Default to student
-        }
-    }
-
-    fun resetNavigation() {
-        dispatch(RegisterAction.ResetNavigation)
-    }
+    fun resetNavigation() = dispatch(RegisterAction.ResetNavigation)
 }

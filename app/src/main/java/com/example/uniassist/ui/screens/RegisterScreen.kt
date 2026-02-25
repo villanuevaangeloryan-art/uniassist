@@ -52,11 +52,9 @@ fun RegisterScreen(
     val state = registerStore.state.collectAsState().value
     val focusManager = LocalFocusManager.current
 
-    // Separate visibility states for password and confirm password
     var isPasswordVisible by remember { mutableStateOf(false) }
     var isConfirmPasswordVisible by remember { mutableStateOf(false) }
 
-    // Animation states
     var showLine by remember { mutableStateOf(false) }
     var showText by remember { mutableStateOf(false) }
 
@@ -70,16 +68,14 @@ fun RegisterScreen(
     val poppinsMedium = FontFamily(Font(R.font.poppins_medium))
     val poppinsRegular = FontFamily(Font(R.font.poppins_regular))
 
-    // Determine which model image to show based on role
     val modelImage = when (role) {
         "Teacher" -> R.drawable.uniassist_teacher
         else -> R.drawable.uniassist_student
     }
 
-    // Handle navigation to dashboard
     LaunchedEffect(state.navigateToDashboard) {
         if (state.navigateToDashboard) {
-            navController.navigate("dashboard/$role") {
+            navController.navigate("dashboard/$role/${state.firstName}/${state.lastName}") {
                 popUpTo("register") { inclusive = true }
             }
             registerStore.resetNavigation()
@@ -95,258 +91,234 @@ fun RegisterScreen(
         }
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Background Image Placeholder
-        Image(
-            painter = painterResource(id = R.drawable.background_rolepick),
-            contentDescription = "Background Image",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
+    if (state.isLoading) {
+        UniAssistLoader {
+            registerStore.dispatch(RegisterAction.LoadingComplete)
+        }
+    } else {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(id = R.drawable.background_rolepick),
+                contentDescription = "Background Image",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
 
-        // Content Layer
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 16.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Top Bar
-            Row(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(
-                    onClick = { registerStore.dispatch(RegisterAction.NavigateBack) },
-                    modifier = Modifier
-                        .background(Color.White.copy(alpha = 0.6f), shape = RoundedCornerShape(50))
-                        .padding(8.dp)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color(0xFF1B5E3C))
-                }
-            }
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-            // Animated Title Section
-            Box(
-                modifier = Modifier.fillMaxWidth()
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp, vertical = 16.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(end = 100.dp)
+                        .padding(top = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Animated green line
-                    AnimatedVisibility(
-                        visible = showLine,
-                        enter = expandVertically(
-                            animationSpec = tween(500),
-                            expandFrom = Alignment.Top
-                        )
+                    IconButton(
+                        onClick = { registerStore.dispatch(RegisterAction.NavigateBack) },
+                        modifier = Modifier
+                            .background(Color.White.copy(alpha = 0.6f), shape = RoundedCornerShape(50))
+                            .padding(8.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .width(4.dp)
-                                .height(100.dp)
-                                .background(PrimaryGreen, RoundedCornerShape(2.dp))
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color(0xFF1B5E3C))
                     }
+                }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.height(30.dp))
 
-                    // Animated text
-                    AnimatedVisibility(
-                        visible = showText,
-                        enter = slideInHorizontally(
-                            initialOffsetX = { -it / 2 }
-                        ) + fadeIn()
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 100.dp)
                     ) {
-                        Column {
-                            Text(
-                                text = "Join now !",
-                                fontSize = 31.sp,
-                                fontFamily = poppinsMedium,
-                                color = PrimaryGreen
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Register and experience handy features\nof the app. Please register to continue.",
-                                fontSize = 11.sp,
-                                color = PrimaryGreen,
-                                lineHeight = 18.sp,
-                                fontWeight = FontWeight.Medium,
-                                fontFamily = poppinsMedium
+                        AnimatedVisibility(
+                            visible = showLine,
+                            enter = expandVertically(tween(500), expandFrom = Alignment.Top)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .width(4.dp)
+                                    .height(100.dp)
+                                    .background(PrimaryGreen, RoundedCornerShape(2.dp))
                             )
                         }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        AnimatedVisibility(
+                            visible = showText,
+                            enter = slideInHorizontally { -it / 2 } + fadeIn()
+                        ) {
+                            Column {
+                                Text(
+                                    "Join now !",
+                                    fontSize = 31.sp,
+                                    fontFamily = poppinsMedium,
+                                    color = PrimaryGreen
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    "Register and experience handy features\nof the app. Please register to continue.",
+                                    fontSize = 11.sp,
+                                    color = PrimaryGreen,
+                                    lineHeight = 18.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = poppinsMedium
+                                )
+                            }
+                        }
                     }
+
+                    Image(
+                        painter = painterResource(id = modelImage),
+                        contentDescription = "Role model image",
+                        modifier = Modifier
+                            .size(175.dp)
+                            .align(Alignment.CenterEnd)
+                            .offset(x = 30.dp, y = (-40).dp)
+                    )
                 }
 
-                // Role-based model image
-                Image(
-                    painter = painterResource(id = modelImage),
-                    contentDescription = "Role model image",
+                // Form Fields
+                AuthLabel("First Name", poppinsBold)
+                AuthTextFieldWithValidation(
+                    value = state.firstName,
+                    onValueChange = { registerStore.dispatch(RegisterAction.FirstNameChanged(it)) },
+                    placeholder = "Enter first name",
+                    isError = state.hasFirstNameError,
+                    errorMessage = state.firstNameError,
+                    poppinsRegular = poppinsRegular
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                AuthLabel("Last Name", poppinsBold)
+                AuthTextFieldWithValidation(
+                    value = state.lastName,
+                    onValueChange = { registerStore.dispatch(RegisterAction.LastNameChanged(it)) },
+                    placeholder = "Enter last name",
+                    isError = state.hasLastNameError,
+                    errorMessage = state.lastNameError,
+                    poppinsRegular = poppinsRegular
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                AuthLabel("Email", poppinsBold)
+                AuthTextFieldWithValidation(
+                    value = state.email,
+                    onValueChange = { registerStore.dispatch(RegisterAction.EmailChanged(it)) },
+                    placeholder = "Enter your email",
+                    keyboardType = KeyboardType.Email,
+                    isError = state.hasEmailError,
+                    errorMessage = state.emailError,
+                    poppinsRegular = poppinsRegular
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                AuthLabel("Username", poppinsBold)
+                AuthTextFieldWithValidation(
+                    value = state.username,
+                    onValueChange = { registerStore.dispatch(RegisterAction.UsernameChanged(it)) },
+                    placeholder = "Enter username",
+                    isError = state.hasUsernameError,
+                    errorMessage = state.usernameError,
+                    poppinsRegular = poppinsRegular
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                AuthLabel("Password", poppinsBold)
+                AuthTextFieldWithValidation(
+                    value = state.password,
+                    onValueChange = { registerStore.dispatch(RegisterAction.PasswordChanged(it)) },
+                    placeholder = "Enter password",
+                    isPassword = true,
+                    isPasswordVisible = isPasswordVisible,
+                    onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
+                    isError = state.hasPasswordError,
+                    errorMessage = state.passwordError,
+                    poppinsRegular = poppinsRegular
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                AuthLabel("Confirm Password", poppinsBold)
+                AuthTextFieldWithValidation(
+                    value = state.confirmPassword,
+                    onValueChange = { registerStore.dispatch(RegisterAction.ConfirmPasswordChanged(it)) },
+                    placeholder = "Confirm password",
+                    isPassword = true,
+                    isPasswordVisible = isConfirmPasswordVisible,
+                    onTogglePasswordVisibility = { isConfirmPasswordVisible = !isConfirmPasswordVisible },
+                    isError = state.hasConfirmPasswordError,
+                    errorMessage = state.confirmPasswordError,
+                    poppinsRegular = poppinsRegular
+                )
+
+                Spacer(modifier = Modifier.height(30.dp))
+
+                Button(
+                    onClick = {
+                        focusManager.clearFocus()
+                        registerStore.dispatch(RegisterAction.RegisterButtonClicked)
+                    },
                     modifier = Modifier
-                        .size(175.dp)
-                        .align(Alignment.CenterEnd)
-                        .offset(x = 30.dp, y = (-40).dp)
+                        .fillMaxWidth()
+                        .height(49.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryGreen,
+                        contentColor = Color.White,
+                        disabledContainerColor = PrimaryGreen.copy(alpha = 0.5f),
+                        disabledContentColor = Color.White.copy(alpha = 0.5f)
+                    ),
+                    shape = RoundedCornerShape(50.dp),
+                    elevation = ButtonDefaults.buttonElevation(1.dp),
+                    enabled = !state.isLoading
+                ) {
+                    Text("Register", fontSize = 19.sp, fontFamily = poppinsBold)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                val annotatedString = buildAnnotatedString {
+                    append("Already have an account? ")
+                    withStyle(SpanStyle(color = PrimaryGreen, fontFamily = poppinsBold)) {
+                        append("Log in here.")
+                    }
+                }
+                Text(
+                    text = annotatedString,
+                    fontSize = 11.sp,
+                    color = PrimaryGreen,
+                    fontFamily = poppinsMedium,
+                    modifier = Modifier.clickable {
+                        navController.navigate("login/$role") {
+                            popUpTo("register") { inclusive = true }
+                        }
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(30.dp))
+
+                Text(
+                    "By TechSpace",
+                    fontSize = 13.sp,
+                    fontFamily = poppinsBold,
+                    color = FooterGray,
+                    modifier = Modifier.padding(bottom = 20.dp)
                 )
             }
-
-            // Form Fields
-            AuthLabel("First Name", poppinsBold)
-            AuthTextFieldWithValidation(
-                value = state.firstName,
-                onValueChange = { registerStore.dispatch(RegisterAction.FirstNameChanged(it)) },
-                placeholder = "Enter first name",
-                isError = state.hasFirstNameError,
-                errorMessage = state.firstNameError,
-                poppinsRegular = poppinsRegular
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            AuthLabel("Last Name", poppinsBold)
-            AuthTextFieldWithValidation(
-                value = state.lastName,
-                onValueChange = { registerStore.dispatch(RegisterAction.LastNameChanged(it)) },
-                placeholder = "Enter last name",
-                isError = state.hasLastNameError,
-                errorMessage = state.lastNameError,
-                poppinsRegular = poppinsRegular
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            AuthLabel("Email", poppinsBold)
-            AuthTextFieldWithValidation(
-                value = state.email,
-                onValueChange = { registerStore.dispatch(RegisterAction.EmailChanged(it)) },
-                placeholder = "Enter your email",
-                keyboardType = KeyboardType.Email,
-                isError = state.hasEmailError,
-                errorMessage = state.emailError,
-                poppinsRegular = poppinsRegular
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            AuthLabel("Username", poppinsBold)
-            AuthTextFieldWithValidation(
-                value = state.username,
-                onValueChange = { registerStore.dispatch(RegisterAction.UsernameChanged(it)) },
-                placeholder = "Enter username",
-                isError = state.hasUsernameError,
-                errorMessage = state.usernameError,
-                poppinsRegular = poppinsRegular
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            AuthLabel("Password", poppinsBold)
-            AuthTextFieldWithValidation(
-                value = state.password,
-                onValueChange = { registerStore.dispatch(RegisterAction.PasswordChanged(it)) },
-                placeholder = "Enter password",
-                isPassword = true,
-                isPasswordVisible = isPasswordVisible,
-                onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
-                isError = state.hasPasswordError,
-                errorMessage = state.passwordError,
-                poppinsRegular = poppinsRegular
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            AuthLabel("Confirm Password", poppinsBold)
-            AuthTextFieldWithValidation(
-                value = state.confirmPassword,
-                onValueChange = { registerStore.dispatch(RegisterAction.ConfirmPasswordChanged(it)) },
-                placeholder = "Confirm password",
-                isPassword = true,
-                isPasswordVisible = isConfirmPasswordVisible,
-                onTogglePasswordVisibility = { isConfirmPasswordVisible = !isConfirmPasswordVisible },
-                isError = state.hasConfirmPasswordError,
-                errorMessage = state.confirmPasswordError,
-                poppinsRegular = poppinsRegular
-            )
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-            // Register Button
-            Button(
-                onClick = {
-                    focusManager.clearFocus()
-                    registerStore.dispatch(RegisterAction.RegisterButtonClicked)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(49.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PrimaryGreen,
-                    contentColor = Color.White,
-                    disabledContainerColor = PrimaryGreen.copy(alpha = 0.5f),
-                    disabledContentColor = Color.White.copy(alpha = 0.5f)
-                ),
-                shape = RoundedCornerShape(50.dp),
-                elevation = ButtonDefaults.buttonElevation(1.dp),
-                enabled = !state.isLoading
-            ) {
-                if (state.isLoading) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(20.dp)
-                    )
-                } else {
-                    Text(
-                        text = "Register",
-                        fontSize = 19.sp,
-                        fontFamily = poppinsBold
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Login Link
-            val annotatedString = buildAnnotatedString {
-                append("Already have an account? ")
-                withStyle(style = SpanStyle(color = PrimaryGreen, fontFamily = poppinsBold)) {
-                    append("Log in here.")
-                }
-            }
-            Text(
-                text = annotatedString,
-                fontSize = 11.sp,
-                color = PrimaryGreen,
-                fontFamily = poppinsMedium,
-                modifier = Modifier.clickable {
-                    navController.navigate("login/$role") {
-                        popUpTo("register") { inclusive = true }
-                    }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-            // Footer
-            Text(
-                text = "By TechSpace",
-                fontSize = 13.sp,
-                fontFamily = poppinsBold,
-                color = FooterGray,
-                modifier = Modifier.padding(bottom = 20.dp)
-            )
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

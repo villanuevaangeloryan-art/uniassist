@@ -6,6 +6,10 @@ data class LoginState(
     val password: String = "",
     val isPasswordVisible: Boolean = false,
 
+    // User info (filled after successful login)
+    val firstName: String = "",
+    val lastName: String = "",
+
     // Validation Errors
     val emailError: String = "",
     val passwordError: String = "",
@@ -14,7 +18,7 @@ data class LoginState(
     val isLoading: Boolean = false,
 
     // Navigation Flags
-    val navigateToDashboard: Boolean = false,   // Changed from navigateToHome
+    val navigateToDashboard: Boolean = false,
     val navigateToRegister: Boolean = false,
     val navigateBack: Boolean = false,
 

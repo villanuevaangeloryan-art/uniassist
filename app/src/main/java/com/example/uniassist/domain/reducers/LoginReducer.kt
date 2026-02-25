@@ -1,62 +1,47 @@
-package com.example.uniassist.domain.reducers
+package com.example.uniassist.domain.reducer
 
 import com.example.uniassist.domain.actions.LoginAction
 import com.example.uniassist.domain.state.LoginState
 import com.example.uniassist.domain.utils.ValidationRules
 
 class LoginReducer {
-
     fun reduce(state: LoginState, action: LoginAction): LoginState {
         return when (action) {
-            // Form Input Actions
             is LoginAction.EmailChanged -> {
-                val validationResult = ValidationRules.validateEmail(action.email)
+                val validation = ValidationRules.validateEmail(action.email)
                 state.copy(
                     email = action.email,
-                    emailError = validationResult.errorMessage
+                    emailError = validation.errorMessage
                 ).validateForm()
             }
-
             is LoginAction.PasswordChanged -> {
-                val validationResult = ValidationRules.validatePassword(action.password)
+                val validation = ValidationRules.validatePassword(action.password)
                 state.copy(
                     password = action.password,
-                    passwordError = validationResult.errorMessage
+                    passwordError = validation.errorMessage
                 ).validateForm()
             }
-
             is LoginAction.TogglePasswordVisibility -> {
                 state.copy(isPasswordVisible = !state.isPasswordVisible)
             }
-
-            // Form Submission
             is LoginAction.LoginButtonClicked -> {
-                val emailValidation = ValidationRules.validateEmail(state.email)
-                val passwordValidation = ValidationRules.validatePassword(state.password)
-
+                val emailValid = ValidationRules.validateEmail(state.email)
+                val passwordValid = ValidationRules.validatePassword(state.password)
                 state.copy(
-                    emailError = emailValidation.errorMessage,
-                    passwordError = passwordValidation.errorMessage,
-                    isLoading = emailValidation.isValid && passwordValidation.isValid
+                    emailError = emailValid.errorMessage,
+                    passwordError = passwordValid.errorMessage,
+                    isLoading = emailValid.isValid && passwordValid.isValid
                 ).validateForm()
             }
-
-            // Navigation Actions
             is LoginAction.NavigateToDashboard -> {
-                state.copy(
-                    isLoading = false,
-                    navigateToDashboard = true
-                )
+                state.copy(navigateToDashboard = true)
             }
-
             is LoginAction.NavigateToRegister -> {
                 state.copy(navigateToRegister = true)
             }
-
             is LoginAction.NavigateBack -> {
                 state.copy(navigateBack = true)
             }
-
             is LoginAction.NavigationHandled -> {
                 state.copy(
                     navigateToDashboard = false,
@@ -64,7 +49,6 @@ class LoginReducer {
                     navigateBack = false
                 )
             }
-
             is LoginAction.ResetNavigation -> {
                 state.copy(
                     navigateToDashboard = false,
@@ -72,12 +56,17 @@ class LoginReducer {
                     navigateBack = false
                 )
             }
+            is LoginAction.LoadingComplete -> {
+                // Keep isLoading true to avoid showing login UI during navigation
+                state.copy(
+                    navigateToDashboard = true
+                )
+            }
         }
     }
 
     private fun LoginState.validateForm(): LoginState {
-        val isFormValid = !hasEmailError && !hasPasswordError &&
-                email.isNotBlank() && password.isNotBlank()
-        return this.copy(isFormValid = isFormValid)
+        val isValid = !hasEmailError && !hasPasswordError && email.isNotBlank() && password.isNotBlank()
+        return copy(isFormValid = isValid)
     }
 }

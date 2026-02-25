@@ -15,4 +15,6 @@ sealed class LoginAction {
     data object NavigateBack : LoginAction()
     data object NavigationHandled : LoginAction()
     data object ResetNavigation : LoginAction()
+    data object LoadingComplete : LoginAction()
+
 }

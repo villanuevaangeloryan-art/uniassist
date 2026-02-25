@@ -8,15 +8,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.uniassist.ui.screens.CampusInformationScreen
 import com.example.uniassist.ui.theme.UniassistTheme
-import com.example.uniassist.ui.screens.GetStartedScreen
 import com.example.uniassist.ui.screens.LoginOrRegisterScreen
 import com.example.uniassist.ui.screens.LoginScreen
 import com.example.uniassist.ui.screens.RegisterScreen
 import com.example.uniassist.ui.screens.ScheduleAndTaskScreen
 import com.example.uniassist.ui.screens.SettingsScreen
 import com.example.uniassist.ui.screens.RolePickScreen
-import androidx.core.view.WindowCompat
 import com.example.uniassist.ui.screens.DashboardScreen
+import com.example.uniassist.ui.screens.TeacherDashboardScreen
+import androidx.core.view.WindowCompat
+import com.example.uniassist.ui.screens.GetStartedScreen   // ← import GetStartedScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,7 +35,7 @@ class MainActivity : ComponentActivity() {
                     startDestination = "get_started"
                 ) {
                     composable("get_started") {
-                        GetStartedScreen(navController = navController)
+                        GetStartedScreen(navController = navController)   // ← fixed
                     }
 
                     composable("role_pick") {
@@ -43,58 +44,90 @@ class MainActivity : ComponentActivity() {
 
                     composable("login_register/{role}") { backStackEntry ->
                         val role = backStackEntry.arguments?.getString("role") ?: "Student"
-                        LoginOrRegisterScreen(
-                            navController = navController,
-                            role = role
-                        )
+                        LoginOrRegisterScreen(navController = navController, role = role)
                     }
 
                     composable("login/{role}") { backStackEntry ->
                         val role = backStackEntry.arguments?.getString("role") ?: "Student"
-                        LoginScreen(
-                            navController = navController,
-                            role = role
-                        )
+                        LoginScreen(navController = navController, role = role)
                     }
 
                     composable("register/{role}") { backStackEntry ->
                         val role = backStackEntry.arguments?.getString("role") ?: "Student"
-                        RegisterScreen(
-                            navController = navController,
-                            role = role
-                        )
+                        RegisterScreen(navController = navController, role = role)
                     }
 
-                    // Dashboard with role
-                    composable("dashboard/{role}") { backStackEntry ->
+                    // ---------- Dashboard route with name parameters ----------
+                    composable("dashboard/{role}/{firstName}/{lastName}") { backStackEntry ->
                         val role = backStackEntry.arguments?.getString("role") ?: "Student"
-                        DashboardScreen(
-                            role = role,
-                            onScheduleClick = {
-                                navController.navigate("schedule/${role}") {
-                                    launchSingleTop = true
+                        val firstName = backStackEntry.arguments?.getString("firstName") ?: ""
+                        val lastName = backStackEntry.arguments?.getString("lastName") ?: ""
+                        val fullName = if (firstName.isNotBlank() && lastName.isNotBlank()) {
+                            "$firstName $lastName"
+                        } else {
+                            if (role == "Teacher") "Prof. Angelo Villanueva" else "Angelo\nVillanueva"
+                        }
+
+                        if (role == "Teacher") {
+                            TeacherDashboardScreen(
+                                userName = fullName,
+                                totalStudents = 128,
+                                totalAnnouncements = 23,
+                                totalUnread = 5,
+                                onManageAnnouncements = {
+                                    // navigate to manage announcements screen
+                                },
+                                onManageCampusInfo = {
+                                    // navigate to manage campus info screen
+                                },
+                                onViewStudents = {
+                                    // navigate to view students screen
+                                },
+                                onSettings = {
+                                    navController.navigate("settings/${role}")
+                                },
+                                onDrafts = {
+                                    // navigate to drafts
+                                },
+                                onArchive = {
+                                    // navigate to archive
+                                },
+                                onLogout = {
+                                    navController.navigate("get_started") {
+                                        popUpTo(0) { inclusive = true }
+                                    }
                                 }
-                            },
-                            onCampusClick = {
-                                navController.navigate("campus/${role}") {
-                                    launchSingleTop = true
+                            )
+                        } else {
+                            DashboardScreen(
+                                role = role,
+                                firstName = firstName,
+                                lastName = lastName,
+                                onScheduleClick = {
+                                    navController.navigate("schedule/${role}") {
+                                        launchSingleTop = true
+                                    }
+                                },
+                                onCampusClick = {
+                                    navController.navigate("campus/${role}") {
+                                        launchSingleTop = true
+                                    }
+                                },
+                                onSettingsClick = {
+                                    navController.navigate("settings/${role}") {
+                                        launchSingleTop = true
+                                    }
                                 }
-                            },
-                            onSettingsClick = {
-                                navController.navigate("settings/${role}") {
-                                    launchSingleTop = true
-                                }
-                            }
-                        )
+                            )
+                        }
                     }
 
-                    // Schedule with role
                     composable("schedule/{role}") { backStackEntry ->
                         val role = backStackEntry.arguments?.getString("role") ?: "Student"
                         ScheduleAndTaskScreen(
                             onDashboardClick = {
-                                navController.navigate("dashboard/${role}") {
-                                    popUpTo("dashboard/${role}") { inclusive = true }
+                                navController.navigate("dashboard/${role}//") {
+                                    popUpTo("dashboard/${role}//") { inclusive = true }
                                 }
                             },
                             onCampusClick = {
@@ -106,13 +139,12 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // Campus with role
                     composable("campus/{role}") { backStackEntry ->
                         val role = backStackEntry.arguments?.getString("role") ?: "Student"
                         CampusInformationScreen(
                             onDashboardClick = {
-                                navController.navigate("dashboard/${role}") {
-                                    popUpTo("dashboard/${role}") { inclusive = true }
+                                navController.navigate("dashboard/${role}//") {
+                                    popUpTo("dashboard/${role}//") { inclusive = true }
                                 }
                             },
                             onScheduleClick = {
@@ -124,13 +156,12 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // Settings with role
                     composable("settings/{role}") { backStackEntry ->
                         val role = backStackEntry.arguments?.getString("role") ?: "Student"
                         SettingsScreen(
                             onDashboardClick = {
-                                navController.navigate("dashboard/${role}") {
-                                    popUpTo("dashboard/${role}") { inclusive = true }
+                                navController.navigate("dashboard/${role}//") {
+                                    popUpTo("dashboard/${role}//") { inclusive = true }
                                 }
                             },
                             onScheduleClick = {
@@ -140,7 +171,7 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate("campus/${role}")
                             },
                             onLogoutClick = {
-                                navController.navigate("login_register/Student") {
+                                navController.navigate("get_started") {
                                     popUpTo(0) { inclusive = true }
                                 }
                             }

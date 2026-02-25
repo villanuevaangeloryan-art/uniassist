@@ -3,7 +3,7 @@ package com.example.uniassist.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.uniassist.domain.actions.LoginAction
-import com.example.uniassist.domain.reducers.LoginReducer
+import com.example.uniassist.domain.reducer.LoginReducer
 import com.example.uniassist.domain.state.LoginState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,8 +32,9 @@ class LoginStore : ViewModel() {
 
     private suspend fun performLogin() {
         _state.update { it.copy(isLoading = true) }
+        // Simulate network delay (optional) – the loader animation will cover it.
         delay(2000)
-        _state.update { it.copy(isLoading = false, navigateToDashboard = true) }
+        // Do NOT set navigateToDashboard here; it will be set by LoadingComplete.
     }
 
     fun resetNavigation() = dispatch(LoginAction.ResetNavigation)
