@@ -58,26 +58,23 @@ fun SettingsBottomNavigationBar(
                 isSelected = false,
                 onClick = onDashboardClick
             )
-
             BottomNavItem(
                 icon = Icons.Default.DateRange,
                 label = "Schedules",
                 isSelected = false,
                 onClick = onScheduleClick
             )
-
             BottomNavItem(
                 icon = Icons.Default.Info,
                 label = "Campus",
                 isSelected = false,
                 onClick = onCampusClick
             )
-
             BottomNavItem(
                 icon = Icons.Default.Settings,
                 label = "Settings",
                 isSelected = true,
-                onClick = {} // No action needed for current screen
+                onClick = {}
             )
         }
     }
@@ -99,7 +96,7 @@ fun SettingsScreen(
             .fillMaxSize()
             .statusBarsPadding(),
         topBar = {
-            SettingsHeaderSection()   // ✅ Fixed: renamed from HeaderSection
+            SettingsHeaderSection()
         },
         bottomBar = {
             SettingsBottomNavigationBar(
@@ -130,15 +127,11 @@ fun SettingsScreen(
     }
 
     if (showEditProfileDialog) {
-        EditProfileDialog(
-            onDismiss = { showEditProfileDialog = false }
-        )
+        EditProfileDialog(onDismiss = { showEditProfileDialog = false })
     }
 
     if (showChangePasswordDialog) {
-        ChangePasswordDialog(
-            onDismiss = { showChangePasswordDialog = false }
-        )
+        ChangePasswordDialog(onDismiss = { showChangePasswordDialog = false })
     }
 
     if (showLogoutDialog) {
@@ -152,7 +145,6 @@ fun SettingsScreen(
     }
 }
 
-// ✅ Renamed from HeaderSection to avoid conflict
 @Composable
 fun SettingsHeaderSection() {
     Box(
@@ -161,10 +153,7 @@ fun SettingsHeaderSection() {
             .height(65.dp)
             .background(
                 brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        Color(0xFF7CA786),
-                        Color(0xFFE2F1C6)
-                    )
+                    colors = listOf(Color(0xFF7CA786), Color(0xFFE2F1C6))
                 )
             )
     ) {
@@ -206,9 +195,7 @@ fun SettingsTitleSection() {
             contentScale = ContentScale.Fit,
             modifier = Modifier.size(40.dp)
         )
-
         Spacer(modifier = Modifier.width(12.dp))
-
         Text(
             text = "Settings",
             color = Color(0xFF1B5E20),
@@ -303,12 +290,8 @@ fun SettingsOptionCard(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFF8F8F8)
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F8)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -333,18 +316,14 @@ fun SettingsOptionCard(
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
                     color = Color(0xFF1B5E20),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold
                 )
-
                 Spacer(modifier = Modifier.height(4.dp))
-
                 Text(
                     text = subtitle,
                     color = Color(0xFF666666),
@@ -374,18 +353,12 @@ fun LogoutButton(onClick: () -> Unit) {
             pressedElevation = 8.dp
         )
     ) {
-        Text(
-            text = "Log Out",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Text(text = "Log Out", fontSize = 16.sp, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
-fun EditProfileDialog(
-    onDismiss: () -> Unit
-) {
+fun EditProfileDialog(onDismiss: () -> Unit) {
     var username by remember { mutableStateOf("Juan Dela Cruz") }
     var email by remember { mutableStateOf("juan.delacruz@university.edu") }
 
@@ -403,35 +376,23 @@ fun EditProfileDialog(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
-            Column(
-                modifier = Modifier.padding(24.dp)
-            ) {
+            Column(modifier = Modifier.padding(24.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text(
-                            text = "Cancel",
-                            color = Color(0xFF1B5E20),
-                            fontSize = 16.sp
-                        )
+                        Text(text = "Cancel", color = Color(0xFF1B5E20), fontSize = 16.sp)
                     }
-
                     Text(
                         text = "Edit Profile",
                         color = Color(0xFF1B5E20),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
-
                     TextButton(onClick = onDismiss) {
-                        Text(
-                            text = "Back",
-                            color = Color(0xFF1B5E20),
-                            fontSize = 16.sp
-                        )
+                        Text(text = "Back", color = Color(0xFF1B5E20), fontSize = 16.sp)
                     }
                 }
 
@@ -447,9 +408,7 @@ fun EditProfileDialog(
                     Image(
                         painter = painterResource(id = R.drawable.profile),
                         contentDescription = "Profile Picture",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape),
+                        modifier = Modifier.fillMaxSize().clip(CircleShape),
                         contentScale = ContentScale.Crop
                     )
                 }
@@ -501,11 +460,7 @@ fun EditProfileDialog(
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(
-                        text = "Save Changes",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(text = "Save Changes", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -513,9 +468,7 @@ fun EditProfileDialog(
 }
 
 @Composable
-fun ChangePasswordDialog(
-    onDismiss: () -> Unit
-) {
+fun ChangePasswordDialog(onDismiss: () -> Unit) {
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -534,35 +487,23 @@ fun ChangePasswordDialog(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
-            Column(
-                modifier = Modifier.padding(24.dp)
-            ) {
+            Column(modifier = Modifier.padding(24.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text(
-                            text = "Cancel",
-                            color = Color(0xFF1B5E20),
-                            fontSize = 16.sp
-                        )
+                        Text(text = "Cancel", color = Color(0xFF1B5E20), fontSize = 16.sp)
                     }
-
                     Text(
                         text = "Change Password",
                         color = Color(0xFF1B5E20),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
-
                     TextButton(onClick = onDismiss) {
-                        Text(
-                            text = "Back",
-                            color = Color(0xFF1B5E20),
-                            fontSize = 16.sp
-                        )
+                        Text(text = "Back", color = Color(0xFF1B5E20), fontSize = 16.sp)
                     }
                 }
 
@@ -616,11 +557,7 @@ fun ChangePasswordDialog(
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(
-                        text = "Update Password",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(text = "Update Password", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -681,10 +618,7 @@ fun LogoutConfirmationDialog(
                             contentColor = Color(0xFF1B5E20)
                         )
                     ) {
-                        Text(
-                            text = "Cancel",
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text(text = "Cancel", fontWeight = FontWeight.Bold)
                     }
 
                     Button(
@@ -696,10 +630,7 @@ fun LogoutConfirmationDialog(
                             contentColor = Color.White
                         )
                     ) {
-                        Text(
-                            text = "Log Out",
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text(text = "Log Out", fontWeight = FontWeight.Bold)
                     }
                 }
             }

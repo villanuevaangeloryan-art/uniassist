@@ -82,7 +82,7 @@ fun CampusInformationScreen(
             .fillMaxSize()
             .statusBarsPadding(),
         topBar = {
-            CampusHeaderSection()   // RENAMED
+            CampusHeaderSection()
         },
         bottomBar = {
             CampusBottomNavigationBar(
@@ -120,7 +120,6 @@ fun CampusInformationScreen(
     }
 }
 
-// RENAMED from HeaderSection to CampusHeaderSection
 @Composable
 fun CampusHeaderSection() {
     Box(

@@ -3,7 +3,6 @@ package com.example.uniassist.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -106,7 +104,7 @@ fun DashboardScreen(
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding(), // Added to leave space for status bar
+            .statusBarsPadding(),
         topBar = { DashboardHeaderSection(role) },
         bottomBar = {
             DashboardBottomNavigationBar(
@@ -380,48 +378,6 @@ fun DashboardBottomNavigationBar(
                 label = "Settings",
                 isSelected = currentRoute == "settings",
                 onClick = onSettingsClick
-            )
-        }
-    }
-}
-
-@Composable
-fun BottomNavItem(
-    icon: ImageVector,
-    label: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .clickable { onClick() }
-            .padding(8.dp)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            if (isSelected) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(Color.White, shape = CircleShape)
-                )
-            }
-            Icon(
-                icon,
-                contentDescription = label,
-                tint = if (isSelected) Color(0xFF1B5E20) else Color.White,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-        Spacer(modifier = Modifier.height(2.dp))
-        if (!isSelected) {
-            Text(
-                text = label,
-                fontFamily = Poppins,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.White
             )
         }
     }
