@@ -89,75 +89,75 @@ fun ScheduleAndTaskScreen(
             )
         }
     ) { paddingValues ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(screenContentPadding)
-                .background(Color.White)
+                .padding(horizontal = screenContentPadding)
+                .background(Color.White),
+            verticalArrangement = Arrangement.spacedBy(screenContentPadding),
+            contentPadding = PaddingValues(
+                top = screenContentPadding,
+                bottom = screenContentPadding + 80.dp
+            )
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFF9D40A6)),
-                    contentAlignment = Alignment.Center
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Icon(Icons.Default.CalendarMonth, null, tint = Color.White, modifier = Modifier.size(24.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF9D40A6)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.CalendarMonth, null, tint = Color.White, modifier = Modifier.size(24.dp))
+                    }
+                    Text("Schedule & Tasks", color = DarkGreenText, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
                 }
-                Text("Schedule & Tasks", color = DarkGreenText, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
             }
 
-            Spacer(modifier = Modifier.height(screenContentPadding))
+            item {
+                CalendarCard(datePickerState = datePickerState)
+            }
 
-            CalendarCard(datePickerState = datePickerState)
-
-            Spacer(modifier = Modifier.height(screenContentPadding))
-
-            TaskInputRow(
-                taskText = taskInputText,
-                onTaskTextChange = { taskInputText = it },
-                buttonLabel = if (editingTaskId != null) "Save" else "Add",
-                onAddClick = {
-                    if (taskInputText.isNotBlank()) {
-                        if (editingTaskId != null) {
-                            val index = taskList.indexOfFirst { it.id == editingTaskId }
-                            if (index != -1) taskList[index] = taskList[index].copy(title = taskInputText)
-                            editingTaskId = null
-                        } else {
-                            val newId = (taskList.maxOfOrNull { it.id } ?: 0) + 1
-                            taskList.add(TaskItem(newId, taskInputText, false))
+            item {
+                TaskInputRow(
+                    taskText = taskInputText,
+                    onTaskTextChange = { taskInputText = it },
+                    buttonLabel = if (editingTaskId != null) "Save" else "Add",
+                    onAddClick = {
+                        if (taskInputText.isNotBlank()) {
+                            if (editingTaskId != null) {
+                                val index = taskList.indexOfFirst { it.id == editingTaskId }
+                                if (index != -1) taskList[index] = taskList[index].copy(title = taskInputText)
+                                editingTaskId = null
+                            } else {
+                                val newId = (taskList.maxOfOrNull { it.id } ?: 0) + 1
+                                taskList.add(TaskItem(newId, taskInputText, false))
+                            }
+                            taskInputText = ""
                         }
-                        taskInputText = ""
                     }
-                }
-            )
+                )
+            }
 
-            Spacer(modifier = Modifier.height(screenContentPadding))
-
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                items(taskList, key = { it.id }) { task ->
-                    TaskRow(
-                        task = task,
-                        onCheckedChange = { isChecked ->
-                            val index = taskList.indexOfFirst { it.id == task.id }
-                            if (index != -1) taskList[index] = task.copy(completed = isChecked)
-                        },
-                        onEditClick = {
-                            taskInputText = task.title
-                            editingTaskId = task.id
-                        },
-                        onDeleteClick = { taskList.removeIf { it.id == task.id } }
-                    )
-                }
+            items(taskList, key = { it.id }) { task ->
+                TaskRow(
+                    task = task,
+                    onCheckedChange = { isChecked ->
+                        val index = taskList.indexOfFirst { it.id == task.id }
+                        if (index != -1) taskList[index] = task.copy(completed = isChecked)
+                    },
+                    onEditClick = {
+                        taskInputText = task.title
+                        editingTaskId = task.id
+                    },
+                    onDeleteClick = { taskList.removeIf { it.id == task.id } }
+                )
             }
         }
     }
@@ -203,7 +203,21 @@ private fun CalendarCard(datePickerState: DatePickerState) {
     ) {
         DatePicker(
             state = datePickerState,
-            showModeToggle = false
+            showModeToggle = false,
+            colors = DatePickerDefaults.colors(
+                containerColor = Color.White,
+                titleContentColor = DarkGreenText,
+                headlineContentColor = DarkGreenText,
+                weekdayContentColor = DarkGreenText,
+                subheadContentColor = DarkGreenText,
+                dayContentColor = DarkGreenText,
+                disabledDayContentColor = GreyText,
+                selectedDayContainerColor = GreenAccent,
+                selectedDayContentColor = Color.White,
+                todayDateBorderColor = GreenAccent,
+                dayInSelectionRangeContainerColor = GreenAccent.copy(alpha = 0.3f),
+                dayInSelectionRangeContentColor = DarkGreenText
+            )
         )
     }
 }
