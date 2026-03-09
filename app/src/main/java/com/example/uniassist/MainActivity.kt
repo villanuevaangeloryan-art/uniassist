@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.core.view.WindowCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -20,8 +21,9 @@ import com.example.uniassist.ui.screens.SettingsScreen
 import com.example.uniassist.ui.screens.RolePickScreen
 import com.example.uniassist.ui.screens.DashboardScreen
 import com.example.uniassist.ui.screens.TeacherDashboardScreen
-import androidx.core.view.WindowCompat
 import com.example.uniassist.ui.screens.GetStartedScreen
+import com.example.uniassist.ui.screens.ManageAnnouncementsScreen
+import com.example.uniassist.ui.screens.CreateAnnouncementScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,7 +83,9 @@ class MainActivity : ComponentActivity() {
                                     totalStudents = 128,
                                     totalAnnouncements = 23,
                                     totalUnread = 5,
-                                    onManageAnnouncements = {},
+                                    onManageAnnouncements = {
+                                        navController.navigate("manage_announcements")
+                                    },
                                     onManageCampusInfo = {},
                                     onViewStudents = {},
                                     onSettings = {
@@ -117,6 +121,25 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                             }
+                        }
+
+                        composable("manage_announcements") {
+                            ManageAnnouncementsScreen(
+                                onBackClick = {
+                                    navController.popBackStack()
+                                },
+                                onCreateClick = {
+                                    navController.navigate("create_announcement")
+                                }
+                            )
+                        }
+
+                        composable("create_announcement") {
+                            CreateAnnouncementScreen(
+                                onBackClick = {
+                                    navController.popBackStack()
+                                }
+                            )
                         }
 
                         composable("schedule/{role}") { backStackEntry ->
