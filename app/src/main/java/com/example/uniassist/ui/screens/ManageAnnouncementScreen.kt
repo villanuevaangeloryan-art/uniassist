@@ -399,9 +399,10 @@ private fun ManageAnnouncementsStatusChip(text: String, icon: ImageVector) {
                 .background(Color(0xFFF0F4F7))
                 .clip(RoundedCornerShape(8.dp))
         ) {
-            ManageAnnouncementsStatusItem("active", StatusActive) { expanded = false }
-            ManageAnnouncementsStatusItem("ending soon", StatusEndingSoon) { expanded = false }
-            ManageAnnouncementsStatusItem("expired", StatusExpired) { expanded = false }
+            // Updated these three lines with capital letters!
+            ManageAnnouncementsStatusItem("Active", StatusActive) { expanded = false }
+            ManageAnnouncementsStatusItem("Ending Soon", StatusEndingSoon) { expanded = false }
+            ManageAnnouncementsStatusItem("Expired", StatusExpired) { expanded = false }
         }
     }
 }
@@ -630,7 +631,7 @@ private fun ManageAnnouncementCard(announcement: ManageScreenAnnouncement) {
                 Spacer(Modifier.weight(1f))
 
                 // Status
-                if (announcement.statusText.lowercase() != "active") {
+                if (announcement.statusText.lowercase() != "Active") {
                     Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(announcement.statusColor))
                     Spacer(Modifier.width(4.dp))
                 }
@@ -640,7 +641,7 @@ private fun ManageAnnouncementCard(announcement: ManageScreenAnnouncement) {
                     fontSize = 11.sp,
                     color = Color.DarkGray
                 )
-                if (announcement.statusText.lowercase() == "active") {
+                if (announcement.statusText.lowercase() == "Active") {
                     Spacer(Modifier.width(4.dp))
                     Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(announcement.statusColor))
                 }
