@@ -27,6 +27,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 // ── Colors from Provided Code ─────────────────────────────────────────────────
 private val GreenDark       = Color(0xFF1B5E20)
@@ -44,7 +47,6 @@ private val CatEnrollment = Color(0xFFD32F2F)
 private val CatInfo       = Color(0xFFF57C00)
 
 // ── Dummy Data Model ──────────────────────────────────────────────────────────
-// Marked private to avoid clashes with other files
 private data class ManageScreenAnnouncement(
     val id: Int,
     val title: String,
@@ -62,7 +64,7 @@ private data class ManageScreenAnnouncement(
 @Composable
 fun ManageAnnouncementsScreen(
     onBackClick: () -> Unit = {},
-    onCreateClick: () -> Unit = {} // Added this parameter for the FAB navigation
+    onCreateClick: () -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var profileMenuExpanded by remember { mutableStateOf(false) }
@@ -117,7 +119,7 @@ fun ManageAnnouncementsScreen(
         floatingActionButtonPosition = FabPosition.Center,
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = onCreateClick, // Connects the FAB to the new screen
+                onClick = onCreateClick,
                 containerColor = Color(0xFF2E5E3E),
                 contentColor = Color.White,
                 shape = RoundedCornerShape(12.dp),
@@ -282,7 +284,8 @@ fun ManageAnnouncementsScreen(
             ) {
                 ManageAnnouncementsFilterChip("Sort by", Icons.AutoMirrored.Outlined.Sort, listOf("Newest", "Oldest", "Archive"))
                 ManageAnnouncementsStatusChip("Filter by", Icons.Outlined.FilterList)
-                ManageAnnouncementsFilterChip("Date", Icons.Outlined.CalendarToday, listOf("Today", "This Week", "This Month"))
+                // NEW CALENDAR CHIP
+                ManageAnnouncementsDateChip("Date", Icons.Outlined.CalendarToday)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -301,14 +304,12 @@ fun ManageAnnouncementsScreen(
 }
 
 // ── Components ────────────────────────────────────────────────────────────────
-// Marked private to prevent "Conflicting overloads" with other files in the package
 
 @Composable
 private fun ManageAnnouncementsFilterChip(text: String, icon: ImageVector, options: List<String>) {
     var expanded by remember { mutableStateOf(false) }
 
     Box {
-        // Replaced Surface with Box to avoid Overload resolution ambiguity
         Box(
             modifier = Modifier
                 .height(32.dp)
@@ -360,7 +361,6 @@ private fun ManageAnnouncementsStatusChip(text: String, icon: ImageVector) {
     var expanded by remember { mutableStateOf(false) }
 
     Box {
-        // Replaced Surface with Box to avoid Overload resolution ambiguity
         Box(
             modifier = Modifier
                 .height(32.dp)
@@ -418,6 +418,86 @@ private fun ManageAnnouncementsStatusItem(label: String, color: Color, onClick: 
         },
         onClick = onClick
     )
+}
+
+// ── NEW DATE CHIP COMPONENT WITH CALENDAR DIALOG ──────────────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ManageAnnouncementsDateChip(defaultText: String, icon: ImageVector) {
+    var showDatePicker by remember { mutableStateOf(false) }
+    var selectedDateText by remember { mutableStateOf(defaultText) }
+
+    val datePickerState = rememberDatePickerState()
+
+    Box {
+        // The visible Chip
+        Box(
+            modifier = Modifier
+                .height(32.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.White)
+                .border(BorderStroke(1.dp, Color.LightGray), RoundedCornerShape(16.dp))
+                .clickable { showDatePicker = true }, // Opens the calendar
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 10.dp)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = Color.Gray
+                )
+                Spacer(Modifier.width(4.dp))
+                // Shows either "Date" or the actual selected date
+                Text(selectedDateText, fontFamily = Poppins, fontSize = 11.sp, color = Color.DarkGray)
+                Spacer(Modifier.width(4.dp))
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = Color.Gray
+                )
+            }
+        }
+
+        // The Calendar Dialog Popup
+        if (showDatePicker) {
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showDatePicker = false
+                        // Format the selected date to display on the chip
+                        val millis = datePickerState.selectedDateMillis
+                        if (millis != null) {
+                            val formatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                            selectedDateText = formatter.format(Date(millis))
+                        }
+                    }) {
+                        Text("OK", fontFamily = Poppins, color = GreenDark)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) {
+                        Text("Cancel", fontFamily = Poppins, color = Color.Gray)
+                    }
+                },
+                colors = DatePickerDefaults.colors(containerColor = Color.White)
+            ) {
+                DatePicker(
+                    state = datePickerState,
+                    colors = DatePickerDefaults.colors(
+                        selectedDayContainerColor = GreenMedium,
+                        todayDateBorderColor = GreenDark,
+                        todayContentColor = GreenDark
+                    )
+                )
+            }
+        }
+    }
 }
 
 @Composable
