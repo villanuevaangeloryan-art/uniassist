@@ -410,16 +410,29 @@ private fun ManageAnnouncementsStatusChip(text: String, icon: ImageVector) {
 private fun ManageAnnouncementsStatusItem(label: String, color: Color, onClick: () -> Unit) {
     DropdownMenuItem(
         text = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(color))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(label, fontFamily = Poppins, fontSize = 12.sp, color = Color.DarkGray)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(vertical = 4.dp) // Adds a bit more breathing room
+            ) {
+                // Increased the dot size from 12.dp to 16.dp
+                Box(modifier = Modifier.size(16.dp).clip(CircleShape).background(color))
+
+                // Increased the spacing between the dot and text
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Increased font size to 15.sp and made it slightly bolder (Medium)
+                Text(
+                    text = label,
+                    fontFamily = Poppins,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.DarkGray
+                )
             }
         },
         onClick = onClick
     )
 }
-
 // ── NEW DATE CHIP COMPONENT WITH CALENDAR DIALOG ──────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
