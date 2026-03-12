@@ -3,13 +3,12 @@ package com.example.uniassist.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -67,8 +66,6 @@ fun ManageCampusDepartmentScreen(
         )
     }
 
-    var showEditDialog by remember { mutableStateOf(false) }
-    var selectedDepartment by remember { mutableStateOf<Department?>(null) }
     var expandedMenuIndex by remember { mutableStateOf<Int?>(null) }
 
     Scaffold(
@@ -145,7 +142,7 @@ fun ManageCampusHeaderSection(onBackClick: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBackClick) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
                         tint = Color(0xFF1B5E20),
                         modifier = Modifier.size(28.dp)
