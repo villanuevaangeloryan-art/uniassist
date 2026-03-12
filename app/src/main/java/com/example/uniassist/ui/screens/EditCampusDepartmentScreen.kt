@@ -256,6 +256,42 @@ fun EditCampusDepartmentScreen(
                 )
             }
         }
+
+        // Date Picker Dialog
+        if (showDatePicker) {
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = postDate.time
+            )
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            datePickerState.selectedDateMillis?.let {
+                                postDate = Date(it)
+                            }
+                            showDatePicker = false
+                        }
+                    ) {
+                        Text("OK", color = Color(0xFF245B3D))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) {
+                        Text("Cancel", color = Color(0xFF666666))
+                    }
+                }
+            ) {
+                DatePicker(
+                    state = datePickerState,
+                    colors = DatePickerDefaults.colors(
+                        selectedDayContainerColor = Color(0xFF245B3D),
+                        todayContentColor = Color(0xFF245B3D),
+                        todayDateBorderColor = Color(0xFF245B3D)
+                    )
+                )
+            }
+        }
     }
 }
 
