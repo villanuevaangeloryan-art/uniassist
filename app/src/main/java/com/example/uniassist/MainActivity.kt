@@ -25,6 +25,7 @@ import com.example.uniassist.ui.screens.GetStartedScreen
 import com.example.uniassist.ui.screens.ManageAnnouncementsScreen
 import com.example.uniassist.ui.screens.CreateAnnouncementScreen
 import com.example.uniassist.ui.screens.ManageCampusDepartmentScreen
+import com.example.uniassist.ui.screens.AddCampusDepartmentScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -140,6 +141,25 @@ class MainActivity : ComponentActivity() {
                         composable("manage_campus_department") {
                             ManageCampusDepartmentScreen(
                                 onBackClick = {
+                                    navController.popBackStack()
+                                },
+                                onAddDepartmentClick = {
+                                    navController.navigate("add_campus_department")
+                                }
+                            )
+                        }
+
+                        composable("add_campus_department") {
+                            AddCampusDepartmentScreen(
+                                onBackClick = {
+                                    navController.popBackStack()
+                                },
+                                onSaveDraft = { department ->
+                                    // Handle save draft
+                                    navController.popBackStack()
+                                },
+                                onPublish = { department ->
+                                    // Handle publish
                                     navController.popBackStack()
                                 }
                             )
