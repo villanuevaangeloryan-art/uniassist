@@ -14,6 +14,9 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Help
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -299,10 +302,38 @@ fun SettingsContent(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         SettingsOptionCard(
+            icon = Icons.Default.Notifications,
+            title = "Notification Settings",
+            subtitle = "Manage your notification preferences",
+            onClick = { /* TODO: Navigate to Notification Settings */ }
+        )
+
+        SettingsOptionCard(
+            icon = Icons.Default.Security,
+            title = "Privacy Settings",
+            subtitle = "Control your privacy and data",
+            onClick = { /* TODO: Navigate to Privacy Settings */ }
+        )
+
+        SettingsOptionCard(
             icon = Icons.Default.Lock,
             title = "Change Password",
             subtitle = "Update your account password",
             onClick = onChangePasswordClick
+        )
+
+        SettingsOptionCard(
+            icon = Icons.Default.Info,
+            title = "About",
+            subtitle = "App version and information",
+            onClick = { /* TODO: Show About dialog */ }
+        )
+
+        SettingsOptionCard(
+            icon = Icons.Default.Help,
+            title = "Help & Support",
+            subtitle = "Get help and contact support",
+            onClick = { /* TODO: Navigate to Help & Support */ }
         )
     }
 }
