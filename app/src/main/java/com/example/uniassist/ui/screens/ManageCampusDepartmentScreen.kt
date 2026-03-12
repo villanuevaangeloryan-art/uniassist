@@ -29,7 +29,8 @@ import com.example.uniassist.R
 @Composable
 fun ManageCampusDepartmentScreen(
     onBackClick: () -> Unit = {},
-    onAddDepartmentClick: () -> Unit = {}
+    onAddDepartmentClick: () -> Unit = {},
+    onEditDepartmentClick: (Int) -> Unit = {}
 ) {
     var departments by remember {
         mutableStateOf(
@@ -66,7 +67,6 @@ fun ManageCampusDepartmentScreen(
         )
     }
 
-    var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var selectedDepartment by remember { mutableStateOf<Department?>(null) }
     var expandedMenuIndex by remember { mutableStateOf<Int?>(null) }
@@ -103,8 +103,7 @@ fun ManageCampusDepartmentScreen(
                     isMenuExpanded = expandedMenuIndex == index,
                     onMenuClick = { expandedMenuIndex = if (expandedMenuIndex == index) null else index },
                     onEdit = {
-                        selectedDepartment = dept
-                        showEditDialog = true
+                        onEditDepartmentClick(index)
                         expandedMenuIndex = null
                     },
                     onDelete = {
@@ -117,22 +116,6 @@ fun ManageCampusDepartmentScreen(
                 )
             }
         }
-    }
-
-    // Edit Department Dialog
-    if (showEditDialog && selectedDepartment != null) {
-        EditDepartmentDialog(
-            department = selectedDepartment!!,
-            onDismiss = { showEditDialog = false },
-            onConfirm = { name, rep, email, phone ->
-                departments = departments.map {
-                    if (it == selectedDepartment) {
-                        it.copy(name = name, representative = rep, email = email, phone = phone)
-                    } else it
-                }
-                showEditDialog = false
-            }
-        )
     }
 }
 

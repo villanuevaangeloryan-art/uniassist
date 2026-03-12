@@ -26,6 +26,8 @@ import com.example.uniassist.ui.screens.ManageAnnouncementsScreen
 import com.example.uniassist.ui.screens.CreateAnnouncementScreen
 import com.example.uniassist.ui.screens.ManageCampusDepartmentScreen
 import com.example.uniassist.ui.screens.AddCampusDepartmentScreen
+import com.example.uniassist.ui.screens.EditCampusDepartmentScreen
+import com.example.uniassist.ui.screens.Department
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -145,6 +147,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onAddDepartmentClick = {
                                     navController.navigate("add_campus_department")
+                                },
+                                onEditDepartmentClick = { index ->
+                                    navController.navigate("edit_campus_department/$index")
                                 }
                             )
                         }
@@ -160,6 +165,53 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onPublish = { department ->
                                     // Handle publish
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
+                        composable("edit_campus_department/{index}") { backStackEntry ->
+                            val index = backStackEntry.arguments?.getString("index")?.toIntOrNull() ?: 0
+                            // Create a sample department for now - in real app, you'd fetch from a ViewModel
+                            val departments = listOf(
+                                Department(
+                                    name = "College of Computer Studies / Information Technology",
+                                    representative = "Mr. Alvin M. Dimaunahan",
+                                    email = "alvinccsdimauanahan@gmail.com",
+                                    phone = "+639829901987",
+                                    logoRes = R.drawable.ccsdeptlogo
+                                ),
+                                Department(
+                                    name = "College of Engineering",
+                                    representative = "Ms. Jennelyn V. Tan",
+                                    email = "tanjennelyncoe@gmail.com",
+                                    phone = "+639549932855",
+                                    logoRes = R.drawable.coedeptlogo
+                                ),
+                                Department(
+                                    name = "College of Business Administration / Accountancy",
+                                    representative = "Ms. Vilma R. Cacho",
+                                    email = "rcachocbaa@gmail.com",
+                                    phone = "+639549932855",
+                                    logoRes = R.drawable.cbaadeptlogo
+                                ),
+                                Department(
+                                    name = "College of Education",
+                                    representative = "Ms. George C. Bacsa",
+                                    email = "geocalmacoedue@gmail.com",
+                                    phone = "+639877718241",
+                                    logoRes = R.drawable.coedudeptlogo
+                                )
+                            )
+                            val department = departments.getOrNull(index) ?: departments[0]
+                            
+                            EditCampusDepartmentScreen(
+                                department = department,
+                                onBackClick = {
+                                    navController.popBackStack()
+                                },
+                                onUpdate = { updatedDept ->
+                                    // Handle update
                                     navController.popBackStack()
                                 }
                             )
