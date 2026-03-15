@@ -181,19 +181,40 @@ fun ScheduleAndTaskScreen(
                 )
             }
 
-            items(tasksForSelectedDate, key = { it.id }) { task ->
-                TaskRow(
-                    task = task,
-                    onCheckedChange = { isChecked ->
-                        val index = taskList.indexOfFirst { it.id == task.id }
-                        if (index != -1) taskList[index] = task.copy(completed = isChecked)
-                    },
-                    onEditClick = {
-                        taskInputText = task.title
-                        editingTaskId = task.id
-                    },
-                    onDeleteClick = { taskList.removeIf { it.id == task.id } }
-                )
+            if (tasksForSelectedDate.isEmpty()) {
+                item {
+                    Text(
+                        text = "No tasks for this day yet.",
+                        color = GreyText,
+                        fontSize = 14.sp
+                    )
+                }
+            } else {
+                item {
+                    val completedCount = tasksForSelectedDate.count { it.completed }
+                    val totalCount = tasksForSelectedDate.size
+                    Text(
+                        text = "$completedCount of $totalCount tasks completed",
+                        color = DarkGreenText,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                items(tasksForSelectedDate, key = { it.id }) { task ->
+                    TaskRow(
+                        task = task,
+                        onCheckedChange = { isChecked ->
+                            val index = taskList.indexOfFirst { it.id == task.id }
+                            if (index != -1) taskList[index] = task.copy(completed = isChecked)
+                        },
+                        onEditClick = {
+                            taskInputText = task.title
+                            editingTaskId = task.id
+                        },
+                        onDeleteClick = { taskList.removeIf { it.id == task.id } }
+                    )
+                }
             }
         }
     }
