@@ -306,6 +306,7 @@ private fun TaskRow(
             text = task.title,
             modifier = Modifier.weight(1f),
             fontWeight = FontWeight.Bold,
+            color = if (task.completed) GreyText else DarkGreenText,
             textDecoration = if (task.completed) TextDecoration.LineThrough else null
         )
         IconButton(onClick = onEditClick) {
