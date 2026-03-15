@@ -31,8 +31,16 @@ private val screenContentPadding = 16.dp
 data class TaskItem(
     val id: Int,
     val title: String,
+    val dateKey: String,
     val completed: Boolean
 )
+
+private fun dateKeyForOffset(offsetDays: Int): String {
+    val calendar = Calendar.getInstance()
+    calendar.add(Calendar.DAY_OF_YEAR, offsetDays)
+    val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    return formatter.format(calendar.time)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,9 +53,9 @@ fun ScheduleAndTaskScreen(
 
     val taskList = remember {
         mutableStateListOf(
-            TaskItem(1, "ITP103 Assignment", true),
-            TaskItem(2, "Claim Clearance", true),
-            TaskItem(3, "Capstone meeting", false)
+            TaskItem(1, "ITP103 Assignment", dateKeyForOffset(0), true),
+            TaskItem(2, "Claim Clearance", dateKeyForOffset(0), true),
+            TaskItem(3, "Capstone meeting", dateKeyForOffset(1), false)
         )
     }
 
@@ -91,6 +99,16 @@ fun ScheduleAndTaskScreen(
             )
         }
     ) { paddingValues ->
+        val selectedDateKey = remember(datePickerState.selectedDateMillis) {
+            val millis = datePickerState.selectedDateMillis ?: System.currentTimeMillis()
+            val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            formatter.format(Date(millis))
+        }
+
+        val tasksForSelectedDate = remember(taskList, selectedDateKey) {
+            taskList.filter { it.dateKey == selectedDateKey }
+        }
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -155,7 +173,7 @@ fun ScheduleAndTaskScreen(
                                 editingTaskId = null
                             } else {
                                 val newId = (taskList.maxOfOrNull { it.id } ?: 0) + 1
-                                taskList.add(TaskItem(newId, taskInputText, false))
+                                taskList.add(TaskItem(newId, taskInputText, selectedDateKey, false))
                             }
                             taskInputText = ""
                         }
@@ -163,7 +181,7 @@ fun ScheduleAndTaskScreen(
                 )
             }
 
-            items(taskList, key = { it.id }) { task ->
+            items(tasksForSelectedDate, key = { it.id }) { task ->
                 TaskRow(
                     task = task,
                     onCheckedChange = { isChecked ->
