@@ -98,7 +98,7 @@ fun ScheduleAndTaskScreen(
             verticalArrangement = Arrangement.spacedBy(screenContentPadding),
             contentPadding = PaddingValues(
                 top = screenContentPadding,
-                bottom = screenContentPadding + 80.dp
+                bottom = screenContentPadding + 100.dp
             )
         ) {
             item {
