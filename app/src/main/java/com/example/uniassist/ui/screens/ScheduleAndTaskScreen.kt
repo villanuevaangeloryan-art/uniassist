@@ -22,6 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.text.SimpleDateFormat
+import java.util.*
 import com.example.uniassist.ui.theme.*
 
 private val screenContentPadding = 16.dp
@@ -122,6 +124,22 @@ fun ScheduleAndTaskScreen(
 
             item {
                 CalendarCard(datePickerState = datePickerState)
+            }
+
+            item {
+                val selectedDateText = remember(datePickerState.selectedDateMillis) {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val formatter = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
+                        formatter.format(Date(millis))
+                    } ?: "No date selected"
+                }
+
+                Text(
+                    text = "Tasks for $selectedDateText",
+                    color = DarkGreenText,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
 
             item {
