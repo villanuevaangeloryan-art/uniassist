@@ -31,23 +31,25 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// ── Colors from Provided Code ─────────────────────────────────────────────────
+// ── Colors ────────────────────────────────────────────────────────────────────
 private val GreenDark       = Color(0xFF1B5E20)
 private val GreenMedium     = Color(0xFF56A566)
 private val BackgroundCream = Color(0xFFFDFDF8)
 
-// Status Colors
 private val StatusActive     = Color(0xFF66DE74)
 private val StatusEndingSoon = Color(0xFFFFD54F)
 private val StatusExpired    = Color(0xFFFF1744)
 
-// Category Colors
 private val CatEvent      = Color(0xFFF57C00)
 private val CatEnrollment = Color(0xFFD32F2F)
 private val CatInfo       = Color(0xFFF57C00)
+private val CatEmergency  = Color(0xFFD32F2F)
+private val CatAcademic   = Color(0xFF1565C0)
+private val CatGeneral    = Color(0xFF2E7D32)
 
-// ── Dummy Data Model ──────────────────────────────────────────────────────────
-private data class ManageScreenAnnouncement(
+// ── Card model ────────────────────────────────────────────────────────────────
+// CHANGE: Made internal (not private) so it can be created from outside this file.
+data class ManageScreenAnnouncement(
     val id: Int,
     val title: String,
     val category: String,
@@ -59,60 +61,103 @@ private data class ManageScreenAnnouncement(
     val description: String? = null
 )
 
-// ── Manage Announcements Screen ───────────────────────────────────────────────
+// ── Helper: converts a NewAnnouncement (from CreateAnnouncementScreen) into a
+//   ManageScreenAnnouncement ready to be displayed in the list.
+fun NewAnnouncement.toManageCard(id: Int): ManageScreenAnnouncement {
+    val (icon, color) = when (category.lowercase()) {
+        "exams", "enrollment", "deadlines", "scholarship updates" ->
+            Icons.Outlined.School to CatAcademic
+        "campus festival", "org activities", "sports fest" ->
+            Icons.Outlined.Event to CatEvent
+        "office hours", "policy reminders", "general updates" ->
+            Icons.Outlined.Info to CatGeneral
+        "class suspension", "typhoon alerts", "safety notices" ->
+            Icons.Outlined.Warning to CatEmergency
+        else -> Icons.Outlined.Campaign to GreenMedium
+    }
+    return ManageScreenAnnouncement(
+        id          = id,
+        title       = title,
+        category    = category,
+        categoryIcon  = icon,
+        categoryColor = color,
+        timePosted  = "just now",
+        statusText  = "Active",
+        statusColor = StatusActive,
+        description = message.ifBlank { null }
+    )
+}
+
+// ── Screen ────────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageAnnouncementsScreen(
     onBackClick: () -> Unit = {},
-    onCreateClick: () -> Unit = {}
+    onCreateClick: () -> Unit = {},
+    publishedAnnouncements: List<ManageScreenAnnouncement> = emptyList()
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var profileMenuExpanded by remember { mutableStateOf(false) }
 
-    // Dummy List to match the image exactly
-    val announcements = listOf(
-        ManageScreenAnnouncement(
-            id = 1,
-            title = "Campus Event Tomorrow",
-            category = "Event",
-            categoryIcon = Icons.Outlined.Event,
-            categoryColor = CatEvent,
-            timePosted = "posted 1h ago",
-            statusText = "active",
-            statusColor = StatusActive
-        ),
-        ManageScreenAnnouncement(
-            id = 2,
-            title = "Reminder: Enrollment Deadline",
-            category = "Enrollment",
-            categoryIcon = Icons.Outlined.NotificationsActive,
-            categoryColor = CatEnrollment,
-            timePosted = "posted 2 days ago",
-            statusText = "Active",
-            statusColor = StatusActive,
-            description = "Final day to enroll for the semester is May 15th!"
-        ),
-        ManageScreenAnnouncement(
-            id = 3,
-            title = "Library Closed for Maintenance",
-            category = "Info",
-            categoryIcon = Icons.Outlined.Event,
-            categoryColor = CatInfo,
-            timePosted = "posted 5 days ago",
-            statusText = "Ending soon",
-            statusColor = StatusEndingSoon
-        ),
-        ManageScreenAnnouncement(
-            id = 4,
-            title = "Campus Event Tomorrow",
-            category = "Event",
-            categoryIcon = Icons.Outlined.Event,
-            categoryColor = CatEvent,
-            timePosted = "posted 1h ago",
-            statusText = "Expired",
-            statusColor = StatusExpired
+
+    val staticAnnouncements = remember {
+        listOf(
+            ManageScreenAnnouncement(
+                id = 1,
+                title = "Campus Event Tomorrow",
+                category = "Event",
+                categoryIcon = Icons.Outlined.Event,
+                categoryColor = CatEvent,
+                timePosted = "posted 1h ago",
+                statusText = "active",
+                statusColor = StatusActive
+            ),
+            ManageScreenAnnouncement(
+                id = 2,
+                title = "Reminder: Enrollment Deadline",
+                category = "Enrollment",
+                categoryIcon = Icons.Outlined.NotificationsActive,
+                categoryColor = CatEnrollment,
+                timePosted = "posted 2 days ago",
+                statusText = "Active",
+                statusColor = StatusActive,
+                description = "Final day to enroll for the semester is May 15th!"
+            ),
+            ManageScreenAnnouncement(
+                id = 3,
+                title = "Library Closed for Maintenance",
+                category = "Info",
+                categoryIcon = Icons.Outlined.Event,
+                categoryColor = CatInfo,
+                timePosted = "posted 5 days ago",
+                statusText = "Ending soon",
+                statusColor = StatusEndingSoon
+            ),
+            ManageScreenAnnouncement(
+                id = 4,
+                title = "Campus Event Tomorrow",
+                category = "Event",
+                categoryIcon = Icons.Outlined.Event,
+                categoryColor = CatEvent,
+                timePosted = "posted 1h ago",
+                statusText = "Expired",
+                statusColor = StatusExpired
+            )
         )
-    )
+    }
+
+
+    val allAnnouncements = publishedAnnouncements + staticAnnouncements
+
+    // Filter by search query
+    val displayed = if (searchQuery.isBlank()) {
+        allAnnouncements
+    } else {
+        allAnnouncements.filter {
+            it.title.contains(searchQuery, ignoreCase = true) ||
+                    it.category.contains(searchQuery, ignoreCase = true)
+        }
+    }
 
     Scaffold(
         containerColor = BackgroundCream,
@@ -134,7 +179,12 @@ fun ManageAnnouncementsScreen(
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(Modifier.width(8.dp))
-                Text("New Announcement", fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                Text(
+                    "New Announcement",
+                    fontFamily = Poppins,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp
+                )
             }
         }
     ) { innerPadding ->
@@ -149,9 +199,7 @@ fun ManageAnnouncementsScreen(
                     .fillMaxWidth()
                     .height(65.dp)
                     .background(
-                        Brush.horizontalGradient(
-                            listOf(Color(0xFF7CA786), Color(0xFFE2F1C6))
-                        )
+                        Brush.horizontalGradient(listOf(Color(0xFF7CA786), Color(0xFFE2F1C6)))
                     )
             ) {
                 Row(
@@ -169,7 +217,6 @@ fun ManageAnnouncementsScreen(
                             modifier = Modifier.size(28.dp)
                         )
                     }
-
                     Text(
                         text = "Announcements",
                         fontFamily = Poppins,
@@ -177,7 +224,6 @@ fun ManageAnnouncementsScreen(
                         fontSize = 20.sp,
                         color = GreenDark
                     )
-
                     Box {
                         IconButton(onClick = { profileMenuExpanded = true }) {
                             Box(
@@ -194,8 +240,6 @@ fun ManageAnnouncementsScreen(
                                 )
                             }
                         }
-
-                        // Profile Dropdown
                         DropdownMenu(
                             expanded = profileMenuExpanded,
                             onDismissRequest = { profileMenuExpanded = false },
@@ -203,23 +247,17 @@ fun ManageAnnouncementsScreen(
                         ) {
                             DropdownMenuItem(
                                 text = { Text("Settings", fontFamily = Poppins, fontSize = 12.sp) },
-                                leadingIcon = {
-                                    Icon(imageVector = Icons.Outlined.Settings, contentDescription = null, modifier = Modifier.size(16.dp))
-                                },
+                                leadingIcon = { Icon(Icons.Outlined.Settings, null, modifier = Modifier.size(16.dp)) },
                                 onClick = { profileMenuExpanded = false }
                             )
                             DropdownMenuItem(
                                 text = { Text("Drafts", fontFamily = Poppins, fontSize = 12.sp) },
-                                leadingIcon = {
-                                    Icon(imageVector = Icons.Outlined.Description, contentDescription = null, modifier = Modifier.size(16.dp))
-                                },
+                                leadingIcon = { Icon(Icons.Outlined.Description, null, modifier = Modifier.size(16.dp)) },
                                 onClick = { profileMenuExpanded = false }
                             )
                             DropdownMenuItem(
                                 text = { Text("Archive", fontFamily = Poppins, fontSize = 12.sp) },
-                                leadingIcon = {
-                                    Icon(imageVector = Icons.Outlined.Archive, contentDescription = null, modifier = Modifier.size(16.dp))
-                                },
+                                leadingIcon = { Icon(Icons.Outlined.Archive, null, modifier = Modifier.size(16.dp)) },
                                 onClick = { profileMenuExpanded = false }
                             )
                         }
@@ -250,11 +288,7 @@ fun ManageAnnouncementsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(start = 16.dp, end = 8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Search,
-                            contentDescription = "Search",
-                            tint = GreenDark
-                        )
+                        Icon(Icons.Outlined.Search, contentDescription = "Search", tint = GreenDark)
                         Spacer(modifier = Modifier.width(12.dp))
                         VerticalDivider(
                             modifier = Modifier.height(24.dp),
@@ -275,245 +309,58 @@ fun ManageAnnouncementsScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // ── Filter Chips Row ───────────────────────────────────────────────
+            // ── Filter Chips ───────────────────────────────────────────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                ManageAnnouncementsFilterChip("Sort by", Icons.AutoMirrored.Outlined.Sort, listOf("Newest", "Oldest", "Archive"))
+                ManageAnnouncementsFilterChip(
+                    "Sort by",
+                    Icons.AutoMirrored.Outlined.Sort,
+                    listOf("Newest", "Oldest", "Archive")
+                )
                 ManageAnnouncementsStatusChip("Filter by", Icons.Outlined.FilterList)
-                // NEW CALENDAR CHIP
                 ManageAnnouncementsDateChip("Date", Icons.Outlined.CalendarToday)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // ── Announcements List ─────────────────────────────────────────────
-            LazyColumn(
-                contentPadding = PaddingValues(bottom = 80.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(announcements) { announcement ->
-                    ManageAnnouncementCard(announcement)
+            // CHANGE: Shows "displayed" list (merged + filtered) instead of the
+            // old hardcoded local val.
+            if (displayed.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 48.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (searchQuery.isBlank()) "No announcements yet.\nTap + New Announcement to create one."
+                        else "No results for \"$searchQuery\".",
+                        fontFamily = Poppins,
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(bottom = 80.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(displayed, key = { it.id }) { announcement ->
+                        ManageAnnouncementCard(announcement)
+                    }
                 }
             }
         }
     }
 }
 
-// ── Components ────────────────────────────────────────────────────────────────
-
-@Composable
-private fun ManageAnnouncementsFilterChip(text: String, icon: ImageVector, options: List<String>) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box {
-        Box(
-            modifier = Modifier
-                .height(32.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color.White)
-                .border(BorderStroke(1.dp, Color.LightGray), RoundedCornerShape(16.dp))
-                .clickable { expanded = true },
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 10.dp)
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    tint = Color.Gray
-                )
-                Spacer(Modifier.width(4.dp))
-                Text(text, fontFamily = Poppins, fontSize = 11.sp, color = Color.DarkGray)
-                Spacer(Modifier.width(4.dp))
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = Color.Gray
-                )
-            }
-        }
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.background(Color.White)
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option, fontFamily = Poppins, fontSize = 12.sp) },
-                    onClick = { expanded = false }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ManageAnnouncementsStatusChip(text: String, icon: ImageVector) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box {
-        Box(
-            modifier = Modifier
-                .height(32.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color.White)
-                .border(BorderStroke(1.dp, Color.LightGray), RoundedCornerShape(16.dp))
-                .clickable { expanded = true },
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 10.dp)
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    tint = Color.Gray
-                )
-                Spacer(Modifier.width(4.dp))
-                Text(text, fontFamily = Poppins, fontSize = 11.sp, color = Color.DarkGray)
-                Spacer(Modifier.width(4.dp))
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = Color.Gray
-                )
-            }
-        }
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier
-                .background(Color(0xFFF0F4F7))
-                .clip(RoundedCornerShape(8.dp))
-        ) {
-            // Updated these three lines with capital letters!
-            ManageAnnouncementsStatusItem("Active", StatusActive) { expanded = false }
-            ManageAnnouncementsStatusItem("Ending Soon", StatusEndingSoon) { expanded = false }
-            ManageAnnouncementsStatusItem("Expired", StatusExpired) { expanded = false }
-        }
-    }
-}
-
-@Composable
-private fun ManageAnnouncementsStatusItem(label: String, color: Color, onClick: () -> Unit) {
-    DropdownMenuItem(
-        text = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(vertical = 4.dp) // Adds a bit more breathing room
-            ) {
-                // Increased the dot size from 12.dp to 16.dp
-                Box(modifier = Modifier.size(16.dp).clip(CircleShape).background(color))
-
-                // Increased the spacing between the dot and text
-                Spacer(modifier = Modifier.width(12.dp))
-
-                // Increased font size to 15.sp and made it slightly bolder (Medium)
-                Text(
-                    text = label,
-                    fontFamily = Poppins,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.DarkGray
-                )
-            }
-        },
-        onClick = onClick
-    )
-}
-// ── NEW DATE CHIP COMPONENT WITH CALENDAR DIALOG ──────────────────────────────
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ManageAnnouncementsDateChip(defaultText: String, icon: ImageVector) {
-    var showDatePicker by remember { mutableStateOf(false) }
-    var selectedDateText by remember { mutableStateOf(defaultText) }
-
-    val datePickerState = rememberDatePickerState()
-
-    Box {
-        // The visible Chip
-        Box(
-            modifier = Modifier
-                .height(32.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color.White)
-                .border(BorderStroke(1.dp, Color.LightGray), RoundedCornerShape(16.dp))
-                .clickable { showDatePicker = true }, // Opens the calendar
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 10.dp)
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    tint = Color.Gray
-                )
-                Spacer(Modifier.width(4.dp))
-                // Shows either "Date" or the actual selected date
-                Text(selectedDateText, fontFamily = Poppins, fontSize = 11.sp, color = Color.DarkGray)
-                Spacer(Modifier.width(4.dp))
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = Color.Gray
-                )
-            }
-        }
-
-        // The Calendar Dialog Popup
-        if (showDatePicker) {
-            DatePickerDialog(
-                onDismissRequest = { showDatePicker = false },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showDatePicker = false
-                        // Format the selected date to display on the chip
-                        val millis = datePickerState.selectedDateMillis
-                        if (millis != null) {
-                            val formatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-                            selectedDateText = formatter.format(Date(millis))
-                        }
-                    }) {
-                        Text("OK", fontFamily = Poppins, color = GreenDark)
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDatePicker = false }) {
-                        Text("Cancel", fontFamily = Poppins, color = Color.Gray)
-                    }
-                },
-                colors = DatePickerDefaults.colors(containerColor = Color.White)
-            ) {
-                DatePicker(
-                    state = datePickerState,
-                    colors = DatePickerDefaults.colors(
-                        selectedDayContainerColor = GreenMedium,
-                        todayDateBorderColor = GreenDark,
-                        todayContentColor = GreenDark
-                    )
-                )
-            }
-        }
-    }
-}
-
+// ── Card composable ───────────────────────────────────────────────────────────
 @Composable
 private fun ManageAnnouncementCard(announcement: ManageScreenAnnouncement) {
     var moreExpanded by remember { mutableStateOf(false) }
@@ -529,7 +376,6 @@ private fun ManageAnnouncementCard(announcement: ManageScreenAnnouncement) {
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
 
-            // Top Section: Title and Menu
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -547,20 +393,13 @@ private fun ManageAnnouncementCard(announcement: ManageScreenAnnouncement) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-
                 Box {
                     IconButton(
                         onClick = { moreExpanded = true },
                         modifier = Modifier.size(24.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "More",
-                            tint = Color.Gray
-                        )
+                        Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.Gray)
                     }
-
-                    // Card Options Dropdown
                     DropdownMenu(
                         expanded = moreExpanded,
                         onDismissRequest = { moreExpanded = false },
@@ -568,23 +407,17 @@ private fun ManageAnnouncementCard(announcement: ManageScreenAnnouncement) {
                     ) {
                         DropdownMenuItem(
                             text = { Text("Edit", fontFamily = Poppins, fontSize = 12.sp) },
-                            leadingIcon = {
-                                Icon(imageVector = Icons.Outlined.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-                            },
+                            leadingIcon = { Icon(Icons.Outlined.Edit, null, modifier = Modifier.size(16.dp)) },
                             onClick = { moreExpanded = false }
                         )
                         DropdownMenuItem(
                             text = { Text("Delete", fontFamily = Poppins, fontSize = 12.sp) },
-                            leadingIcon = {
-                                Icon(imageVector = Icons.Outlined.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
-                            },
+                            leadingIcon = { Icon(Icons.Outlined.Delete, null, modifier = Modifier.size(16.dp)) },
                             onClick = { moreExpanded = false }
                         )
                         DropdownMenuItem(
                             text = { Text("Archive", fontFamily = Poppins, fontSize = 12.sp) },
-                            leadingIcon = {
-                                Icon(imageVector = Icons.Outlined.Archive, contentDescription = null, modifier = Modifier.size(16.dp))
-                            },
+                            leadingIcon = { Icon(Icons.Outlined.Archive, null, modifier = Modifier.size(16.dp)) },
                             onClick = { moreExpanded = false }
                         )
                     }
@@ -593,14 +426,12 @@ private fun ManageAnnouncementCard(announcement: ManageScreenAnnouncement) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Middle Section: Meta Info (Category, Date, Status)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Category
                 Icon(
                     imageVector = announcement.categoryIcon,
                     contentDescription = null,
@@ -615,24 +446,23 @@ private fun ManageAnnouncementCard(announcement: ManageScreenAnnouncement) {
                     fontSize = 11.sp,
                     color = announcement.categoryColor
                 )
-
                 Spacer(Modifier.width(8.dp))
                 Text("|", color = Color.LightGray, fontSize = 12.sp)
                 Spacer(Modifier.width(8.dp))
-
-                // Date Posted
                 Text(
                     text = announcement.timePosted,
                     fontFamily = Poppins,
                     fontSize = 11.sp,
                     color = Color.Gray
                 )
-
                 Spacer(Modifier.weight(1f))
-
-                // Status
-                if (announcement.statusText.lowercase() != "Active") {
-                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(announcement.statusColor))
+                if (announcement.statusText.lowercase() != "active") {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(announcement.statusColor)
+                    )
                     Spacer(Modifier.width(4.dp))
                 }
                 Text(
@@ -641,15 +471,19 @@ private fun ManageAnnouncementCard(announcement: ManageScreenAnnouncement) {
                     fontSize = 11.sp,
                     color = Color.DarkGray
                 )
-                if (announcement.statusText.lowercase() == "Active") {
+                if (announcement.statusText.lowercase() == "active") {
                     Spacer(Modifier.width(4.dp))
-                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(announcement.statusColor))
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(announcement.statusColor)
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Bottom Section: Optional Description Body
             if (announcement.description != null) {
                 HorizontalDivider(color = Color.LightGray.copy(alpha = 0.4f), thickness = 1.dp)
                 Box(
@@ -669,6 +503,143 @@ private fun ManageAnnouncementCard(announcement: ManageScreenAnnouncement) {
             } else {
                 Spacer(modifier = Modifier.height(4.dp))
             }
+        }
+    }
+}
+
+// ── Filter / Sort chip helpers (unchanged from original) ──────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ManageAnnouncementsFilterChip(text: String, icon: ImageVector, options: List<String>) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        Box(
+            modifier = Modifier
+                .height(32.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.White)
+                .border(BorderStroke(1.dp, Color.LightGray), RoundedCornerShape(16.dp))
+                .clickable { expanded = true },
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(icon, null, tint = GreenDark, modifier = Modifier.size(14.dp))
+                Text(text, fontFamily = Poppins, fontSize = 12.sp, color = GreenDark)
+                Icon(Icons.Default.ArrowDropDown, null, tint = GreenDark, modifier = Modifier.size(14.dp))
+            }
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(Color.White)
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option, fontFamily = Poppins, fontSize = 12.sp) },
+                    onClick = { expanded = false }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ManageAnnouncementsStatusChip(text: String, icon: ImageVector) {
+    var expanded by remember { mutableStateOf(false) }
+    val statuses = listOf("All", "Active", "Ending soon", "Expired")
+    Box {
+        Box(
+            modifier = Modifier
+                .height(32.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.White)
+                .border(BorderStroke(1.dp, Color.LightGray), RoundedCornerShape(16.dp))
+                .clickable { expanded = true },
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(icon, null, tint = GreenDark, modifier = Modifier.size(14.dp))
+                Text(text, fontFamily = Poppins, fontSize = 12.sp, color = GreenDark)
+                Icon(Icons.Default.ArrowDropDown, null, tint = GreenDark, modifier = Modifier.size(14.dp))
+            }
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(Color.White)
+        ) {
+            statuses.forEach { status ->
+                DropdownMenuItem(
+                    text = { Text(status, fontFamily = Poppins, fontSize = 12.sp) },
+                    onClick = { expanded = false }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ManageAnnouncementsDateChip(text: String, icon: ImageVector) {
+    var showDatePicker by remember { mutableStateOf(false) }
+    var selectedDateText by remember { mutableStateOf(text) }
+
+    Box(
+        modifier = Modifier
+            .height(32.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.White)
+            .border(BorderStroke(1.dp, Color.LightGray), RoundedCornerShape(16.dp))
+            .clickable { showDatePicker = true },
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(icon, null, tint = GreenDark, modifier = Modifier.size(14.dp))
+            Text(selectedDateText, fontFamily = Poppins, fontSize = 12.sp, color = GreenDark)
+        }
+    }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState()
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDatePicker = false
+                    val millis = datePickerState.selectedDateMillis
+                    if (millis != null) {
+                        val formatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                        selectedDateText = formatter.format(Date(millis))
+                    }
+                }) { Text("OK", fontFamily = Poppins, color = GreenDark) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel", fontFamily = Poppins, color = Color.Gray)
+                }
+            },
+            colors = DatePickerDefaults.colors(containerColor = Color.White)
+        ) {
+            DatePicker(
+                state = datePickerState,
+                colors = DatePickerDefaults.colors(
+                    selectedDayContainerColor = GreenMedium,
+                    todayDateBorderColor = GreenDark,
+                    todayContentColor = GreenDark
+                )
+            )
         }
     }
 }

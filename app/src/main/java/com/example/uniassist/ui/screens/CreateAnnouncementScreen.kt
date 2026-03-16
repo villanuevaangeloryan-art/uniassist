@@ -40,7 +40,7 @@ private val GreenDark = Color(0xFF1B5E20)
 private val GreenMedium = Color(0xFF56A566)
 private val BackgroundCream = Color(0xFFFDFDF8)
 
-// ── Data class for a new announcement produced by this screen ─────────────────
+// Data class carrying the form fields back to the caller.
 data class NewAnnouncement(
     val title: String,
     val category: String,
@@ -54,22 +54,20 @@ data class NewAnnouncement(
 @Composable
 fun CreateAnnouncementScreen(
     onBackClick: () -> Unit = {},
-    // FIX 1: Added onSaveDraft and onPublish callbacks.
     onSaveDraft: (NewAnnouncement) -> Unit = {},
+    // onPublish: caller adds the item to the shared list then navigates back.
     onPublish: (NewAnnouncement) -> Unit = {}
 ) {
-    var title by remember { mutableStateOf("") }
+    var title    by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("Emergency") }
     var isPriority by remember { mutableStateOf(true) }
-    var message by remember { mutableStateOf("") }
+    var message  by remember { mutableStateOf("") }
 
-    // FIX 2: Dates are now stored as Date objects instead of hardcoded strings.
     var postDate by remember { mutableStateOf(Date()) }
-    var endDate by remember { mutableStateOf(Date()) }
+    var endDate  by remember { mutableStateOf(Date()) }
 
-    // FIX 3: Separate boolean flags to show/hide each date picker dialog.
     var showPostDatePicker by remember { mutableStateOf(false) }
-    var showEndDatePicker by remember { mutableStateOf(false) }
+    var showEndDatePicker  by remember { mutableStateOf(false) }
 
     val dateFormatter = remember { SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()) }
 
@@ -77,26 +75,24 @@ fun CreateAnnouncementScreen(
 
     val isPublishEnabled = title.isNotBlank() && message.isNotBlank()
 
-    Scaffold(
-        containerColor = BackgroundCream
-    ) { innerPadding ->
+    Scaffold(containerColor = BackgroundCream) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // ── Top Gradient Bar ───────────────────────────────────────────────
+            // ── Top Bar ────────────────────────────────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(65.dp)
-                    .background(Brush.horizontalGradient(listOf(Color(0xFF7CA786), Color(0xFFE2F1C6))))
+                    .background(
+                        Brush.horizontalGradient(listOf(Color(0xFF7CA786), Color(0xFFE2F1C6)))
+                    )
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -118,17 +114,10 @@ fun CreateAnnouncementScreen(
                     Box {
                         IconButton(onClick = { profileMenuExpanded = true }) {
                             Box(
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .border(2.dp, GreenDark, CircleShape),
+                                modifier = Modifier.size(34.dp).border(2.dp, GreenDark, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.AccountCircle,
-                                    contentDescription = "Profile",
-                                    tint = GreenDark,
-                                    modifier = Modifier.size(30.dp)
-                                )
+                                Icon(Icons.Default.AccountCircle, "Profile", tint = GreenDark, modifier = Modifier.size(30.dp))
                             }
                         }
                         DropdownMenu(
@@ -160,7 +149,7 @@ fun CreateAnnouncementScreen(
 
             Column(modifier = Modifier.padding(horizontal = 24.dp)) {
 
-                // Title field
+                // Title
                 InputLabel("Title")
                 OutlinedTextField(
                     value = title,
@@ -179,13 +168,13 @@ fun CreateAnnouncementScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Category dropdown
+                // Category
                 InputLabel("Category")
                 CategoryDropdownMenu(selectedCategory = category, onCategorySelected = { category = it })
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Priority toggle
+                // Priority
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -206,16 +195,13 @@ fun CreateAnnouncementScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Message box
+                // Message
                 InputLabel("Message")
                 RichTextEditor(message = message, onMessageChange = { message = it })
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // ── Post Date ──────────────────────────────────────────────────
-                // FIX 4: The field now reads from the live postDate state (not a
-                // hardcoded string). Both the field and the trailing icon open the
-                // date picker dialog via showPostDatePicker = true.
+                // Post Date
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     InputLabel("Post Date", modifier = Modifier.weight(1f))
                     OutlinedTextField(
@@ -230,12 +216,7 @@ fun CreateAnnouncementScreen(
                         textStyle = TextStyle(fontFamily = Poppins, fontSize = 14.sp),
                         trailingIcon = {
                             IconButton(onClick = { showPostDatePicker = true }) {
-                                Icon(
-                                    Icons.Default.CalendarToday,
-                                    contentDescription = "Pick post date",
-                                    modifier = Modifier.size(18.dp),
-                                    tint = GreenDark
-                                )
+                                Icon(Icons.Default.CalendarToday, "Pick post date", modifier = Modifier.size(18.dp), tint = GreenDark)
                             }
                         },
                         colors = OutlinedTextFieldDefaults.colors(
@@ -247,8 +228,7 @@ fun CreateAnnouncementScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // ── End Date ───────────────────────────────────────────────────
-                // FIX 5: Same fix as Post Date above.
+                // End Date
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     InputLabel("End Date", modifier = Modifier.weight(1f))
                     OutlinedTextField(
@@ -263,12 +243,7 @@ fun CreateAnnouncementScreen(
                         textStyle = TextStyle(fontFamily = Poppins, fontSize = 14.sp),
                         trailingIcon = {
                             IconButton(onClick = { showEndDatePicker = true }) {
-                                Icon(
-                                    Icons.Default.CalendarToday,
-                                    contentDescription = "Pick end date",
-                                    modifier = Modifier.size(18.dp),
-                                    tint = GreenDark
-                                )
+                                Icon(Icons.Default.CalendarToday, "Pick end date", modifier = Modifier.size(18.dp), tint = GreenDark)
                             }
                         },
                         colors = OutlinedTextFieldDefaults.colors(
@@ -281,8 +256,6 @@ fun CreateAnnouncementScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // ── Action Buttons ─────────────────────────────────────────────
-                // FIX 6: Both buttons now call their respective callbacks with the
-                // filled-in announcement data instead of being no-op comments.
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -290,14 +263,8 @@ fun CreateAnnouncementScreen(
                     Button(
                         onClick = {
                             onSaveDraft(
-                                NewAnnouncement(
-                                    title = title,
-                                    category = category,
-                                    isPriority = isPriority,
-                                    message = message,
-                                    postDate = dateFormatter.format(postDate),
-                                    endDate = dateFormatter.format(endDate)
-                                )
+                                NewAnnouncement(title, category, isPriority, message,
+                                    dateFormatter.format(postDate), dateFormatter.format(endDate))
                             )
                         },
                         modifier = Modifier.weight(1f).height(50.dp),
@@ -310,15 +277,13 @@ fun CreateAnnouncementScreen(
 
                     Button(
                         onClick = {
+                            // Pass the completed announcement up to the caller.
+                            // The caller (NavGraph) will add it to the shared list
+                            // and then call navController.popBackStack() so the user
+                            // lands back on ManageAnnouncementsScreen with the new item.
                             onPublish(
-                                NewAnnouncement(
-                                    title = title,
-                                    category = category,
-                                    isPriority = isPriority,
-                                    message = message,
-                                    postDate = dateFormatter.format(postDate),
-                                    endDate = dateFormatter.format(endDate)
-                                )
+                                NewAnnouncement(title, category, isPriority, message,
+                                    dateFormatter.format(postDate), dateFormatter.format(endDate))
                             )
                         },
                         modifier = Modifier.weight(1f).height(50.dp),
@@ -335,22 +300,16 @@ fun CreateAnnouncementScreen(
         }
     }
 
-    // ── Post Date Picker Dialog ────────────────────────────────────────────────
-    // FIX 7: These two dialogs were completely absent from the original screen.
-    // They follow the exact same working pattern from AddCampusDepartmentScreen.
+    // Post Date Picker Dialog
     if (showPostDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = postDate.time
-        )
+        val state = rememberDatePickerState(initialSelectedDateMillis = postDate.time)
         DatePickerDialog(
             onDismissRequest = { showPostDatePicker = false },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let { postDate = Date(it) }
-                        showPostDatePicker = false
-                    }
-                ) { Text("OK", color = Color(0xFF245B3D)) }
+                TextButton(onClick = {
+                    state.selectedDateMillis?.let { postDate = Date(it) }
+                    showPostDatePicker = false
+                }) { Text("OK", color = Color(0xFF245B3D)) }
             },
             dismissButton = {
                 TextButton(onClick = { showPostDatePicker = false }) {
@@ -359,7 +318,7 @@ fun CreateAnnouncementScreen(
             }
         ) {
             DatePicker(
-                state = datePickerState,
+                state = state,
                 colors = DatePickerDefaults.colors(
                     selectedDayContainerColor = Color(0xFF245B3D),
                     todayContentColor = Color(0xFF245B3D),
@@ -369,20 +328,16 @@ fun CreateAnnouncementScreen(
         }
     }
 
-    // ── End Date Picker Dialog ─────────────────────────────────────────────────
+    // End Date Picker Dialog
     if (showEndDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = endDate.time
-        )
+        val state = rememberDatePickerState(initialSelectedDateMillis = endDate.time)
         DatePickerDialog(
             onDismissRequest = { showEndDatePicker = false },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let { endDate = Date(it) }
-                        showEndDatePicker = false
-                    }
-                ) { Text("OK", color = Color(0xFF245B3D)) }
+                TextButton(onClick = {
+                    state.selectedDateMillis?.let { endDate = Date(it) }
+                    showEndDatePicker = false
+                }) { Text("OK", color = Color(0xFF245B3D)) }
             },
             dismissButton = {
                 TextButton(onClick = { showEndDatePicker = false }) {
@@ -391,7 +346,7 @@ fun CreateAnnouncementScreen(
             }
         ) {
             DatePicker(
-                state = datePickerState,
+                state = state,
                 colors = DatePickerDefaults.colors(
                     selectedDayContainerColor = Color(0xFF245B3D),
                     todayContentColor = Color(0xFF245B3D),
@@ -402,18 +357,11 @@ fun CreateAnnouncementScreen(
     }
 }
 
-// ── Shared sub-composables ────────────────────────────────────────────────────
+// ── Sub-composables ───────────────────────────────────────────────────────────
 
 @Composable
 private fun InputLabel(text: String, modifier: Modifier = Modifier.padding(bottom = 8.dp)) {
-    Text(
-        text = text,
-        fontFamily = Poppins,
-        fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        color = GreenDark,
-        modifier = modifier
-    )
+    Text(text = text, fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = GreenDark, modifier = modifier)
 }
 
 @Composable
@@ -422,9 +370,9 @@ private fun CategoryDropdownMenu(selectedCategory: String, onCategorySelected: (
     var activeSubMenu by remember { mutableStateOf<String?>(null) }
 
     val categories = mapOf(
-        "Academic" to listOf("Exams", "Enrollment", "Deadlines", "Scholarship updates"),
-        "Event" to listOf("Campus festival", "Org activities", "Sports fest"),
-        "General" to listOf("Office hours", "Policy reminders", "General updates"),
+        "Academic"  to listOf("Exams", "Enrollment", "Deadlines", "Scholarship updates"),
+        "Event"     to listOf("Campus festival", "Org activities", "Sports fest"),
+        "General"   to listOf("Office hours", "Policy reminders", "General updates"),
         "Emergency" to listOf("Class suspension", "Typhoon alerts", "Safety notices")
     )
 
@@ -436,9 +384,7 @@ private fun CategoryDropdownMenu(selectedCategory: String, onCategorySelected: (
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(8.dp),
             textStyle = TextStyle(fontFamily = Poppins, fontSize = 14.sp),
-            trailingIcon = {
-                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = GreenMedium)
-            },
+            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null, tint = GreenMedium) },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = GreenMedium,
                 unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
@@ -446,7 +392,6 @@ private fun CategoryDropdownMenu(selectedCategory: String, onCategorySelected: (
                 unfocusedContainerColor = Color.White
             )
         )
-        // Overlay to reliably capture taps on the readOnly TextField
         Box(modifier = Modifier.matchParentSize().clickable { expanded = true })
 
         DropdownMenu(
@@ -458,9 +403,7 @@ private fun CategoryDropdownMenu(selectedCategory: String, onCategorySelected: (
                 categories.keys.forEach { mainCat ->
                     DropdownMenuItem(
                         text = { Text(mainCat, fontFamily = Poppins, color = Color.DarkGray) },
-                        trailingIcon = {
-                            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = GreenMedium)
-                        },
+                        trailingIcon = { Icon(Icons.Default.ChevronRight, null, tint = GreenMedium) },
                         onClick = { activeSubMenu = mainCat }
                     )
                 }
@@ -509,10 +452,7 @@ private fun RichTextEditor(message: String, onMessageChange: (String) -> Unit) {
                 innerTextField()
             }
         )
-        Row(
-            modifier = Modifier.align(Alignment.BottomStart),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.align(Alignment.BottomStart), verticalAlignment = Alignment.CenterVertically) {
             Surface(
                 onClick = { isToolbarExpanded = !isToolbarExpanded },
                 shape = RoundedCornerShape(4.dp),
@@ -550,7 +490,5 @@ private fun RichTextEditor(message: String, onMessageChange: (String) -> Unit) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CreateAnnouncementPreview() {
-    MaterialTheme {
-        CreateAnnouncementScreen()
-    }
+    MaterialTheme { CreateAnnouncementScreen() }
 }

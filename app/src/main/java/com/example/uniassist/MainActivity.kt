@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.view.WindowCompat
@@ -23,11 +25,13 @@ import com.example.uniassist.ui.screens.DashboardScreen
 import com.example.uniassist.ui.screens.TeacherDashboardScreen
 import com.example.uniassist.ui.screens.GetStartedScreen
 import com.example.uniassist.ui.screens.ManageAnnouncementsScreen
+import com.example.uniassist.ui.screens.ManageScreenAnnouncement
 import com.example.uniassist.ui.screens.CreateAnnouncementScreen
 import com.example.uniassist.ui.screens.ManageCampusDepartmentScreen
 import com.example.uniassist.ui.screens.AddCampusDepartmentScreen
 import com.example.uniassist.ui.screens.EditCampusDepartmentScreen
 import com.example.uniassist.ui.screens.Department
+import com.example.uniassist.ui.screens.toManageCard
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +47,12 @@ class MainActivity : ComponentActivity() {
                     color = Color.White
                 ) {
                     val navController = rememberNavController()
+
+                    // ── Shared list of published announcements ──────────────────
+                    // Declared here (above NavHost) so it survives navigation.
+                    // ManageAnnouncementsScreen reads it; CreateAnnouncementScreen
+                    // writes to it via the onPublish callback below.
+                    val publishedAnnouncements = remember { mutableStateListOf<ManageScreenAnnouncement>() }
 
                     NavHost(
                         navController = navController,
@@ -129,6 +139,9 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
+                        // ── Manage Announcements ────────────────────────────────
+                        // FIX: Now receives publishedAnnouncements so newly
+                        // published items appear in the list automatically.
                         composable("manage_announcements") {
                             ManageAnnouncementsScreen(
                                 onBackClick = {
@@ -136,7 +149,8 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onCreateClick = {
                                     navController.navigate("create_announcement")
-                                }
+                                },
+                                publishedAnnouncements = publishedAnnouncements
                             )
                         }
 
@@ -160,11 +174,9 @@ class MainActivity : ComponentActivity() {
                                     navController.popBackStack()
                                 },
                                 onSaveDraft = { department ->
-                                    // Handle save draft
                                     navController.popBackStack()
                                 },
                                 onPublish = { department ->
-                                    // Handle publish
                                     navController.popBackStack()
                                 }
                             )
@@ -172,7 +184,6 @@ class MainActivity : ComponentActivity() {
 
                         composable("edit_campus_department/{index}") { backStackEntry ->
                             val index = backStackEntry.arguments?.getString("index")?.toIntOrNull() ?: 0
-                            // Create a sample department for now - in real app, you'd fetch from a ViewModel
                             val departments = listOf(
                                 Department(
                                     name = "College of Computer Studies / Information Technology",
@@ -204,22 +215,38 @@ class MainActivity : ComponentActivity() {
                                 )
                             )
                             val department = departments.getOrNull(index) ?: departments[0]
-                            
+
                             EditCampusDepartmentScreen(
                                 department = department,
                                 onBackClick = {
                                     navController.popBackStack()
                                 },
                                 onUpdate = { updatedDept ->
-                                    // Handle update
                                     navController.popBackStack()
                                 }
                             )
                         }
 
+                        // ── Create Announcement ─────────────────────────────────
+                        // FIX: Added onPublish lambda. It converts the form data
+                        // into a ManageScreenAnnouncement, prepends it to the
+                        // shared list, then navigates back — the list is already
+                        // updated when ManageAnnouncementsScreen recomposes.
                         composable("create_announcement") {
                             CreateAnnouncementScreen(
                                 onBackClick = {
+                                    navController.popBackStack()
+                                },
+                                onSaveDraft = {
+                                    navController.popBackStack()
+                                },
+                                onPublish = { newAnnouncement ->
+                                    publishedAnnouncements.add(
+                                        0, // insert at top of the list
+                                        newAnnouncement.toManageCard(
+                                            id = publishedAnnouncements.size + 100
+                                        )
+                                    )
                                     navController.popBackStack()
                                 }
                             )
