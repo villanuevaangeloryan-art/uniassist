@@ -28,6 +28,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.uniassist.R
+import com.example.uniassist.data.AnnouncementRepository
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -46,41 +47,7 @@ data class Announcement(
     val footer: String
 )
 
-val announcementList = listOf(
-    Announcement(
-        "Campus Operations & Class Suspension",
-        "January 19, 2026",
-        "All on-campus classes are suspended due to bad weather.",
-        listOf(
-            "Online Classes:" to "Asynchronous via portal",
-            "Offices:" to "Skeletal workforce",
-            "Campus Access:" to "Essential staff only"
-        ),
-        "Stay safe everyone!"
-    ),
-    Announcement(
-        "Scholarship Applications Open",
-        "January 25, 2026",
-        "Students with GPA 1.75+ may apply.",
-        listOf(
-            "Deadline:" to "Feb 10",
-            "Where:" to "Student Portal",
-            "Contact:" to "Scholarship Office"
-        ),
-        "Don't miss this opportunity!"
-    ),
-    Announcement(
-        "Library Hours Extended",
-        "February 1, 2026",
-        "The university library will be open until 10 PM during exam week.",
-        listOf(
-            "New Hours:" to "8 AM – 10 PM",
-            "Quiet Zones:" to "Available on 3rd floor",
-            "Book Reservations:" to "Online portal"
-        ),
-        "Good luck with your exams!"
-    )
-)
+// removed the old hardcoded announcements
 
 @Composable
 fun DashboardScreen(
@@ -132,8 +99,10 @@ fun DashboardScreen(
             item {
                 AnnouncementHeader()
             }
-            items(announcementList) {
-                AnnouncementCard(it)
+            // CHANGED: reads from AnnouncementRepository instead of the old
+            // hardcoded local list. Recomposes automatically when teacher publishes.
+            items(AnnouncementRepository.announcements) { announcement ->
+                AnnouncementCard(announcement)
             }
         }
     }
@@ -175,7 +144,7 @@ fun DashboardHeaderSection(role: String) {
 @Composable
 fun WelcomeSection(userName: String, mascotRes: Int) {
     val currentDate = Date()
-    val day = SimpleDateFormat("EEEE", Locale.getDefault()).format(currentDate)
+    val day  = SimpleDateFormat("EEEE", Locale.getDefault()).format(currentDate)
     val date = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(currentDate)
 
     Box(
@@ -201,36 +170,11 @@ fun WelcomeSection(userName: String, mascotRes: Int) {
                 .align(Alignment.CenterStart),
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                "Welcome back,",
-                fontFamily = Poppins,
-                fontWeight = FontWeight.Medium,
-                fontSize = 18.sp,
-                color = Color.White
-            )
-            Text(
-                userName,
-                fontFamily = Poppins,
-                fontWeight = FontWeight.ExtraBold,
-                lineHeight = 32.sp,
-                fontSize = 30.sp,
-                color = Color.White
-            )
+            Text("Welcome back,", fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 18.sp, color = Color.White)
+            Text(userName, fontFamily = Poppins, fontWeight = FontWeight.ExtraBold, lineHeight = 32.sp, fontSize = 30.sp, color = Color.White)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                day,
-                fontFamily = Poppins,
-                fontWeight = FontWeight.Medium,
-                fontSize = 16.sp,
-                color = Color.White
-            )
-            Text(
-                date,
-                fontFamily = Poppins,
-                fontWeight = FontWeight.Normal,
-                fontSize = 14.sp,
-                color = Color.White.copy(alpha = 0.9f)
-            )
+            Text(day,  fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 16.sp, color = Color.White)
+            Text(date, fontFamily = Poppins, fontWeight = FontWeight.Normal, fontSize = 14.sp, color = Color.White.copy(alpha = 0.9f))
         }
 
         Image(
@@ -257,21 +201,10 @@ fun AnnouncementHeader() {
             shape = RoundedCornerShape(10.dp),
             modifier = Modifier.size(44.dp)
         ) {
-            Icon(
-                Icons.Default.Campaign,
-                null,
-                tint = Color.White,
-                modifier = Modifier.padding(8.dp)
-            )
+            Icon(Icons.Default.Campaign, null, tint = Color.White, modifier = Modifier.padding(8.dp))
         }
         Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            "Announcements",
-            fontFamily = Poppins,
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 28.sp,
-            color = Color(0xFF1B5E20)
-        )
+        Text("Announcements", fontFamily = Poppins, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp, color = Color(0xFF1B5E20))
     }
 }
 
@@ -288,33 +221,13 @@ fun AnnouncementCard(announcement: Announcement) {
             Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                announcement.title,
-                fontFamily = Poppins,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 18.sp,
-                color = Color(0xFF1B5E20)
-            )
-            Text(
-                "Date: ${announcement.date}",
-                fontFamily = Poppins,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
-                color = Color(0xFF1B5E20).copy(alpha = 0.8f)
-            )
-            Text(
-                announcement.content,
-                fontFamily = Poppins,
-                fontSize = 14.sp,
-                lineHeight = 20.sp,
-                color = Color(0xFF1B5E20)
-            )
+            Text(announcement.title, fontFamily = Poppins, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = Color(0xFF1B5E20))
+            Text("Date: ${announcement.date}", fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF1B5E20).copy(alpha = 0.8f))
+            Text(announcement.content, fontFamily = Poppins, fontSize = 14.sp, lineHeight = 20.sp, color = Color(0xFF1B5E20))
             announcement.bullets.forEach {
                 Text(
                     buildAnnotatedString {
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("${it.first} ")
-                        }
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("${it.first} ") }
                         append(it.second)
                     },
                     fontFamily = Poppins,
@@ -323,13 +236,7 @@ fun AnnouncementCard(announcement: Announcement) {
                     color = Color(0xFF1B5E20)
                 )
             }
-            Text(
-                announcement.footer,
-                fontFamily = Poppins,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
-                color = Color(0xFF1B5E20)
-            )
+            Text(announcement.footer, fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF1B5E20))
         }
     }
 }
@@ -355,30 +262,10 @@ fun DashboardBottomNavigationBar(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomNavItem(
-                icon = Icons.Default.Home,
-                label = "Dashboard",
-                isSelected = currentRoute == "dashboard",
-                onClick = { /* no action */ }
-            )
-            BottomNavItem(
-                icon = Icons.Default.CalendarMonth,
-                label = "Schedules",
-                isSelected = currentRoute == "schedule",
-                onClick = onScheduleClick
-            )
-            BottomNavItem(
-                icon = Icons.Default.Info,
-                label = "Campus",
-                isSelected = currentRoute == "campus",
-                onClick = onCampusClick
-            )
-            BottomNavItem(
-                icon = Icons.Default.Settings,
-                label = "Settings",
-                isSelected = currentRoute == "settings",
-                onClick = onSettingsClick
-            )
+            BottomNavItem(Icons.Default.Home,          "Dashboard", currentRoute == "dashboard", {})
+            BottomNavItem(Icons.Default.CalendarMonth, "Schedules", currentRoute == "schedule",  onScheduleClick)
+            BottomNavItem(Icons.Default.Info,          "Campus",    currentRoute == "campus",    onCampusClick)
+            BottomNavItem(Icons.Default.Settings,      "Settings",  currentRoute == "settings",  onSettingsClick)
         }
     }
 }

@@ -13,6 +13,8 @@ import androidx.core.view.WindowCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.uniassist.data.AnnouncementRepository
+import com.example.uniassist.ui.screens.Announcement
 import com.example.uniassist.ui.screens.CampusInformationScreen
 import com.example.uniassist.ui.theme.UniassistTheme
 import com.example.uniassist.ui.screens.LoginOrRegisterScreen
@@ -48,10 +50,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val navController = rememberNavController()
 
-                    // ── Shared list of published announcements ──────────────────
-                    // Declared here (above NavHost) so it survives navigation.
-                    // ManageAnnouncementsScreen reads it; CreateAnnouncementScreen
-                    // writes to it via the onPublish callback below.
+                    // Shared list for the teacher's Manage Announcements screen.
                     val publishedAnnouncements = remember { mutableStateListOf<ManageScreenAnnouncement>() }
 
                     NavHost(
@@ -139,9 +138,6 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        // ── Manage Announcements ────────────────────────────────
-                        // FIX: Now receives publishedAnnouncements so newly
-                        // published items appear in the list automatically.
                         composable("manage_announcements") {
                             ManageAnnouncementsScreen(
                                 onBackClick = {
@@ -227,11 +223,6 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        // ── Create Announcement ─────────────────────────────────
-                        // FIX: Added onPublish lambda. It converts the form data
-                        // into a ManageScreenAnnouncement, prepends it to the
-                        // shared list, then navigates back — the list is already
-                        // updated when ManageAnnouncementsScreen recomposes.
                         composable("create_announcement") {
                             CreateAnnouncementScreen(
                                 onBackClick = {
@@ -241,12 +232,29 @@ class MainActivity : ComponentActivity() {
                                     navController.popBackStack()
                                 },
                                 onPublish = { newAnnouncement ->
+                                    // 1. Add to teacher's Manage Announcements list
                                     publishedAnnouncements.add(
-                                        0, // insert at top of the list
+                                        0,
                                         newAnnouncement.toManageCard(
                                             id = publishedAnnouncements.size + 100
                                         )
                                     )
+
+                                    // 2. SYNC TO STUDENT DASHBOARD:
+                                    //    Convert NewAnnouncement → Announcement and push
+                                    //    into the shared repository. The student's
+                                    //    DashboardScreen reads from here and recomposes
+                                    //    automatically because it's a mutableStateListOf.
+                                    AnnouncementRepository.publish(
+                                        Announcement(
+                                            title   = newAnnouncement.title,
+                                            date    = newAnnouncement.postDate,
+                                            content = newAnnouncement.message,
+                                            bullets = emptyList(), // no bullet breakdown from the form
+                                            footer  = if (newAnnouncement.isPriority) "⚠ Priority Announcement" else ""
+                                        )
+                                    )
+
                                     navController.popBackStack()
                                 }
                             )
