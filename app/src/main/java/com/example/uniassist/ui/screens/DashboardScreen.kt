@@ -6,12 +6,13 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,7 +29,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.uniassist.R
-import com.example.uniassist.data.AnnouncementRepository
+import com.example.uniassist.ui.viewmodel.AnnouncementViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -47,13 +48,13 @@ data class Announcement(
     val footer: String
 )
 
-// removed the old hardcoded announcements
-
 @Composable
 fun DashboardScreen(
     role: String = "Student",
     firstName: String = "",
     lastName: String = "",
+    // MVVM
+    announcementViewModel: AnnouncementViewModel,
     onScheduleClick: () -> Unit = {},
     onCampusClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {}
@@ -67,6 +68,9 @@ fun DashboardScreen(
     } else {
         if (role == "Teacher") "Prof. Jane Doe" else "Jane Doe"
     }
+
+    // Collect the live StateFlow from the ViewModel.
+    val announcements by announcementViewModel.announcements.collectAsState()
 
     Scaffold(
         modifier = Modifier
@@ -90,18 +94,10 @@ fun DashboardScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 100.dp)
         ) {
-            item {
-                WelcomeSection(
-                    userName = fullName,
-                    mascotRes = mascotRes
-                )
-            }
-            item {
-                AnnouncementHeader()
-            }
-            // CHANGED: reads from AnnouncementRepository instead of the old
-            // hardcoded local list. Recomposes automatically when teacher publishes.
-            items(AnnouncementRepository.announcements) { announcement ->
+            item { WelcomeSection(userName = fullName, mascotRes = mascotRes) }
+            item { AnnouncementHeader() }
+            // Driven by StateFlow
+            items(announcements) { announcement ->
                 AnnouncementCard(announcement)
             }
         }
@@ -114,26 +110,14 @@ fun DashboardHeaderSection(role: String) {
         modifier = Modifier
             .fillMaxWidth()
             .height(65.dp)
-            .background(
-                Brush.horizontalGradient(
-                    listOf(Color(0xFF7CA786), Color(0xFFE2F1C6))
-                )
-            )
+            .background(Brush.horizontalGradient(listOf(Color(0xFF7CA786), Color(0xFFE2F1C6))))
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = role,
-                color = Color(0xFF1B5E20),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(end = 16.dp)
-            )
+            Text(role, color = Color(0xFF1B5E20), fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 16.dp))
             Icon(Icons.Default.Notifications, null, tint = Color(0xFF1B5E20), modifier = Modifier.size(32.dp))
             Spacer(modifier = Modifier.width(16.dp))
             Icon(Icons.Default.AccountCircle, null, tint = Color(0xFF1B5E20), modifier = Modifier.size(32.dp))
@@ -155,19 +139,12 @@ fun WelcomeSection(userName: String, mascotRes: Int) {
             .clip(RoundedCornerShape(14.dp))
             .background(
                 brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        Color(0xFF377243).copy(alpha = 0.8f),
-                        Color(0xFF56A566).copy(alpha = 0.8f)
-                    )
-                ),
-                shape = RoundedCornerShape(14.dp)
+                    colors = listOf(Color(0xFF377243).copy(alpha = 0.8f), Color(0xFF56A566).copy(alpha = 0.8f))
+                )
             )
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(20.dp)
-                .align(Alignment.CenterStart),
+            modifier = Modifier.fillMaxSize().padding(20.dp).align(Alignment.CenterStart),
             verticalArrangement = Arrangement.Center
         ) {
             Text("Welcome back,", fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 18.sp, color = Color.White)
@@ -176,15 +153,10 @@ fun WelcomeSection(userName: String, mascotRes: Int) {
             Text(day,  fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 16.sp, color = Color.White)
             Text(date, fontFamily = Poppins, fontWeight = FontWeight.Normal, fontSize = 14.sp, color = Color.White.copy(alpha = 0.9f))
         }
-
         Image(
             painter = painterResource(id = mascotRes),
             contentDescription = "Mascot",
-            modifier = Modifier
-                .size(165.dp)
-                .align(Alignment.BottomEnd)
-                .offset(y = 25.dp)
-                .clip(RoundedCornerShape(16.dp)),
+            modifier = Modifier.size(165.dp).align(Alignment.BottomEnd).offset(y = 25.dp).clip(RoundedCornerShape(16.dp)),
             contentScale = ContentScale.Fit
         )
     }
@@ -192,15 +164,8 @@ fun WelcomeSection(userName: String, mascotRes: Int) {
 
 @Composable
 fun AnnouncementHeader() {
-    Row(
-        Modifier.padding(horizontal = 24.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            color = Color(0xFFE9B44C),
-            shape = RoundedCornerShape(10.dp),
-            modifier = Modifier.size(44.dp)
-        ) {
+    Row(Modifier.padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
+        Surface(color = Color(0xFFE9B44C), shape = RoundedCornerShape(10.dp), modifier = Modifier.size(44.dp)) {
             Icon(Icons.Default.Campaign, null, tint = Color.White, modifier = Modifier.padding(8.dp))
         }
         Spacer(modifier = Modifier.width(12.dp))
@@ -217,10 +182,7 @@ fun AnnouncementCard(announcement: Announcement) {
             .border(1.dp, Color(0xFFDDE9E1), RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(Color(0xFFF8FAF8))
     ) {
-        Column(
-            Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(announcement.title, fontFamily = Poppins, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = Color(0xFF1B5E20))
             Text("Date: ${announcement.date}", fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF1B5E20).copy(alpha = 0.8f))
             Text(announcement.content, fontFamily = Poppins, fontSize = 14.sp, lineHeight = 20.sp, color = Color(0xFF1B5E20))
@@ -230,13 +192,12 @@ fun AnnouncementCard(announcement: Announcement) {
                         withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("${it.first} ") }
                         append(it.second)
                     },
-                    fontFamily = Poppins,
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp,
-                    color = Color(0xFF1B5E20)
+                    fontFamily = Poppins, fontSize = 14.sp, lineHeight = 20.sp, color = Color(0xFF1B5E20)
                 )
             }
-            Text(announcement.footer, fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF1B5E20))
+            if (announcement.footer.isNotBlank()) {
+                Text(announcement.footer, fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF1B5E20))
+            }
         }
     }
 }
@@ -249,19 +210,12 @@ fun DashboardBottomNavigationBar(
     onSettingsClick: () -> Unit
 ) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .height(64.dp),
+        modifier = Modifier.fillMaxWidth().padding(16.dp).height(64.dp),
         shape = RoundedCornerShape(35.dp),
         color = Color(0xFF245B3D),
         shadowElevation = 8.dp
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
             BottomNavItem(Icons.Default.Home,          "Dashboard", currentRoute == "dashboard", {})
             BottomNavItem(Icons.Default.CalendarMonth, "Schedules", currentRoute == "schedule",  onScheduleClick)
             BottomNavItem(Icons.Default.Info,          "Campus",    currentRoute == "campus",    onCampusClick)

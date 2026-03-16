@@ -22,9 +22,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.uniassist.ui.theme.*
+import com.example.uniassist.ui.viewmodel.TaskViewModel
 import java.text.SimpleDateFormat
 import java.util.*
-import com.example.uniassist.ui.theme.*
 
 private val screenContentPadding = 16.dp
 
@@ -35,32 +36,35 @@ data class TaskItem(
     val completed: Boolean
 )
 
-private fun dateKeyForOffset(offsetDays: Int): String {
-    val calendar = Calendar.getInstance()
-    calendar.add(Calendar.DAY_OF_YEAR, offsetDays)
-    val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    return formatter.format(calendar.time)
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleAndTaskScreen(
+    // MVVM
+    taskViewModel: TaskViewModel,
     onDashboardClick: () -> Unit = {},
     onCampusClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {}
 ) {
     val datePickerState = rememberDatePickerState()
 
-    val taskList = remember {
-        mutableStateListOf(
-            TaskItem(1, "ITP103 Assignment", dateKeyForOffset(0), true),
-            TaskItem(2, "Claim Clearance", dateKeyForOffset(0), true),
-            TaskItem(3, "Capstone meeting", dateKeyForOffset(1), false)
-        )
+    // Derive the selected date key from the calendar picker.
+    val selectedDateKey by remember(datePickerState.selectedDateMillis) {
+        derivedStateOf {
+            val millis = datePickerState.selectedDateMillis ?: System.currentTimeMillis()
+            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(millis))
+        }
     }
 
+    // Tell the ViewModel which date is selected so it queries Room for that day.
+    LaunchedEffect(selectedDateKey) {
+        taskViewModel.setSelectedDate(selectedDateKey)
+    }
+
+    // Collect the live task list from Room via StateFlow.
+    val tasksForSelectedDate by taskViewModel.tasksForSelectedDate.collectAsState()
+
     var taskInputText by remember { mutableStateOf("") }
-    var editingTaskId by remember { mutableStateOf<Int?>(null) }
+    var editingTask   by remember { mutableStateOf<TaskItem?>(null) }
 
     Scaffold(
         modifier = Modifier
@@ -78,10 +82,7 @@ fun ScheduleAndTaskScreen(
                     )
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .align(Alignment.Center),
+                    modifier = Modifier.fillMaxWidth().padding(16.dp).align(Alignment.Center),
                     horizontalArrangement = Arrangement.End
                 ) {
                     Icon(Icons.Default.Notifications, "Notifications", tint = Color(0xFF1B5E20), modifier = Modifier.size(28.dp))
@@ -99,16 +100,6 @@ fun ScheduleAndTaskScreen(
             )
         }
     ) { paddingValues ->
-        val selectedDateKey = remember(datePickerState.selectedDateMillis) {
-            val millis = datePickerState.selectedDateMillis ?: System.currentTimeMillis()
-            val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            formatter.format(Date(millis))
-        }
-
-        val tasksForSelectedDate = remember(taskList, selectedDateKey) {
-            taskList.filter { it.dateKey == selectedDateKey }
-        }
-
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -128,10 +119,7 @@ fun ScheduleAndTaskScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF9D40A6)),
+                        modifier = Modifier.size(40.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF9D40A6)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(Icons.Default.CalendarMonth, null, tint = Color.White, modifier = Modifier.size(24.dp))
@@ -147,10 +135,8 @@ fun ScheduleAndTaskScreen(
             item {
                 val selectedDateText = remember(datePickerState.selectedDateMillis) {
                     val millis = datePickerState.selectedDateMillis ?: System.currentTimeMillis()
-                    val formatter = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
-                    formatter.format(Date(millis))
+                    SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(Date(millis))
                 }
-
                 Text(
                     text = "Tasks for $selectedDateText",
                     color = DarkGreenText,
@@ -163,16 +149,16 @@ fun ScheduleAndTaskScreen(
                 TaskInputRow(
                     taskText = taskInputText,
                     onTaskTextChange = { taskInputText = it },
-                    buttonLabel = if (editingTaskId != null) "Save" else "Add",
+                    buttonLabel = if (editingTask != null) "Save" else "Add",
                     onAddClick = {
                         if (taskInputText.isNotBlank()) {
-                            if (editingTaskId != null) {
-                                val index = taskList.indexOfFirst { it.id == editingTaskId }
-                                if (index != -1) taskList[index] = taskList[index].copy(title = taskInputText)
-                                editingTaskId = null
+                            if (editingTask != null) {
+                                // Update existing task title in Room.
+                                taskViewModel.updateTask(editingTask!!.copy(title = taskInputText))
+                                editingTask = null
                             } else {
-                                val newId = (taskList.maxOfOrNull { it.id } ?: 0) + 1
-                                taskList.add(TaskItem(newId, taskInputText, selectedDateKey, false))
+                                // Add new task to Room for the selected date.
+                                taskViewModel.addTask(taskInputText)
                             }
                             taskInputText = ""
                         }
@@ -191,7 +177,7 @@ fun ScheduleAndTaskScreen(
             } else {
                 item {
                     val completedCount = tasksForSelectedDate.count { it.completed }
-                    val totalCount = tasksForSelectedDate.size
+                    val totalCount     = tasksForSelectedDate.size
                     Text(
                         text = "$completedCount of $totalCount tasks completed",
                         color = DarkGreenText,
@@ -203,15 +189,18 @@ fun ScheduleAndTaskScreen(
                 items(tasksForSelectedDate, key = { it.id }) { task ->
                     TaskRow(
                         task = task,
-                        onCheckedChange = { isChecked ->
-                            val index = taskList.indexOfFirst { it.id == task.id }
-                            if (index != -1) taskList[index] = task.copy(completed = isChecked)
+                        onCheckedChange = {
+                            // Toggle persisted directly to Room.
+                            taskViewModel.toggleComplete(task)
                         },
                         onEditClick = {
                             taskInputText = task.title
-                            editingTaskId = task.id
+                            editingTask = task
                         },
-                        onDeleteClick = { taskList.removeIf { it.id == task.id } }
+                        onDeleteClick = {
+                            // Delete from Room — list updates automatically.
+                            taskViewModel.deleteTask(task.id)
+                        }
                     )
                 }
             }
@@ -226,10 +215,7 @@ fun ScheduleBottomNavigationBar(
     onSettingsClick: () -> Unit
 ) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .height(65.dp),
+        modifier = Modifier.fillMaxWidth().padding(16.dp).height(65.dp),
         shape = RoundedCornerShape(35.dp),
         color = Color(0xFF245B3D),
         shadowElevation = 8.dp
@@ -239,13 +225,14 @@ fun ScheduleBottomNavigationBar(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomNavItem(Icons.Default.Home, "Dashboard", false, onDashboardClick)
-            BottomNavItem(Icons.Default.CalendarMonth, "Schedules", true, {})
-            BottomNavItem(Icons.Default.Info, "Campus", false, onCampusClick)
-            BottomNavItem(Icons.Default.Settings, "Settings", false, onSettingsClick)
+            BottomNavItem(Icons.Default.Home,          "Dashboard", false, onDashboardClick)
+            BottomNavItem(Icons.Default.CalendarMonth, "Schedules", true,  {})
+            BottomNavItem(Icons.Default.Info,          "Campus",    false, onCampusClick)
+            BottomNavItem(Icons.Default.Settings,      "Settings",  false, onSettingsClick)
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -277,6 +264,7 @@ private fun CalendarCard(datePickerState: DatePickerState) {
         )
     }
 }
+
 
 @Composable
 private fun TaskInputRow(
@@ -318,6 +306,7 @@ private fun TaskInputRow(
         }
     }
 }
+
 
 @Composable
 private fun TaskRow(

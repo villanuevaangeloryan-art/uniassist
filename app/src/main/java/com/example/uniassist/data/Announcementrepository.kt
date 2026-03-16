@@ -1,54 +1,64 @@
 package com.example.uniassist.data
 
-import androidx.compose.runtime.mutableStateListOf
+import com.example.uniassist.data.db.AnnouncementDao
+import com.example.uniassist.data.db.AnnouncementEntity
 import com.example.uniassist.ui.screens.Announcement
-
-// singleton that acts as the single source of truth for announcements.
-//  Both the teacher side (publish) and the student side (dashboard) share this
-//  same list, when a teacher publishes, the student sees it instantly.
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 
-object AnnouncementRepository {
+class AnnouncementRepository(private val dao: AnnouncementDao) {
 
-    val announcements = mutableStateListOf(
-
-        Announcement(
-            title   = "Campus Operations & Class Suspension",
-            date    = "January 19, 2026",
-            content = "All on-campus classes are suspended due to bad weather.",
-            bullets = listOf(
-                "Online Classes:" to "Asynchronous via portal",
-                "Offices:"        to "Skeletal workforce",
-                "Campus Access:"  to "Essential staff only"
-            ),
-            footer = "Stay safe everyone!"
-        ),
-        Announcement(
-            title   = "Scholarship Applications Open",
-            date    = "January 25, 2026",
-            content = "Students with GPA 1.75+ may apply.",
-            bullets = listOf(
-                "Deadline:" to "Feb 10",
-                "Where:"    to "Student Portal",
-                "Contact:"  to "Scholarship Office"
-            ),
-            footer = "Don't miss this opportunity!"
-        ),
-        Announcement(
-            title   = "Library Hours Extended",
-            date    = "February 1, 2026",
-            content = "The university library will be open until 10 PM during exam week.",
-            bullets = listOf(
-                "New Hours:"         to "8 AM – 10 PM",
-                "Quiet Zones:"       to "Available on 3rd floor",
-                "Book Reservations:" to "Online portal"
-            ),
-            footer = "Good luck with your exams!"
-        )
-    )
-
-    // Called by the teacher when they tap PUBLISH in CreateAnnouncementScreen
-    fun publish(announcement: Announcement) {
-        announcements.add(0, announcement)
+    // Live stream of all announcements as UI models, newest first.
+    val announcements: Flow<List<Announcement>> = dao.getAllFlow().map { entities ->
+        entities.map { it.toUiModel() }
     }
+
+    // Live count of unread announcements
+    val unreadCount: Flow<Int> = dao.getUnreadCountFlow()
+
+    // Called when the teacher taps PUBLISH.
+    suspend fun publish(announcement: Announcement, category: String, isPriority: Boolean) {
+        dao.insert(announcement.toEntity(category = category, isPriority = isPriority))
+    }
+
+    suspend fun markAsRead(id: Int) = dao.markAsRead(id)
+
+    suspend fun markAllAsRead() = dao.markAllAsRead()
+
+    suspend fun delete(entity: AnnouncementEntity) = dao.delete(entity)
+}
+
+
+// Converts a Room entity to the Announcement UI model used by DashboardScreen.
+fun AnnouncementEntity.toUiModel(): Announcement {
+    val bullets = if (bulletsRaw.isBlank()) {
+        emptyList()
+    } else {
+        bulletsRaw.split("||").mapNotNull { pair ->
+            val parts = pair.split("|")
+            if (parts.size == 2) parts[0] to parts[1] else null
+        }
+    }
+    return Announcement(
+        title   = title,
+        date    = date,
+        content = content,
+        bullets = bullets,
+        footer  = footer
+    )
+}
+
+// Converts the UI Announcement model back to a Room entity for storage.
+fun Announcement.toEntity(category: String, isPriority: Boolean): AnnouncementEntity {
+    val bulletsRaw = bullets.joinToString("||") { "${it.first}|${it.second}" }
+    return AnnouncementEntity(
+        title      = title,
+        date       = date,
+        content    = content,
+        bulletsRaw = bulletsRaw,
+        footer     = footer,
+        category   = category,
+        isPriority = isPriority
+    )
 }
