@@ -302,7 +302,7 @@ private fun TaskInputRow(
             singleLine = true,
             textStyle = TextStyle(color = Color.Black, fontSize = 16.sp),
             decorationBox = { innerTextField ->
-                if (taskText.isEmpty()) Text("Enter task", color = GreyText)
+                if (taskText.isEmpty()) Text("Add a task for this day", color = GreyText)
                 innerTextField()
             }
         )
