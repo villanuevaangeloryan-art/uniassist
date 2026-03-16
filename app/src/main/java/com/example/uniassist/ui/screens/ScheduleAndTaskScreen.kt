@@ -146,10 +146,9 @@ fun ScheduleAndTaskScreen(
 
             item {
                 val selectedDateText = remember(datePickerState.selectedDateMillis) {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        val formatter = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
-                        formatter.format(Date(millis))
-                    } ?: "No date selected"
+                    val millis = datePickerState.selectedDateMillis ?: System.currentTimeMillis()
+                    val formatter = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
+                    formatter.format(Date(millis))
                 }
 
                 Text(
