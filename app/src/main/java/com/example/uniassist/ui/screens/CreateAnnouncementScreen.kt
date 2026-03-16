@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.outlined.Archive
@@ -32,26 +33,49 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material.icons.filled.ArrowDropDown
+import java.text.SimpleDateFormat
+import java.util.*
 
 private val GreenDark = Color(0xFF1B5E20)
 private val GreenMedium = Color(0xFF56A566)
 private val BackgroundCream = Color(0xFFFDFDF8)
 
+// ── Data class for a new announcement produced by this screen ─────────────────
+data class NewAnnouncement(
+    val title: String,
+    val category: String,
+    val isPriority: Boolean,
+    val message: String,
+    val postDate: String,
+    val endDate: String
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateAnnouncementScreen(
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    // FIX 1: Added onSaveDraft and onPublish callbacks.
+    onSaveDraft: (NewAnnouncement) -> Unit = {},
+    onPublish: (NewAnnouncement) -> Unit = {}
 ) {
-    var title by remember { mutableStateOf("Important Notice") }
+    var title by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("Emergency") }
     var isPriority by remember { mutableStateOf(true) }
     var message by remember { mutableStateOf("") }
-    var postDate by remember { mutableStateOf("February 18, 2026") }
-    var endDate by remember { mutableStateOf("February 27, 2026") }
 
-    // Controls the profile dropdown
+    // FIX 2: Dates are now stored as Date objects instead of hardcoded strings.
+    var postDate by remember { mutableStateOf(Date()) }
+    var endDate by remember { mutableStateOf(Date()) }
+
+    // FIX 3: Separate boolean flags to show/hide each date picker dialog.
+    var showPostDatePicker by remember { mutableStateOf(false) }
+    var showEndDatePicker by remember { mutableStateOf(false) }
+
+    val dateFormatter = remember { SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()) }
+
     var profileMenuExpanded by remember { mutableStateOf(false) }
+
+    val isPublishEnabled = title.isNotBlank() && message.isNotBlank()
 
     Scaffold(
         containerColor = BackgroundCream
@@ -70,16 +94,27 @@ fun CreateAnnouncementScreen(
                     .background(Brush.horizontalGradient(listOf(Color(0xFF7CA786), Color(0xFFE2F1C6))))
             ) {
                 Row(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = GreenDark, modifier = Modifier.size(28.dp))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = GreenDark,
+                            modifier = Modifier.size(28.dp)
+                        )
                     }
-                    Text("Create Announcement", fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = GreenDark)
-
-                    // Profile Menu
+                    Text(
+                        "Create Announcement",
+                        fontFamily = Poppins,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = GreenDark
+                    )
                     Box {
                         IconButton(onClick = { profileMenuExpanded = true }) {
                             Box(
@@ -96,8 +131,6 @@ fun CreateAnnouncementScreen(
                                 )
                             }
                         }
-
-                        // Dropdown Options
                         DropdownMenu(
                             expanded = profileMenuExpanded,
                             onDismissRequest = { profileMenuExpanded = false },
@@ -105,23 +138,17 @@ fun CreateAnnouncementScreen(
                         ) {
                             DropdownMenuItem(
                                 text = { Text("Settings", fontFamily = Poppins, fontSize = 12.sp) },
-                                leadingIcon = {
-                                    Icon(imageVector = Icons.Outlined.Settings, contentDescription = null, modifier = Modifier.size(16.dp))
-                                },
+                                leadingIcon = { Icon(Icons.Outlined.Settings, null, modifier = Modifier.size(16.dp)) },
                                 onClick = { profileMenuExpanded = false }
                             )
                             DropdownMenuItem(
                                 text = { Text("Drafts", fontFamily = Poppins, fontSize = 12.sp) },
-                                leadingIcon = {
-                                    Icon(imageVector = Icons.Outlined.Description, contentDescription = null, modifier = Modifier.size(16.dp))
-                                },
+                                leadingIcon = { Icon(Icons.Outlined.Description, null, modifier = Modifier.size(16.dp)) },
                                 onClick = { profileMenuExpanded = false }
                             )
                             DropdownMenuItem(
                                 text = { Text("Archive", fontFamily = Poppins, fontSize = 12.sp) },
-                                leadingIcon = {
-                                    Icon(imageVector = Icons.Outlined.Archive, contentDescription = null, modifier = Modifier.size(16.dp))
-                                },
+                                leadingIcon = { Icon(Icons.Outlined.Archive, null, modifier = Modifier.size(16.dp)) },
                                 onClick = { profileMenuExpanded = false }
                             )
                         }
@@ -131,19 +158,19 @@ fun CreateAnnouncementScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ── Form Fields ───────────────────────────────────────────────────
             Column(modifier = Modifier.padding(horizontal = 24.dp)) {
 
-                // Title
+                // Title field
                 InputLabel("Title")
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     shape = RoundedCornerShape(8.dp),
+                    placeholder = { Text("Enter announcement title", color = Color.LightGray, fontSize = 14.sp) },
                     textStyle = TextStyle(fontFamily = Poppins, fontSize = 14.sp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF6200EE), // Purple border from mockup
+                        focusedBorderColor = GreenMedium,
                         unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White
@@ -152,13 +179,13 @@ fun CreateAnnouncementScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Category (with simple drill-down dropdown)
+                // Category dropdown
                 InputLabel("Category")
                 CategoryDropdownMenu(selectedCategory = category, onCategorySelected = { category = it })
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Priority Switch
+                // Priority toggle
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -179,63 +206,125 @@ fun CreateAnnouncementScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Message Box with Sliding Toolbar
+                // Message box
                 InputLabel("Message")
                 RichTextEditor(message = message, onMessageChange = { message = it })
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Dates
+                // ── Post Date ──────────────────────────────────────────────────
+                // FIX 4: The field now reads from the live postDate state (not a
+                // hardcoded string). Both the field and the trailing icon open the
+                // date picker dialog via showPostDatePicker = true.
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     InputLabel("Post Date", modifier = Modifier.weight(1f))
                     OutlinedTextField(
-                        value = postDate,
+                        value = dateFormatter.format(postDate),
                         onValueChange = {},
                         readOnly = true,
-                        modifier = Modifier.weight(1.5f).height(50.dp),
+                        modifier = Modifier
+                            .weight(1.5f)
+                            .height(50.dp)
+                            .clickable { showPostDatePicker = true },
                         shape = RoundedCornerShape(8.dp),
                         textStyle = TextStyle(fontFamily = Poppins, fontSize = 14.sp),
-                        trailingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(18.dp)) },
-                        colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, focusedContainerColor = Color.White)
+                        trailingIcon = {
+                            IconButton(onClick = { showPostDatePicker = true }) {
+                                Icon(
+                                    Icons.Default.CalendarToday,
+                                    contentDescription = "Pick post date",
+                                    modifier = Modifier.size(18.dp),
+                                    tint = GreenDark
+                                )
+                            }
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = Color.White,
+                            focusedContainerColor = Color.White
+                        )
                     )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // ── End Date ───────────────────────────────────────────────────
+                // FIX 5: Same fix as Post Date above.
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     InputLabel("End Date", modifier = Modifier.weight(1f))
                     OutlinedTextField(
-                        value = endDate,
+                        value = dateFormatter.format(endDate),
                         onValueChange = {},
                         readOnly = true,
-                        modifier = Modifier.weight(1.5f).height(50.dp),
+                        modifier = Modifier
+                            .weight(1.5f)
+                            .height(50.dp)
+                            .clickable { showEndDatePicker = true },
                         shape = RoundedCornerShape(8.dp),
                         textStyle = TextStyle(fontFamily = Poppins, fontSize = 14.sp),
-                        trailingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(18.dp)) },
-                        colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.White, focusedContainerColor = Color.White)
+                        trailingIcon = {
+                            IconButton(onClick = { showEndDatePicker = true }) {
+                                Icon(
+                                    Icons.Default.CalendarToday,
+                                    contentDescription = "Pick end date",
+                                    modifier = Modifier.size(18.dp),
+                                    tint = GreenDark
+                                )
+                            }
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = Color.White,
+                            focusedContainerColor = Color.White
+                        )
                     )
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Buttons
+                // ── Action Buttons ─────────────────────────────────────────────
+                // FIX 6: Both buttons now call their respective callbacks with the
+                // filled-in announcement data instead of being no-op comments.
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Button(
-                        onClick = { /* Save Draft */ },
+                        onClick = {
+                            onSaveDraft(
+                                NewAnnouncement(
+                                    title = title,
+                                    category = category,
+                                    isPriority = isPriority,
+                                    message = message,
+                                    postDate = dateFormatter.format(postDate),
+                                    endDate = dateFormatter.format(endDate)
+                                )
+                            )
+                        },
                         modifier = Modifier.weight(1f).height(50.dp),
                         shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E5E3E))
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E5E3E)),
+                        enabled = title.isNotBlank()
                     ) {
                         Text("SAVE DRAFT", fontFamily = Poppins, fontWeight = FontWeight.Bold)
                     }
+
                     Button(
-                        onClick = { /* Publish */ },
+                        onClick = {
+                            onPublish(
+                                NewAnnouncement(
+                                    title = title,
+                                    category = category,
+                                    isPriority = isPriority,
+                                    message = message,
+                                    postDate = dateFormatter.format(postDate),
+                                    endDate = dateFormatter.format(endDate)
+                                )
+                            )
+                        },
                         modifier = Modifier.weight(1f).height(50.dp),
                         shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E5E3E))
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20)),
+                        enabled = isPublishEnabled
                     ) {
                         Text("PUBLISH", fontFamily = Poppins, fontWeight = FontWeight.Bold)
                     }
@@ -245,9 +334,75 @@ fun CreateAnnouncementScreen(
             }
         }
     }
+
+    // ── Post Date Picker Dialog ────────────────────────────────────────────────
+    // FIX 7: These two dialogs were completely absent from the original screen.
+    // They follow the exact same working pattern from AddCampusDepartmentScreen.
+    if (showPostDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = postDate.time
+        )
+        DatePickerDialog(
+            onDismissRequest = { showPostDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { postDate = Date(it) }
+                        showPostDatePicker = false
+                    }
+                ) { Text("OK", color = Color(0xFF245B3D)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPostDatePicker = false }) {
+                    Text("Cancel", color = Color(0xFF666666))
+                }
+            }
+        ) {
+            DatePicker(
+                state = datePickerState,
+                colors = DatePickerDefaults.colors(
+                    selectedDayContainerColor = Color(0xFF245B3D),
+                    todayContentColor = Color(0xFF245B3D),
+                    todayDateBorderColor = Color(0xFF245B3D)
+                )
+            )
+        }
+    }
+
+    // ── End Date Picker Dialog ─────────────────────────────────────────────────
+    if (showEndDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = endDate.time
+        )
+        DatePickerDialog(
+            onDismissRequest = { showEndDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { endDate = Date(it) }
+                        showEndDatePicker = false
+                    }
+                ) { Text("OK", color = Color(0xFF245B3D)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEndDatePicker = false }) {
+                    Text("Cancel", color = Color(0xFF666666))
+                }
+            }
+        ) {
+            DatePicker(
+                state = datePickerState,
+                colors = DatePickerDefaults.colors(
+                    selectedDayContainerColor = Color(0xFF245B3D),
+                    todayContentColor = Color(0xFF245B3D),
+                    todayDateBorderColor = Color(0xFF245B3D)
+                )
+            )
+        }
+    }
 }
 
-// ── Components ────────────────────────────────────────────────────────────────
+// ── Shared sub-composables ────────────────────────────────────────────────────
 
 @Composable
 private fun InputLabel(text: String, modifier: Modifier = Modifier.padding(bottom = 8.dp)) {
@@ -274,61 +429,42 @@ private fun CategoryDropdownMenu(selectedCategory: String, onCategorySelected: (
     )
 
     Box(modifier = Modifier.fillMaxWidth()) {
-        // The visible text field
         OutlinedTextField(
             value = selectedCategory,
             onValueChange = {},
-            readOnly = true, // Keeps keyboard from opening
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            readOnly = true,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(8.dp),
             textStyle = TextStyle(fontFamily = Poppins, fontSize = 14.sp),
             trailingIcon = {
-                // Adding the dropdown arrow makes it visually obvious it's clickable
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Select Category",
-                    tint = Color.Gray,
-                    modifier = Modifier.size(24.dp)
-                )
+                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = GreenMedium)
             },
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
                 focusedBorderColor = GreenMedium,
-                unfocusedContainerColor = Color.White,
+                unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
                 focusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
+                unfocusedContainerColor = Color.White
             )
         )
-
-        // Invisible overlay that intercepts the click flawlessly
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .clickable { expanded = true }
-        )
+        // Overlay to reliably capture taps on the readOnly TextField
+        Box(modifier = Modifier.matchParentSize().clickable { expanded = true })
 
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = {
-                expanded = false
-                activeSubMenu = null
-            },
-            modifier = Modifier.background(Color.White).width(200.dp)
+            onDismissRequest = { expanded = false; activeSubMenu = null },
+            modifier = Modifier.background(Color.White)
         ) {
             if (activeSubMenu == null) {
-                // Show Main Categories
                 categories.keys.forEach { mainCat ->
                     DropdownMenuItem(
-                        text = { Text(mainCat, fontFamily = Poppins, color = GreenMedium, fontWeight = FontWeight.Medium) },
-                        trailingIcon = { Icon(Icons.Default.ChevronRight, contentDescription = null, tint = GreenMedium) },
+                        text = { Text(mainCat, fontFamily = Poppins, color = Color.DarkGray) },
+                        trailingIcon = {
+                            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = GreenMedium)
+                        },
                         onClick = { activeSubMenu = mainCat }
                     )
                 }
             } else {
-                // Show Sub Categories
                 DropdownMenuItem(
                     text = { Text("← Back to Categories", fontFamily = Poppins, color = Color.Gray, fontSize = 12.sp) },
                     onClick = { activeSubMenu = null }
@@ -373,13 +509,10 @@ private fun RichTextEditor(message: String, onMessageChange: (String) -> Unit) {
                 innerTextField()
             }
         )
-
-        // Sliding Toolbar at the bottom left
         Row(
             modifier = Modifier.align(Alignment.BottomStart),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // "Aa" Toggle Button
             Surface(
                 onClick = { isToolbarExpanded = !isToolbarExpanded },
                 shape = RoundedCornerShape(4.dp),
@@ -388,8 +521,6 @@ private fun RichTextEditor(message: String, onMessageChange: (String) -> Unit) {
             ) {
                 Text("Aa", fontFamily = Poppins, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), fontSize = 14.sp, fontWeight = FontWeight.Medium)
             }
-
-            // The animated sliding tools
             AnimatedVisibility(
                 visible = isToolbarExpanded,
                 enter = expandHorizontally(animationSpec = tween(300)) + fadeIn(),
@@ -402,13 +533,13 @@ private fun RichTextEditor(message: String, onMessageChange: (String) -> Unit) {
                     color = Color.White
                 ) {
                     Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("B", fontFamily = Poppins, fontWeight = FontWeight.Bold, modifier = Modifier.clickable {  })
-                        Text("I", fontFamily = Poppins, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, modifier = Modifier.clickable {  })
-                        Text("U", fontFamily = Poppins, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline, modifier = Modifier.clickable {  })
-                        Text("H1", fontFamily = Poppins, fontWeight = FontWeight.Bold, modifier = Modifier.clickable {  })
-                        Text("H2", fontFamily = Poppins, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable {  })
-                        Text("H3", fontFamily = Poppins, fontWeight = FontWeight.Medium, modifier = Modifier.clickable {  })
-                        Text("H4", fontFamily = Poppins, modifier = Modifier.clickable {  })
+                        Text("B", fontFamily = Poppins, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { })
+                        Text("I", fontFamily = Poppins, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, modifier = Modifier.clickable { })
+                        Text("U", fontFamily = Poppins, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline, modifier = Modifier.clickable { })
+                        Text("H1", fontFamily = Poppins, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { })
+                        Text("H2", fontFamily = Poppins, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { })
+                        Text("H3", fontFamily = Poppins, fontWeight = FontWeight.Medium, modifier = Modifier.clickable { })
+                        Text("H4", fontFamily = Poppins, modifier = Modifier.clickable { })
                     }
                 }
             }
