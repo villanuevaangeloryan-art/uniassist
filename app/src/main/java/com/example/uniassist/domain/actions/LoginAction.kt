@@ -7,7 +7,7 @@ sealed class LoginAction {
     data object TogglePasswordVisibility : LoginAction()
 
     // Form Submission
-    data object LoginButtonClicked : LoginAction()
+    data class LoginButtonClicked(val expectedRole: String) : LoginAction()
 
     // Navigation Actions
     data object NavigateToDashboard : LoginAction()   // Changed from NavigateToHome

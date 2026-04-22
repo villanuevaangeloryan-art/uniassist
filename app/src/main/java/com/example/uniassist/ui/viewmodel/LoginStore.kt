@@ -15,52 +15,49 @@ class LoginStore(
     private val authRepository: FirebaseAuthRepository = FirebaseAuthRepository()
 ) : ViewModel() {
 
-    // Using StateFlow to handle the MVI state updates
     private val _state = MutableStateFlow(LoginState())
     val state: StateFlow<LoginState> = _state
     private val reducer = LoginReducer()
 
-    // This handles all the clicks and typing from the Login Screen
     fun dispatch(action: LoginAction) {
         viewModelScope.launch {
-            // First, update the state based on the action (like typing email)
             _state.update { current ->
                 reducer.reduce(current, action)
             }
 
-            // If the button was clicked and the form is valid, start the login process
             when (action) {
+                // 1. Catch the expectedRole from the action
                 is LoginAction.LoginButtonClicked -> {
-                    if (_state.value.isFormValid) performLogin()
+                    if (_state.value.isFormValid) performLogin(action.expectedRole)
                 }
                 else -> {}
             }
         }
     }
 
-    private suspend fun performLogin() {
-        // Reset errors and show the loading spinner
+    // 2. Add expectedRole as a parameter
+    private suspend fun performLogin(expectedRole: String) {
         _state.update { it.copy(isLoading = true, authError = "") }
 
         try {
-            // Call the repository to talk to Firebase
+            // 3. Pass expectedRole into the repository!
             val authResult = authRepository.signIn(
                 email = _state.value.email,
-                password = _state.value.password
+                password = _state.value.password,
+                expectedRole = expectedRole
             )
 
-            // If we reach here, login worked! Save the data and trigger navigation
             _state.update {
                 it.copy(
                     isLoading = false,
-                    userRole = authResult.role, // This role determines which dashboard they see
+                    userRole = authResult.role,
                     firstName = authResult.firstName,
                     lastName = authResult.lastName,
                     navigateToDashboard = true
                 )
             }
         } catch (e: Exception) {
-            // If login fails, show the error message and stop the loader
+            // If the gatekeeper throws an error, it gets caught right here!
             _state.update {
                 it.copy(
                     isLoading = false,
@@ -70,6 +67,5 @@ class LoginStore(
         }
     }
 
-    // Helper to stop the app from navigating in a loop
     fun resetNavigation() = dispatch(LoginAction.ResetNavigation)
 }

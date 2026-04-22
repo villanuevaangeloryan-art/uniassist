@@ -269,12 +269,27 @@ fun LoginScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(75.dp))
+                    // --- AUTH ERROR DISPLAY ---
+                    if (state.authError.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Text(
+                            text = state.authError,
+                            color = Color(0xFFD32F2F),
+                            fontSize = 13.sp,
+                            fontFamily = FontFamily(Font(R.font.poppins_medium)),
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(20.dp))
+                    } else {
+                        Spacer(modifier = Modifier.height(75.dp))
+                    }
 
                     Button(
                         onClick = {
                             focusManager.clearFocus()
-                            loginStore.dispatch(LoginAction.LoginButtonClicked)
+                            // Pass the 'role' variable down into the action!
+                            loginStore.dispatch(LoginAction.LoginButtonClicked(role))
                         },
                         modifier = Modifier
                             .fillMaxWidth()

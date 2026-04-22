@@ -12,31 +12,42 @@ data class AuthResult(
     val firstName: String,
     val lastName: String
 )
+
 class FirebaseAuthRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
-    // account with Gmail and Password
+    // Account with Gmail and Password
     suspend fun signUp(email: String, password: String): String {
         val result = auth.createUserWithEmailAndPassword(email, password).await()
         return result.user?.uid ?: throw Exception("Sign up failed")
     }
 
-    //sSave the extra info (names, role) to Firestore
+    // Save the extra info (names, role) to Firestore
     suspend fun saveProfile(uid: String, profileData: Map<String, Any>) {
         firestore.collection("users").document(uid).set(profileData).await()
     }
 
-    // Existing login function
-    suspend fun signIn(email: String, password: String): AuthResult {
+    // UPDATED: Now requires the 'expectedRole' to verify authorization
+    suspend fun signIn(email: String, password: String, expectedRole: String): AuthResult {
         val authResult = auth.signInWithEmailAndPassword(email, password).await()
         val user = authResult.user ?: throw Exception("Login failed")
         val doc = firestore.collection("users").document(user.uid).get().await()
 
+        val actualRole = doc.getString("role") ?: "Student"
+
+        // --- THE GATEKEEPER ---
+        if (actualRole != expectedRole) {
+            // Immediately sign them out of Firebase so they aren't stuck authenticated in the background
+            auth.signOut()
+            throw Exception("Access Denied: You are registered as a $actualRole, not a $expectedRole.")
+        }
+        // ----------------------
+
         return AuthResult(
             uid = user.uid,
             email = email,
-            role = doc.getString("role") ?: "Student",
+            role = actualRole,
             firstName = doc.getString("firstName") ?: "",
             lastName = doc.getString("lastName") ?: ""
         )
