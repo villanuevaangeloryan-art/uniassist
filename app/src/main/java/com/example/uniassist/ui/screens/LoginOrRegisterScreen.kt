@@ -3,6 +3,7 @@ package com.example.uniassist.ui.screens
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -35,7 +36,7 @@ import kotlinx.coroutines.launch
 // IMPORTING YOUR COLORS DIRECTLY FROM COLOR.KT
 import com.example.uniassist.ui.theme.BottomNavGreen
 import com.example.uniassist.ui.theme.GreyText
-
+import kotlinx.coroutines.tasks.await
 @Composable
 fun LoginOrRegisterScreen(
     navController: NavController,
@@ -44,6 +45,7 @@ fun LoginOrRegisterScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val repository = remember { FirebaseAuthRepository() }
+    var errorMessage by remember { mutableStateOf("") }
 
     // --- GOOGLE SIGN-IN SETUP ---
     val gso = remember {
@@ -65,27 +67,36 @@ fun LoginOrRegisterScreen(
                 if (idToken != null) {
                     scope.launch {
                         try {
-                            // Sign into Firebase with Google
                             val email = repository.signInWithGoogle(idToken)
-                            // Skip the old register screen and go straight to Step 2
-                            navController.navigate("complete_profile/$email/$role")
+                            val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+
+                            if (currentUser != null) {
+                                val alreadyRegistered = repository.isUserRegistered(currentUser.uid)
+
+                                if (alreadyRegistered) {
+                                    // User exists, block registration and show error
+                                    com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                                    errorMessage = "This email is already registered. Please use Login."
+                                } else {
+                                    errorMessage = ""
+                                    navController.navigate("complete_profile/$email/$role")
+                                }
+                            }
                         } catch (e: Exception) {
-                            println("Firebase auth failed: ${e.message}")
+                            errorMessage = "Authentication failed."
                         }
                     }
                 }
             } catch (e: ApiException) {
-                println("Google sign in failed: ${e.statusCode}")
+                errorMessage = "Google sign-in failed."
             }
         }
     }
-    // ----------------------------
 
     val poppinsBold = FontFamily(Font(R.font.poppins_bold))
     val poppinsMedium = FontFamily(Font(R.font.poppins_medium))
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Background Image
         Image(
             painter = painterResource(id = R.drawable.background_rolepick),
             contentDescription = "Background",
@@ -125,6 +136,17 @@ fun LoginOrRegisterScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            // --- MOVED ERROR MESSAGE HERE ---
+            AnimatedVisibility(visible = errorMessage.isNotEmpty()) {
+                Text(
+                    text = errorMessage,
+                    color = Color(0xFFD32F2F),
+                    fontSize = 14.sp,
+                    fontFamily = poppinsMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+
             // --- 1. SOLID LOGIN BUTTON ---
             Button(
                 onClick = { navController.navigate("login/$role") },
@@ -138,7 +160,7 @@ fun LoginOrRegisterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- 2. DIVIDER WITH "OR" ---
+            // --- 2. DIVIDER ---
             Row(
                 modifier = Modifier.fillMaxWidth(0.8f),
                 verticalAlignment = Alignment.CenterVertically
@@ -158,7 +180,6 @@ fun LoginOrRegisterScreen(
             // --- 3. OUTLINED GOOGLE REGISTER BUTTON ---
             OutlinedButton(
                 onClick = {
-                    // forces Google to "forget" the auto-login
                     googleSignInClient.signOut().addOnCompleteListener {
                         googleAuthLauncher.launch(googleSignInClient.signInIntent)
                     }

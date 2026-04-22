@@ -163,21 +163,29 @@ fun CompleteProfileScreen(
                             try {
                                 val user = FirebaseAuth.getInstance().currentUser
                                 if (user != null) {
-                                    // 1. Update their password in Firebase Auth
-                                    user.updatePassword(password).await()
+                                    //Check if this UID already has a profile in Firestore
+                                    val alreadyExists = repository.isUserRegistered(user.uid)
 
-                                    // 2. Save their details to Firestore
-                                    val profileData = mapOf(
-                                        "firstName" to firstName,
-                                        "lastName" to lastName,
-                                        "email" to email,
-                                        "role" to role
-                                    )
-                                    repository.saveProfile(user.uid, profileData)
+                                    if (alreadyExists) {
+                                        errorMessage = "This email is already registered. Please login instead."
+                                    } else {
+                                        // Update their password
+                                        user.updatePassword(password).await()
 
-                                    // 3. Go to Dashboard
-                                    navController.navigate("dashboard/$role/$firstName/$lastName") {
-                                        popUpTo("get_started") { inclusive = true }
+                                        // Save their details to Firestore
+                                        val profileData = mapOf(
+                                            "firstName" to firstName,
+                                            "lastName" to lastName,
+                                            "email" to email,
+                                            "role" to role,
+                                            "uid" to user.uid
+                                        )
+                                        repository.saveProfile(user.uid, profileData)
+
+                                        //  Go to Dashboard
+                                        navController.navigate("dashboard/$role/$firstName/$lastName") {
+                                            popUpTo("get_started") { inclusive = true }
+                                        }
                                     }
                                 }
                             } catch (e: Exception) {

@@ -58,4 +58,13 @@ class FirebaseAuthRepository(
         val result = auth.signInWithCredential(credential).await()
         return result.user?.email ?: throw Exception("Google Auth Failed")
     }
+
+    suspend fun isUserRegistered(uid: String): Boolean {
+        return try {
+            val document = firestore.collection("users").document(uid).get().await()
+            document.exists()
+        } catch (e: Exception) {
+            false
+        }
+    }
 }
