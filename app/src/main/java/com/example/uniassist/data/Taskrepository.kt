@@ -11,12 +11,10 @@ import kotlinx.coroutines.flow.map
 
 class TaskRepository(private val dao: TaskDao) {
 
-    // All tasks as a live stream of UI models.
     val allTasks: Flow<List<TaskItem>> = dao.getAllFlow().map { entities ->
         entities.map { it.toUiModel() }
     }
 
-    // Tasks for a specific date as a live stream.
     fun tasksForDate(dateKey: String): Flow<List<TaskItem>> =
         dao.getByDateFlow(dateKey).map { entities -> entities.map { it.toUiModel() } }
 

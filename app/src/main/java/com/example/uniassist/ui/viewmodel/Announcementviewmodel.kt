@@ -15,8 +15,7 @@ class AnnouncementViewModel(
     private val repository: AnnouncementRepository
 ) : ViewModel() {
 
-    // All announcements — collected by both DashboardScreen (student) and
-    // ManageAnnouncementsScreen (teacher).
+    // All announcements
     val announcements: StateFlow<List<Announcement>> = repository.announcements
         .stateIn(
             scope = viewModelScope,
@@ -32,14 +31,13 @@ class AnnouncementViewModel(
             initialValue = 0
         )
 
-    // Called when the teacher taps PUBLISH in CreateAnnouncementScreen.
+
     fun publish(announcement: Announcement, category: String, isPriority: Boolean) {
         viewModelScope.launch {
             repository.publish(announcement, category, isPriority)
         }
     }
 
-    // Called when the student taps an announcement card.
     fun markAsRead(id: Int) {
         viewModelScope.launch {
             repository.markAsRead(id)
@@ -52,7 +50,6 @@ class AnnouncementViewModel(
         }
     }
 
-    // ── Factory
     class Factory(private val repository: AnnouncementRepository) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
