@@ -11,25 +11,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.view.WindowCompat
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.example.uniassist.data.AnnouncementRepository
+import com.example.uniassist.data.FirestoreStudentRepository
 import com.example.uniassist.data.TaskRepository
 import com.example.uniassist.data.db.AppDatabase
+import com.example.uniassist.data.db.CampusRepository
 import com.example.uniassist.ui.screens.*
 import com.example.uniassist.ui.theme.UniassistTheme
-import com.example.uniassist.ui.viewmodel.AnnouncementViewModel
-import com.example.uniassist.ui.viewmodel.TaskViewModel
+import com.example.uniassist.ui.viewmodel.*
 
 class MainActivity : ComponentActivity() {
 
-    // Initialize our local databases and repositories
+    // DB → DAO → Repository → ViewModel
     private val db by lazy { AppDatabase.getInstance(this) }
 
-    // ViewModels for managing Announcements and Tasks via Room
     private val announcementViewModel: AnnouncementViewModel by viewModels {
         AnnouncementViewModel.Factory(AnnouncementRepository(db.announcementDao()))
     }
@@ -38,10 +36,18 @@ class MainActivity : ComponentActivity() {
         TaskViewModel.Factory(TaskRepository(db.taskDao()))
     }
 
+    private val campusViewModel: CampusViewModel by viewModels {
+        CampusViewModelFactory(CampusRepository(db.campusDao()))
+    }
+
+    private val studentViewModel: StudentViewModel by viewModels {
+        StudentViewModelFactory(FirestoreStudentRepository())
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Make the status bar look clean with our green theme
+        // Make the status bar look clean with our theme
         WindowCompat.setDecorFitsSystemWindows(window, true)
         WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = true
 
@@ -50,18 +56,17 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
                     val navController = rememberNavController()
 
-                    // Temporary list for Teacher's Manage screen (UI state)
+                    // Teacher's manage-screen list (UI only, not persisted).
                     val publishedAnnouncements = remember { mutableStateListOf<ManageScreenAnnouncement>() }
 
                     NavHost(navController = navController, startDestination = "get_started") {
 
-                        // --- ONBOARDING & AUTH ---
+                        // --- AUTHENTICATION & ONBOARDING ---
 
                         composable("get_started") {
                             GetStartedScreen(navController = navController)
                         }
 
-                        // Still keeping RolePick for UI/UX flow, but login will strictly enforce the role
                         composable("role_pick") {
                             RolePickScreen(navController = navController)
                         }
@@ -76,53 +81,72 @@ class MainActivity : ComponentActivity() {
                             LoginScreen(navController = navController, role = role)
                         }
 
-
-                        // --- MAIN DASHBOARDS (Strict Role Enforcement) ---
-
-                        composable(
-                            route = "dashboard/{role}/{firstName}/{lastName}",
-                            arguments = listOf(
-                                navArgument("role") { type = NavType.StringType },
-                                navArgument("firstName") { type = NavType.StringType },
-                                navArgument("lastName") { type = NavType.StringType }
-                            )
-                        ) { backStackEntry ->
+                        composable("complete_profile/{email}/{role}") { backStackEntry ->
+                            val email = backStackEntry.arguments?.getString("email") ?: ""
                             val role = backStackEntry.arguments?.getString("role") ?: "Student"
-                            val firstName = backStackEntry.arguments?.getString("firstName") ?: ""
-                            val lastName = backStackEntry.arguments?.getString("lastName") ?: ""
-                            val fullName = "$firstName $lastName"
+                            CompleteProfileScreen(navController, email, role)
+                        }
 
-                            // If the backend says they are a Teacher, send them to Teacher Dashboard
-                            if (role.equals("Teacher", ignoreCase = true)) {
+                        // --- DASHBOARDS ---
+
+                        composable("dashboard/{role}/{firstName}/{lastName}") { backStackEntry ->
+                            val role      = backStackEntry.arguments?.getString("role")      ?: "Student"
+                            val firstName = backStackEntry.arguments?.getString("firstName") ?: ""
+                            val lastName  = backStackEntry.arguments?.getString("lastName")  ?: ""
+                            val fullName  = if (firstName.isNotBlank() && lastName.isNotBlank()) {
+                                "$firstName $lastName"
+                            } else {
+                                if (role == "Teacher") "Prof. Angelo Villanueva" else "Angelo\nVillanueva"
+                            }
+
+                            if (role == "Teacher") {
                                 TeacherDashboardScreen(
-                                    userName = fullName,
-                                    // Teacher specific logic
+                                    userName           = fullName,
+                                    totalStudents      = 128,
+                                    totalAnnouncements = 23,
+                                    totalUnread        = 5,
                                     onManageAnnouncements = { navController.navigate("manage_announcements") },
-                                    onManageCampusInfo = { navController.navigate("manage_campus_department") },
-                                    onSettings = { navController.navigate("settings/$role") },
+                                    onManageCampusInfo    = { navController.navigate("manage_campus_department") },
+                                    onViewStudents        = { navController.navigate("view_students") },
+                                    onSettings            = { navController.navigate("settings/${role}") },
+                                    onDrafts              = {},
+                                    onArchive             = {},
                                     onLogout = {
                                         navController.navigate("get_started") { popUpTo(0) { inclusive = true } }
                                     }
                                 )
                             } else {
-                                // Otherwise, they get the Student Dashboard
+                                // Student dashboard receives the shared ViewModel.
                                 DashboardScreen(
-                                    role = role,
-                                    firstName = firstName,
-                                    lastName = lastName,
+                                    role                 = role,
+                                    firstName            = firstName,
+                                    lastName             = lastName,
                                     announcementViewModel = announcementViewModel,
-                                    onScheduleClick = { navController.navigate("schedule/$role") },
-                                    onCampusClick = { navController.navigate("campus/$role") },
-                                    onSettingsClick = { navController.navigate("settings/$role") }
+                                    onScheduleClick = {
+                                        navController.navigate("schedule/${role}") { launchSingleTop = true }
+                                    },
+                                    onCampusClick = {
+                                        navController.navigate("campus/${role}") { launchSingleTop = true }
+                                    },
+                                    onSettingsClick = {
+                                        navController.navigate("settings/${role}") { launchSingleTop = true }
+                                    }
                                 )
                             }
                         }
 
-                        // --- FEATURES ---
+                        // --- TEACHER FEATURES ---
+
+                        composable("view_students") {
+                            StudentListScreen(
+                                viewModel = studentViewModel,
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        }
 
                         composable("manage_announcements") {
                             ManageAnnouncementsScreen(
-                                onBackClick = { navController.popBackStack() },
+                                onBackClick  = { navController.popBackStack() },
                                 onCreateClick = { navController.navigate("create_announcement") },
                                 publishedAnnouncements = publishedAnnouncements
                             )
@@ -130,72 +154,114 @@ class MainActivity : ComponentActivity() {
 
                         composable("create_announcement") {
                             CreateAnnouncementScreen(
-                                onBackClick = { navController.popBackStack() },
+                                onBackClick  = { navController.popBackStack() },
+                                onSaveDraft  = { navController.popBackStack() },
                                 onPublish = { newAnnouncement ->
-                                    // Add to the local manage list for immediate UI feedback
-                                    publishedAnnouncements.add(0, newAnnouncement.toManageCard(publishedAnnouncements.size + 1))
 
-                                    // Persist it to the Room Database
+                                    publishedAnnouncements.add(
+                                        0,
+                                        newAnnouncement.toManageCard(id = publishedAnnouncements.size + 100)
+                                    )
+
                                     announcementViewModel.publish(
                                         announcement = Announcement(
-                                            title = newAnnouncement.title,
-                                            date = newAnnouncement.postDate,
+                                            title   = newAnnouncement.title,
+                                            date    = newAnnouncement.postDate,
                                             content = newAnnouncement.message,
                                             bullets = emptyList(),
-                                            footer = if (newAnnouncement.isPriority) "⚠ Priority Announcement" else ""
+                                            footer  = if (newAnnouncement.isPriority) "⚠ Priority Announcement" else ""
                                         ),
-                                        category = newAnnouncement.category,
+                                        category   = newAnnouncement.category,
                                         isPriority = newAnnouncement.isPriority
                                     )
+
                                     navController.popBackStack()
                                 }
                             )
                         }
 
+                        composable("manage_campus_department") {
+                            ManageCampusDepartmentScreen(
+                                viewModel = campusViewModel,
+                                onBackClick          = { navController.popBackStack() },
+                                onAddDepartmentClick = { navController.navigate("add_campus_department") },
+                                onEditDepartmentClick = { index ->
+                                    navController.navigate("edit_campus_department/$index")
+                                }
+                            )
+                        }
+
+                        composable("add_campus_department") {
+                            AddCampusDepartmentScreen(
+                                viewModel    = campusViewModel,
+                                onBackClick  = { navController.popBackStack() },
+                                onSaveDraft  = { navController.popBackStack() },
+                                onPublish    = { navController.popBackStack() }
+                            )
+                        }
+
+                        composable("edit_campus_department/{index}") { backStackEntry ->
+                            val index = backStackEntry.arguments?.getString("index")?.toIntOrNull() ?: 0
+
+                            // You can update this later to pull from the ViewModel instead of a static list
+                            val departments = listOf(
+                                Department("College of Computer Studies / Information Technology", "Mr. Alvin M. Dimaunahan", "alvinccsdimauanahan@gmail.com", "+639829901987", R.drawable.ccsdeptlogo),
+                                Department("College of Engineering", "Ms. Jennelyn V. Tan", "tanjennelyncoe@gmail.com", "+639549932855", R.drawable.coedeptlogo),
+                                Department("College of Business Administration / Accountancy", "Ms. Vilma R. Cacho", "rcachocbaa@gmail.com", "+639549932855", R.drawable.cbaadeptlogo),
+                                Department("College of Education", "Ms. George C. Bacsa", "geocalmacoedue@gmail.com", "+639877718241", R.drawable.coedudeptlogo)
+                            )
+
+                            EditCampusDepartmentScreen(
+                                department = departments.getOrNull(index) ?: departments[0],
+                                onBackClick = { navController.popBackStack() },
+                                onUpdate    = { navController.popBackStack() }
+                            )
+                        }
+
+                        // --- STUDENT BOTTOM NAV FEATURES ---
+
                         composable("schedule/{role}") { backStackEntry ->
                             val role = backStackEntry.arguments?.getString("role") ?: "Student"
                             ScheduleAndTaskScreen(
-                                taskViewModel = taskViewModel,
-                                onDashboardClick = { navController.popBackStack() },
-                                onCampusClick = { navController.navigate("campus/$role") },
-                                onSettingsClick = { navController.navigate("settings/$role") }
+                                taskViewModel    = taskViewModel,
+                                onDashboardClick = {
+                                    navController.navigate("dashboard/${role}//") {
+                                        popUpTo("dashboard/${role}//") { inclusive = true }
+                                    }
+                                },
+                                onCampusClick   = { navController.navigate("campus/${role}") },
+                                onSettingsClick = { navController.navigate("settings/${role}") }
                             )
                         }
 
                         composable("campus/{role}") { backStackEntry ->
                             val role = backStackEntry.arguments?.getString("role") ?: "Student"
                             CampusInformationScreen(
-                                onDashboardClick = { navController.popBackStack() },
-                                onScheduleClick = { navController.navigate("schedule/$role") },
-                                onSettingsClick = { navController.navigate("settings/$role") }
-                            )
-                        }
-
-                        composable("manage_campus_department") {
-                            ManageCampusDepartmentScreen(
-                                onBackClick = { navController.popBackStack() },
-                                onAddDepartmentClick = { navController.navigate("add_campus_department") },
-                                onEditDepartmentClick = { index -> navController.navigate("edit_campus_department/$index") }
+                                viewModel = campusViewModel,
+                                onDashboardClick = {
+                                    navController.navigate("dashboard/${role}//") {
+                                        popUpTo("dashboard/${role}//") { inclusive = true }
+                                    }
+                                },
+                                onScheduleClick = { navController.navigate("schedule/${role}") },
+                                onSettingsClick = { navController.navigate("settings/${role}") }
                             )
                         }
 
                         composable("settings/{role}") { backStackEntry ->
                             val role = backStackEntry.arguments?.getString("role") ?: "Student"
                             SettingsScreen(
-                                onDashboardClick = { navController.popBackStack() },
-                                onScheduleClick = { navController.navigate("schedule/$role") },
-                                onCampusClick = { navController.navigate("campus/$role") },
-                                onLogoutClick = {
+                                onDashboardClick = {
+                                    navController.navigate("dashboard/${role}//") {
+                                        popUpTo("dashboard/${role}//") { inclusive = true }
+                                    }
+                                },
+                                onScheduleClick = { navController.navigate("schedule/${role}") },
+                                onCampusClick   = { navController.navigate("campus/${role}") },
+                                onLogoutClick   = {
                                     navController.navigate("get_started") { popUpTo(0) { inclusive = true } }
                                 }
                             )
-                        }
-
-                        // NEW ROUTE for the second step
-                        composable("complete_profile/{email}/{role}") { backStackEntry ->
-                            val email = backStackEntry.arguments?.getString("email") ?: ""
-                            val role = backStackEntry.arguments?.getString("role") ?: "Student"
-                            CompleteProfileScreen(navController, email, role)
                         }
                     }
                 }
