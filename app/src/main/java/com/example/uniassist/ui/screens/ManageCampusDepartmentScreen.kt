@@ -23,46 +23,33 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.uniassist.R
+import com.example.uniassist.ui.viewmodel.CampusViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageCampusDepartmentScreen(
+    viewModel: CampusViewModel,
     onBackClick: () -> Unit = {},
     onAddDepartmentClick: () -> Unit = {},
     onEditDepartmentClick: (Int) -> Unit = {}
 ) {
-    var departments by remember {
-        mutableStateOf(
-            listOf(
-                Department(
-                    name = "College of Computer Studies / Information Technology",
-                    representative = "Mr. Alvin M. Dimaunahan",
-                    email = "alvinccsdimauanahan@gmail.com",
-                    phone = "+639829901987",
-                    logoRes = R.drawable.ccsdeptlogo
-                ),
-                Department(
-                    name = "College of Engineering",
-                    representative = "Ms. Jennelyn V. Tan",
-                    email = "tanjennelyncoe@gmail.com",
-                    phone = "+639549932855",
-                    logoRes = R.drawable.coedeptlogo
-                ),
-                Department(
-                    name = "College of Business Administration / Accountancy",
-                    representative = "Ms. Vilma R. Cacho",
-                    email = "rcachocbaa@gmail.com",
-                    phone = "+639549932855",
-                    logoRes = R.drawable.cbaadeptlogo
-                ),
-                Department(
-                    name = "College of Education",
-                    representative = "Ms. George C. Bacsa",
-                    email = "geocalmacoedue@gmail.com",
-                    phone = "+639877718241",
-                    logoRes = R.drawable.coedudeptlogo
-                )
-            )
+    // 1. COLLECT DATA FROM THE DATABASE
+    val dbDepartments by viewModel.departments.collectAsState()
+
+    // 2. Map the Database Entity to your UI Data Class
+    val uiDepartments = dbDepartments.map { entity ->
+        // We stored the rep, email, and phone in the 'description' field earlier separated by " | "
+        val details = entity.description.split(" | ")
+        val rep = details.getOrElse(0) { "Unknown Rep" }
+        val email = details.getOrElse(1) { "No Email" }
+        val phone = details.getOrElse(2) { "No Phone" }
+
+        Department(
+            name = entity.departmentName,
+            representative = rep,
+            email = email,
+            phone = phone,
+            logoRes = R.drawable.ccsdeptlogo // Default logo
         )
     }
 
@@ -86,31 +73,45 @@ fun ManageCampusDepartmentScreen(
         },
         containerColor = Color(0xFFF5F5F5)
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(departments.size) { index ->
-                val dept = departments[index]
-                ManageDepartmentCard(
-                    department = dept,
-                    isMenuExpanded = expandedMenuIndex == index,
-                    onMenuClick = { expandedMenuIndex = if (expandedMenuIndex == index) null else index },
-                    onEdit = {
-                        onEditDepartmentClick(index)
-                        expandedMenuIndex = null
-                    },
-                    onDelete = {
-                        departments = departments.filterIndexed { i, _ -> i != index }
-                        expandedMenuIndex = null
-                    },
-                    onArchive = {
-                        expandedMenuIndex = null
-                    }
-                )
+
+        // Show a message if the database is empty
+        if (uiDepartments.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No departments found. Click + to add one!", color = Color.Gray)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(uiDepartments.size) { index ->
+                    val dept = uiDepartments[index]
+                    ManageDepartmentCard(
+                        department = dept,
+                        isMenuExpanded = expandedMenuIndex == index,
+                        onMenuClick = { expandedMenuIndex = if (expandedMenuIndex == index) null else index },
+                        onEdit = {
+                            onEditDepartmentClick(dbDepartments[index].id)
+                            expandedMenuIndex = null
+                        },
+                        onDelete = {
+                            // Note: Add a delete function to your ViewModel later!
+                            // viewModel.deleteDepartment(dbDepartments[index].id)
+                            expandedMenuIndex = null
+                        },
+                        onArchive = {
+                            expandedMenuIndex = null
+                        }
+                    )
+                }
             }
         }
     }
@@ -298,8 +299,8 @@ fun EditDepartmentDialog(
         confirmButton = {
             TextButton(
                 onClick = { onConfirm(name, representative, email, phone) },
-                enabled = name.isNotBlank() && representative.isNotBlank() && 
-                         email.isNotBlank() && phone.isNotBlank()
+                enabled = name.isNotBlank() && representative.isNotBlank() &&
+                        email.isNotBlank() && phone.isNotBlank()
             ) {
                 Text("Save", color = Color(0xFF245B3D))
             }
