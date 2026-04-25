@@ -15,6 +15,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.uniassist.data.AnnouncementRepository
 import com.example.uniassist.data.TaskRepository
 import com.example.uniassist.data.db.AppDatabase
+import com.example.uniassist.data.db.CampusRepository
+import com.example.uniassist.data.db.StudentRepository
 import com.example.uniassist.ui.screens.Announcement
 import com.example.uniassist.ui.screens.CampusInformationScreen
 import com.example.uniassist.ui.screens.LoginOrRegisterScreen
@@ -32,10 +34,15 @@ import com.example.uniassist.ui.screens.CreateAnnouncementScreen
 import com.example.uniassist.ui.screens.ManageCampusDepartmentScreen
 import com.example.uniassist.ui.screens.AddCampusDepartmentScreen
 import com.example.uniassist.ui.screens.EditCampusDepartmentScreen
+import com.example.uniassist.ui.screens.StudentListScreen
 import com.example.uniassist.ui.screens.Department
 import com.example.uniassist.ui.screens.toManageCard
 import com.example.uniassist.ui.viewmodel.AnnouncementViewModel
 import com.example.uniassist.ui.viewmodel.TaskViewModel
+import com.example.uniassist.ui.viewmodel.CampusViewModel
+import com.example.uniassist.ui.viewmodel.CampusViewModelFactory
+import com.example.uniassist.ui.viewmodel.StudentViewModel
+import com.example.uniassist.ui.viewmodel.StudentViewModelFactory
 import com.example.uniassist.ui.theme.UniassistTheme
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
@@ -51,6 +58,14 @@ class MainActivity : ComponentActivity() {
 
     private val taskViewModel: TaskViewModel by viewModels {
         TaskViewModel.Factory(TaskRepository(db.taskDao()))
+    }
+
+    private val campusViewModel: CampusViewModel by viewModels {
+        CampusViewModelFactory(CampusRepository(db.campusDao()))
+    }
+
+    private val studentViewModel: StudentViewModel by viewModels {
+        StudentViewModelFactory(com.example.uniassist.data.FirestoreStudentRepository())
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -110,7 +125,7 @@ class MainActivity : ComponentActivity() {
                                     totalUnread        = 5,
                                     onManageAnnouncements = { navController.navigate("manage_announcements") },
                                     onManageCampusInfo    = { navController.navigate("manage_campus_department") },
-                                    onViewStudents        = {},
+                                    onViewStudents        = { navController.navigate("view_students") },
                                     onSettings            = { navController.navigate("settings/${role}") },
                                     onDrafts              = {},
                                     onArchive             = {},
@@ -138,6 +153,13 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
+                        composable("view_students") {
+                            StudentListScreen(
+                                viewModel = studentViewModel,
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        }
+
                         composable("manage_announcements") {
                             ManageAnnouncementsScreen(
                                 onBackClick  = { navController.popBackStack() },
@@ -148,6 +170,7 @@ class MainActivity : ComponentActivity() {
 
                         composable("manage_campus_department") {
                             ManageCampusDepartmentScreen(
+                                viewModel = campusViewModel,
                                 onBackClick          = { navController.popBackStack() },
                                 onAddDepartmentClick = { navController.navigate("add_campus_department") },
                                 onEditDepartmentClick = { index ->
@@ -158,6 +181,7 @@ class MainActivity : ComponentActivity() {
 
                         composable("add_campus_department") {
                             AddCampusDepartmentScreen(
+                                viewModel    = campusViewModel,
                                 onBackClick  = { navController.popBackStack() },
                                 onSaveDraft  = { navController.popBackStack() },
                                 onPublish    = { navController.popBackStack() }
@@ -190,7 +214,6 @@ class MainActivity : ComponentActivity() {
                                         newAnnouncement.toManageCard(id = publishedAnnouncements.size + 100)
                                     )
 
-
                                     announcementViewModel.publish(
                                         announcement = Announcement(
                                             title   = newAnnouncement.title,
@@ -210,7 +233,6 @@ class MainActivity : ComponentActivity() {
 
                         composable("schedule/{role}") { backStackEntry ->
                             val role = backStackEntry.arguments?.getString("role") ?: "Student"
-                            // Student task screen — receives the shared TaskViewModel.
                             ScheduleAndTaskScreen(
                                 taskViewModel    = taskViewModel,
                                 onDashboardClick = {
@@ -226,6 +248,7 @@ class MainActivity : ComponentActivity() {
                         composable("campus/{role}") { backStackEntry ->
                             val role = backStackEntry.arguments?.getString("role") ?: "Student"
                             CampusInformationScreen(
+                                viewModel = campusViewModel, // <-- FIX APPLIED HERE
                                 onDashboardClick = {
                                     navController.navigate("dashboard/${role}//") {
                                         popUpTo("dashboard/${role}//") { inclusive = true }

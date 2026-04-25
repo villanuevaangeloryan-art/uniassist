@@ -24,12 +24,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.uniassist.R
+import com.example.uniassist.ui.viewmodel.CampusViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCampusDepartmentScreen(
+    viewModel: CampusViewModel,
     onBackClick: () -> Unit = {},
     onSaveDraft: (Department) -> Unit = {},
     onPublish: (Department) -> Unit = {}
@@ -265,6 +267,14 @@ fun AddCampusDepartmentScreen(
                             phone = phone,
                             logoRes = R.drawable.ccsdeptlogo
                         )
+
+                        // Save to the local database via ViewModel
+                        viewModel.addDepartment(
+                            campusId = 1,
+                            name = departmentName,
+                            description = "$representative | $email | $phone"
+                        )
+
                         onPublish(dept)
                     },
                     modifier = Modifier

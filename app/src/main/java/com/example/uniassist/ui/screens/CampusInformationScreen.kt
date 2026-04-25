@@ -17,6 +17,8 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,12 +28,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+// import androidx.compose.ui.tooling.preview.Preview // Commented out to prevent preview errors with ViewModel
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.uniassist.R
 import com.example.uniassist.ui.theme.UniassistTheme
+import com.example.uniassist.ui.viewmodel.CampusViewModel // <-- NEW IMPORT
 
+// If you already have this data class defined in another file, you can remove this one to avoid duplicates!
 data class Department(
     val name: String,
     val representative: String,
@@ -42,40 +46,29 @@ data class Department(
 
 @Composable
 fun CampusInformationScreen(
+    viewModel: CampusViewModel, // <-- ADDED VIEWMODEL
     onDashboardClick: () -> Unit = {},
     onScheduleClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {}
 ) {
-    val departments = listOf(
+    // 1. COLLECT DATA FROM THE LIVE DATABASE
+    val dbDepartments by viewModel.departments.collectAsState()
+
+    // 2. Map the Database Entity to your UI Data Class
+    val departments = dbDepartments.map { entity ->
+        val details = entity.description.split(" | ")
+        val rep = details.getOrElse(0) { "Unknown Rep" }
+        val email = details.getOrElse(1) { "No Email" }
+        val phone = details.getOrElse(2) { "No Phone" }
+
         Department(
-            name = "College of Computer Studies / Information Technology",
-            representative = "Mr. Alvin M. Dimaunahan",
-            email = "alvinccsdimauanahan@gmail.com",
-            phone = "+639829901987",
-            logoRes = R.drawable.ccsdeptlogo
-        ),
-        Department(
-            name = "College of Engineering",
-            representative = "Ms. Jennelyn V. Tan",
-            email = "tanjennelyncoe@gmail.com",
-            phone = "+639549932855",
-            logoRes = R.drawable.coedeptlogo
-        ),
-        Department(
-            name = "College of Business Administration / Accountancy",
-            representative = "Ms. Vilma R. Cacho",
-            email = "rcachocbaa@gmail.com",
-            phone = "+639549932855",
-            logoRes = R.drawable.cbaadeptlogo
-        ),
-        Department(
-            name = "College of Education",
-            representative = "Ms. George C. Bacsa",
-            email = "geocalmacoedue@gmail.com",
-            phone = "+639877718241",
-            logoRes = R.drawable.coedudeptlogo
+            name = entity.departmentName,
+            representative = rep,
+            email = email,
+            phone = phone,
+            logoRes = R.drawable.ccsdeptlogo // Default logo
         )
-    )
+    }
 
     Scaffold(
         modifier = Modifier
@@ -113,8 +106,20 @@ fun CampusInformationScreen(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
-            items(departments) { department ->
-                DepartmentCard(department)
+
+            // Show a placeholder if no departments exist yet
+            if (departments.isEmpty()) {
+                item {
+                    Text(
+                        text = "No departments available yet.",
+                        color = Color.Gray,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            } else {
+                items(departments) { department ->
+                    DepartmentCard(department)
+                }
             }
         }
     }
@@ -300,13 +305,5 @@ fun DepartmentCard(dept: Department) {
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun CampusScreenPreview() {
-    UniassistTheme {
-        CampusInformationScreen()
     }
 }
