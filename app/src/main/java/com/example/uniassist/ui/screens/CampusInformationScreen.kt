@@ -55,18 +55,25 @@ fun CampusInformationScreen(
     val dbDepartments by viewModel.departments.collectAsState()
 
     // 2. Map the Database Entity to your UI Data Class
+// 2. Map Database Entity to UI Model with FOOLPROOF Logo Logic
     val departments = dbDepartments.map { entity ->
         val details = entity.description.split(" | ")
-        val rep = details.getOrElse(0) { "Unknown Rep" }
-        val email = details.getOrElse(1) { "No Email" }
-        val phone = details.getOrElse(2) { "No Phone" }
+        val name = entity.departmentName
+        val rawName = name.lowercase()
+
+        val correctLogo = when {
+            rawName.contains("engineering") || rawName.contains("coe") -> R.drawable.coedeptlogo
+            rawName.contains("business") || rawName.contains("accountancy") || rawName.contains("cbaa") -> R.drawable.cbaadeptlogo
+            rawName.contains("education") || rawName.contains("coed") -> R.drawable.coedudeptlogo
+            else -> R.drawable.ccsdeptlogo
+        }
 
         Department(
-            name = entity.departmentName,
-            representative = rep,
-            email = email,
-            phone = phone,
-            logoRes = R.drawable.ccsdeptlogo // Default logo
+            name = name,
+            representative = details.getOrElse(0) { "Unknown" },
+            email = details.getOrElse(1) { "No Email" },
+            phone = details.getOrElse(2) { "No Phone" },
+            logoRes = correctLogo
         )
     }
 
