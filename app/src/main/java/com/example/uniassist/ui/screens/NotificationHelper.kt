@@ -2,6 +2,7 @@ package com.example.uniassist.ui.screens
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationCompat
@@ -27,14 +28,13 @@ object NotificationHelper {
         }
     }
 
-    fun showNotification(context: Context, title: String, body: String) {
+    fun showNotification(context: Context, title: String, body: String, pendingIntent: PendingIntent? = null) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(body)
-            // Expands to show the full announcement content when pulled down
             .setStyle(
                 NotificationCompat.BigTextStyle()
                     .bigText(body)
@@ -42,6 +42,7 @@ object NotificationHelper {
             )
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
+            .apply { if (pendingIntent != null) setContentIntent(pendingIntent) }
             .build()
 
         manager.notify(System.currentTimeMillis().toInt(), notification)
