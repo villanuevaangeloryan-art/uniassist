@@ -62,6 +62,11 @@ class LoginStore(
 
             // Retrieve current FCM token and save it to Firestore after login
             saveFcmToken(authResult.uid)
+
+            // Subscribe students to the announcements FCM topic
+            if (authResult.role == "Student") {
+                FirebaseMessaging.getInstance().subscribeToTopic("announcements")
+            }
         } catch (e: Exception) {
             // If the gatekeeper throws an error, it gets caught right here!
             _state.update {
