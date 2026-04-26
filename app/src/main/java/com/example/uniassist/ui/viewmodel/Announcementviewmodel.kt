@@ -15,8 +15,16 @@ class AnnouncementViewModel(
     private val repository: AnnouncementRepository
 ) : ViewModel() {
 
-    // All announcements
+    // All announcements (teacher side — includes archived)
     val announcements: StateFlow<List<Announcement>> = repository.announcements
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyList()
+        )
+
+    // Only non-archived announcements (student dashboard)
+    val activeAnnouncements: StateFlow<List<Announcement>> = repository.activeAnnouncements
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
@@ -47,6 +55,12 @@ class AnnouncementViewModel(
     fun markAllAsRead() {
         viewModelScope.launch {
             repository.markAllAsRead()
+        }
+    }
+
+    fun archive(id: Int) {
+        viewModelScope.launch {
+            repository.archive(id)
         }
     }
 

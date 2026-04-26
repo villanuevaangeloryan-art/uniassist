@@ -8,10 +8,15 @@ import kotlinx.coroutines.flow.map
 
 
 class AnnouncementRepository(private val dao: AnnouncementDao) {
+    // All announcements (teacher side — includes archived)
     val announcements: Flow<List<Announcement>> = dao.getAllFlow().map { entities ->
         entities.map { it.toUiModel() }
     }
 
+    // Only non-archived announcements (student side)
+    val activeAnnouncements: Flow<List<Announcement>> = dao.getActiveFlow().map { entities ->
+        entities.map { it.toUiModel() }
+    }
 
     val unreadCount: Flow<Int> = dao.getUnreadCountFlow()
 
@@ -25,6 +30,8 @@ class AnnouncementRepository(private val dao: AnnouncementDao) {
     suspend fun markAllAsRead() = dao.markAllAsRead()
 
     suspend fun delete(entity: AnnouncementEntity) = dao.delete(entity)
+
+    suspend fun archive(id: Int) = dao.archive(id)
 }
 
 
@@ -38,11 +45,13 @@ fun AnnouncementEntity.toUiModel(): Announcement {
         }
     }
     return Announcement(
-        title   = title,
-        date    = date,
-        content = content,
-        bullets = bullets,
-        footer  = footer
+        id         = id,
+        title      = title,
+        date       = date,
+        content    = content,
+        bullets    = bullets,
+        footer     = footer,
+        isArchived = isArchived
     )
 }
 

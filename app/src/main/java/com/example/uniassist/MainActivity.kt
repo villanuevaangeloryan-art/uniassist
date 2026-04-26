@@ -148,7 +148,8 @@ class MainActivity : ComponentActivity() {
                             ManageAnnouncementsScreen(
                                 onBackClick  = { navController.popBackStack() },
                                 onCreateClick = { navController.navigate("create_announcement") },
-                                publishedAnnouncements = publishedAnnouncements
+                                publishedAnnouncements = publishedAnnouncements,
+                                onArchive = { id -> announcementViewModel.archive(id) }
                             )
                         }
 

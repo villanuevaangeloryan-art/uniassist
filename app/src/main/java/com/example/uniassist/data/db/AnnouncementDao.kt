@@ -8,9 +8,17 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface AnnouncementDao {
 
-    // Observe all announcements, newest first. Used by both teacher and student.
+    // Observe all announcements, newest first. Used by teacher (includes archived).
     @Query("SELECT * FROM announcements ORDER BY createdAt DESC")
     fun getAllFlow(): Flow<List<AnnouncementEntity>>
+
+    // Observe only non-archived announcements. Used by student dashboard.
+    @Query("SELECT * FROM announcements WHERE isArchived = 0 ORDER BY createdAt DESC")
+    fun getActiveFlow(): Flow<List<AnnouncementEntity>>
+
+    // Archive a single announcement.
+    @Query("UPDATE announcements SET isArchived = 1 WHERE id = :id")
+    suspend fun archive(id: Int)
 
     // Insert a newly published announcement.
     @Insert(onConflict = OnConflictStrategy.REPLACE)

@@ -58,7 +58,8 @@ data class ManageScreenAnnouncement(
     val timePosted: String,
     val statusText: String,
     val statusColor: Color,
-    val description: String? = null
+    val description: String? = null,
+    val isArchived: Boolean = false
 )
 
 // ── Helper: converts a NewAnnouncement (from CreateAnnouncementScreen) into a
@@ -94,7 +95,8 @@ fun NewAnnouncement.toManageCard(id: Int): ManageScreenAnnouncement {
 fun ManageAnnouncementsScreen(
     onBackClick: () -> Unit = {},
     onCreateClick: () -> Unit = {},
-    publishedAnnouncements: List<ManageScreenAnnouncement> = emptyList()
+    publishedAnnouncements: List<ManageScreenAnnouncement> = emptyList(),
+    onArchive: (Int) -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var profileMenuExpanded by remember { mutableStateOf(false) }
@@ -352,7 +354,7 @@ fun ManageAnnouncementsScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(displayed, key = { it.id }) { announcement ->
-                        ManageAnnouncementCard(announcement)
+                        ManageAnnouncementCard(announcement, onArchive = onArchive)
                     }
                 }
             }
@@ -362,12 +364,17 @@ fun ManageAnnouncementsScreen(
 
 // ── Card composable ───────────────────────────────────────────────────────────
 @Composable
-private fun ManageAnnouncementCard(announcement: ManageScreenAnnouncement) {
+private fun ManageAnnouncementCard(
+    announcement: ManageScreenAnnouncement,
+    onArchive: (Int) -> Unit = {}
+) {
     var moreExpanded by remember { mutableStateOf(false) }
 
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(
+            containerColor = if (announcement.isArchived) Color(0xFFF0F0F0) else Color.White
+        ),
         border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier
@@ -383,16 +390,36 @@ private fun ManageAnnouncementCard(announcement: ManageScreenAnnouncement) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-                Text(
-                    text = announcement.title,
-                    fontFamily = Poppins,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp,
-                    color = GreenDark,
+                Row(
                     modifier = Modifier.weight(1f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = announcement.title,
+                        fontFamily = Poppins,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                        color = if (announcement.isArchived) Color.Gray else GreenDark,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    if (announcement.isArchived) {
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = Color(0xFF9E9E9E)
+                        ) {
+                            Text(
+                                text = "Archived",
+                                fontFamily = Poppins,
+                                fontSize = 10.sp,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
                 Box {
                     IconButton(
                         onClick = { moreExpanded = true },
@@ -415,11 +442,16 @@ private fun ManageAnnouncementCard(announcement: ManageScreenAnnouncement) {
                             leadingIcon = { Icon(Icons.Outlined.Delete, null, modifier = Modifier.size(16.dp)) },
                             onClick = { moreExpanded = false }
                         )
-                        DropdownMenuItem(
-                            text = { Text("Archive", fontFamily = Poppins, fontSize = 12.sp) },
-                            leadingIcon = { Icon(Icons.Outlined.Archive, null, modifier = Modifier.size(16.dp)) },
-                            onClick = { moreExpanded = false }
-                        )
+                        if (!announcement.isArchived) {
+                            DropdownMenuItem(
+                                text = { Text("Archive", fontFamily = Poppins, fontSize = 12.sp) },
+                                leadingIcon = { Icon(Icons.Outlined.Archive, null, modifier = Modifier.size(16.dp)) },
+                                onClick = {
+                                    moreExpanded = false
+                                    onArchive(announcement.id)
+                                }
+                            )
+                        }
                     }
                 }
             }

@@ -41,11 +41,13 @@ val Poppins = FontFamily(
 )
 
 data class Announcement(
+    val id: Int = 0,
     val title: String,
     val date: String,
     val content: String,
     val bullets: List<Pair<String, String>>,
-    val footer: String
+    val footer: String,
+    val isArchived: Boolean = false
 )
 
 @Composable
@@ -69,8 +71,8 @@ fun DashboardScreen(
         if (role == "Teacher") "Prof. Jane Doe" else "Jane Doe"
     }
 
-    // Collect the live StateFlow from the ViewModel.
-    val announcements by announcementViewModel.announcements.collectAsState()
+    // Collect only non-archived announcements for the student view.
+    val announcements by announcementViewModel.activeAnnouncements.collectAsState()
 
     Scaffold(
         modifier = Modifier
