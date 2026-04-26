@@ -53,6 +53,26 @@ class CampusViewModel(private val repository: CampusRepository) : ViewModel() {
             repository.addDepartment(department)
         }
     }
+
+    fun deleteDepartment(id: Int) {
+        viewModelScope.launch {
+            repository.deleteDepartment(id)
+        }
+    }
+
+    fun updateDepartment(id: Int, campusId: Int, name: String, rep: String, email: String, phone: String) {
+        viewModelScope.launch {
+            // Re-combine the string exactly how we split it
+            val description = "$rep | $email | $phone"
+            val updatedEntity = DepartmentEntity(
+                id = id,
+                campusId = campusId,
+                departmentName = name,
+                description = description
+            )
+            repository.updateDepartment(updatedEntity)
+        }
+    }
 }
 
 // We need a Factory because our ViewModel takes a Repository as a parameter
