@@ -200,19 +200,13 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        composable("edit_campus_department/{index}") { backStackEntry ->
-                            val index = backStackEntry.arguments?.getString("index")?.toIntOrNull() ?: 0
-
-                            // You can update this later to pull from the ViewModel instead of a static list
-                            val departments = listOf(
-                                Department("College of Computer Studies / Information Technology", "Mr. Alvin M. Dimaunahan", "alvinccsdimauanahan@gmail.com", "+639829901987", R.drawable.ccsdeptlogo),
-                                Department("College of Engineering", "Ms. Jennelyn V. Tan", "tanjennelyncoe@gmail.com", "+639549932855", R.drawable.coedeptlogo),
-                                Department("College of Business Administration / Accountancy", "Ms. Vilma R. Cacho", "rcachocbaa@gmail.com", "+639549932855", R.drawable.cbaadeptlogo),
-                                Department("College of Education", "Ms. George C. Bacsa", "geocalmacoedue@gmail.com", "+639877718241", R.drawable.coedudeptlogo)
-                            )
+                        composable("edit_campus_department/{id}") { backStackEntry ->
+                            // Grab the database ID passed from the Manage screen
+                            val deptId = backStackEntry.arguments?.getString("id")?.toIntOrNull() ?: 0
 
                             EditCampusDepartmentScreen(
-                                department = departments.getOrNull(index) ?: departments[0],
+                                viewModel = campusViewModel, // Pass the view model
+                                departmentId = deptId,       // Pass the ID
                                 onBackClick = { navController.popBackStack() },
                                 onUpdate    = { navController.popBackStack() }
                             )
