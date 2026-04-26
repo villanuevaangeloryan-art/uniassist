@@ -34,7 +34,12 @@ object NotificationHelper {
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(body)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            // Expands to show the full announcement content when pulled down
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(body)
+                    .setBigContentTitle(title)
+            )
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()
