@@ -36,20 +36,28 @@ fun ManageCampusDepartmentScreen(
     // 1. COLLECT DATA FROM THE DATABASE
     val dbDepartments by viewModel.departments.collectAsState()
 
-    // 2. Map the Database Entity to your UI Data Class
+    // 2. Map the Database Entity to your UI Data Class with LOGO LOGIC
     val uiDepartments = dbDepartments.map { entity ->
-        // We stored the rep, email, and phone in the 'description' field earlier separated by " | "
         val details = entity.description.split(" | ")
         val rep = details.getOrElse(0) { "Unknown Rep" }
         val email = details.getOrElse(1) { "No Email" }
         val phone = details.getOrElse(2) { "No Phone" }
+
+        // --- THE MISSING LOGO LOGIC HAS BEEN ADDED HERE ---
+        val rawName = entity.departmentName.lowercase()
+        val correctLogo = when {
+            rawName.contains("engineering") || rawName.contains("coe") -> R.drawable.coedeptlogo
+            rawName.contains("business") || rawName.contains("accountancy") || rawName.contains("cbaa") -> R.drawable.cbaadeptlogo
+            rawName.contains("education") || rawName.contains("coed") -> R.drawable.coedudeptlogo
+            else -> R.drawable.ccsdeptlogo
+        }
 
         Department(
             name = entity.departmentName,
             representative = rep,
             email = email,
             phone = phone,
-            logoRes = R.drawable.ccsdeptlogo // Default logo
+            logoRes = correctLogo // <-- NO LONGER HARDCODED!
         )
     }
 
@@ -103,11 +111,13 @@ fun ManageCampusDepartmentScreen(
                             expandedMenuIndex = null
                         },
                         onDelete = {
-                            // Note: Add a delete function to your ViewModel later!
-                            // viewModel.deleteDepartment(dbDepartments[index].id)
+                            // --- UNCOMMENTED: THIS NOW TELLS THE DATABASE TO DELETE ---
+                            viewModel.deleteDepartment(dbDepartments[index].id)
                             expandedMenuIndex = null
                         },
                         onArchive = {
+                            // Temporary: mapping archive to delete since there is no archive boolean yet
+                            viewModel.deleteDepartment(dbDepartments[index].id)
                             expandedMenuIndex = null
                         }
                     )
@@ -252,63 +262,4 @@ fun ManageDepartmentCard(
             }
         }
     }
-}
-
-@Composable
-fun EditDepartmentDialog(
-    department: Department,
-    onDismiss: () -> Unit,
-    onConfirm: (String, String, String, String) -> Unit
-) {
-    var name by remember { mutableStateOf(department.name) }
-    var representative by remember { mutableStateOf(department.representative) }
-    var email by remember { mutableStateOf(department.email) }
-    var phone by remember { mutableStateOf(department.phone) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Edit Department", fontWeight = FontWeight.Bold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Department Name") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = representative,
-                    onValueChange = { representative = it },
-                    label = { Text("Representative") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text("Phone") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onConfirm(name, representative, email, phone) },
-                enabled = name.isNotBlank() && representative.isNotBlank() &&
-                        email.isNotBlank() && phone.isNotBlank()
-            ) {
-                Text("Save", color = Color(0xFF245B3D))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel", color = Color(0xFF666666))
-            }
-        }
-    )
 }
