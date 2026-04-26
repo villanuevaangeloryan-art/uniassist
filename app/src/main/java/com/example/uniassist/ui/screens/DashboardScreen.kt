@@ -47,6 +47,7 @@ data class Announcement(
     val content: String,
     val bullets: List<Pair<String, String>>,
     val footer: String,
+    val category: String = "",
     val isArchived: Boolean = false
 )
 

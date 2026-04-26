@@ -51,6 +51,7 @@ fun AnnouncementEntity.toUiModel(): Announcement {
         content    = content,
         bullets    = bullets,
         footer     = footer,
+        category   = category,
         isArchived = isArchived
     )
 }

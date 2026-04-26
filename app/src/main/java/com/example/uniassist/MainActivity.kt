@@ -6,8 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.view.WindowCompat
@@ -56,8 +56,9 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
                     val navController = rememberNavController()
 
-                    // Teacher's manage-screen list (UI only, not persisted).
-                    val publishedAnnouncements = remember { mutableStateListOf<ManageScreenAnnouncement>() }
+                    // DB-backed list for the teacher's manage screen (all announcements incl. archived)
+                    val allAnnouncements by announcementViewModel.announcements.collectAsState()
+                    val dbManageList = allAnnouncements.map { it.toManageCard() }
 
                     NavHost(navController = navController, startDestination = "get_started") {
 
@@ -146,9 +147,9 @@ class MainActivity : ComponentActivity() {
 
                         composable("manage_announcements") {
                             ManageAnnouncementsScreen(
-                                onBackClick  = { navController.popBackStack() },
+                                onBackClick   = { navController.popBackStack() },
                                 onCreateClick = { navController.navigate("create_announcement") },
-                                publishedAnnouncements = publishedAnnouncements,
+                                dbAnnouncements = dbManageList,
                                 onArchive = { id -> announcementViewModel.archive(id) }
                             )
                         }
@@ -158,24 +159,18 @@ class MainActivity : ComponentActivity() {
                                 onBackClick  = { navController.popBackStack() },
                                 onSaveDraft  = { navController.popBackStack() },
                                 onPublish = { newAnnouncement ->
-
-                                    publishedAnnouncements.add(
-                                        0,
-                                        newAnnouncement.toManageCard(id = publishedAnnouncements.size + 100)
-                                    )
-
                                     announcementViewModel.publish(
                                         announcement = Announcement(
                                             title   = newAnnouncement.title,
                                             date    = newAnnouncement.postDate,
                                             content = newAnnouncement.message,
                                             bullets = emptyList(),
-                                            footer  = if (newAnnouncement.isPriority) "⚠ Priority Announcement" else ""
+                                            footer  = if (newAnnouncement.isPriority) "⚠ Priority Announcement" else "",
+                                            category = newAnnouncement.category
                                         ),
                                         category   = newAnnouncement.category,
                                         isPriority = newAnnouncement.isPriority
                                     )
-
                                     navController.popBackStack()
                                 }
                             )

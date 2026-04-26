@@ -65,17 +65,7 @@ data class ManageScreenAnnouncement(
 // ── Helper: converts a NewAnnouncement (from CreateAnnouncementScreen) into a
 //   ManageScreenAnnouncement ready to be displayed in the list.
 fun NewAnnouncement.toManageCard(id: Int): ManageScreenAnnouncement {
-    val (icon, color) = when (category.lowercase()) {
-        "exams", "enrollment", "deadlines", "scholarship updates" ->
-            Icons.Outlined.School to CatAcademic
-        "campus festival", "org activities", "sports fest" ->
-            Icons.Outlined.Event to CatEvent
-        "office hours", "policy reminders", "general updates" ->
-            Icons.Outlined.Info to CatGeneral
-        "class suspension", "typhoon alerts", "safety notices" ->
-            Icons.Outlined.Warning to CatEmergency
-        else -> Icons.Outlined.Campaign to GreenMedium
-    }
+    val (icon, color) = categoryIconAndColor(category)
     return ManageScreenAnnouncement(
         id          = id,
         title       = title,
@@ -89,73 +79,54 @@ fun NewAnnouncement.toManageCard(id: Int): ManageScreenAnnouncement {
     )
 }
 
+// ── Helper: converts a DB-backed Announcement to a ManageScreenAnnouncement.
+fun Announcement.toManageCard(): ManageScreenAnnouncement {
+    val (icon, color) = categoryIconAndColor(category)
+    return ManageScreenAnnouncement(
+        id            = id,
+        title         = title,
+        category      = category,
+        categoryIcon  = icon,
+        categoryColor = color,
+        timePosted    = date,
+        statusText    = if (isArchived) "Archived" else "Active",
+        statusColor   = if (isArchived) Color(0xFF9E9E9E) else StatusActive,
+        description   = content.ifBlank { null },
+        isArchived    = isArchived
+    )
+}
+
+private fun categoryIconAndColor(category: String): Pair<ImageVector, Color> =
+    when (category.lowercase()) {
+        "exams", "enrollment", "deadlines", "scholarship updates" ->
+            Icons.Outlined.School to CatAcademic
+        "campus festival", "org activities", "sports fest" ->
+            Icons.Outlined.Event to CatEvent
+        "office hours", "policy reminders", "general updates" ->
+            Icons.Outlined.Info to CatGeneral
+        "class suspension", "typhoon alerts", "safety notices" ->
+            Icons.Outlined.Warning to CatEmergency
+        else -> Icons.Outlined.Campaign to GreenMedium
+    }
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageAnnouncementsScreen(
     onBackClick: () -> Unit = {},
     onCreateClick: () -> Unit = {},
-    publishedAnnouncements: List<ManageScreenAnnouncement> = emptyList(),
+    // DB-backed list — all announcements including archived (teacher view)
+    dbAnnouncements: List<ManageScreenAnnouncement> = emptyList(),
     onArchive: (Int) -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var profileMenuExpanded by remember { mutableStateOf(false) }
 
-
-    val staticAnnouncements = remember {
-        listOf(
-            ManageScreenAnnouncement(
-                id = 1,
-                title = "Campus Event Tomorrow",
-                category = "Event",
-                categoryIcon = Icons.Outlined.Event,
-                categoryColor = CatEvent,
-                timePosted = "posted 1h ago",
-                statusText = "active",
-                statusColor = StatusActive
-            ),
-            ManageScreenAnnouncement(
-                id = 2,
-                title = "Reminder: Enrollment Deadline",
-                category = "Enrollment",
-                categoryIcon = Icons.Outlined.NotificationsActive,
-                categoryColor = CatEnrollment,
-                timePosted = "posted 2 days ago",
-                statusText = "Active",
-                statusColor = StatusActive,
-                description = "Final day to enroll for the semester is May 15th!"
-            ),
-            ManageScreenAnnouncement(
-                id = 3,
-                title = "Library Closed for Maintenance",
-                category = "Info",
-                categoryIcon = Icons.Outlined.Event,
-                categoryColor = CatInfo,
-                timePosted = "posted 5 days ago",
-                statusText = "Ending soon",
-                statusColor = StatusEndingSoon
-            ),
-            ManageScreenAnnouncement(
-                id = 4,
-                title = "Campus Event Tomorrow",
-                category = "Event",
-                categoryIcon = Icons.Outlined.Event,
-                categoryColor = CatEvent,
-                timePosted = "posted 1h ago",
-                statusText = "Expired",
-                statusColor = StatusExpired
-            )
-        )
-    }
-
-
-    val allAnnouncements = publishedAnnouncements + staticAnnouncements
-
-    // Filter by search query
+    // Filter by search query only — archive state is already on each item
     val displayed = if (searchQuery.isBlank()) {
-        allAnnouncements
+        dbAnnouncements
     } else {
-        allAnnouncements.filter {
+        dbAnnouncements.filter {
             it.title.contains(searchQuery, ignoreCase = true) ||
                     it.category.contains(searchQuery, ignoreCase = true)
         }
