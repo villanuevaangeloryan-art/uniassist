@@ -77,6 +77,9 @@ dependencies {
     ksp("androidx.room:room-compiler:2.7.1")
 
 
+    // Firebase Cloud Messaging
+    implementation("com.google.firebase:firebase-messaging-ktx")
+
     // ViewModel for Compose
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
 
