@@ -249,6 +249,8 @@ class MainActivity : ComponentActivity() {
                                 onScheduleClick = { navController.navigate("schedule/${role}") },
                                 onCampusClick   = { navController.navigate("campus/${role}") },
                                 onLogoutClick   = {
+                                    com.google.firebase.messaging.FirebaseMessaging.getInstance()
+                                        .unsubscribeFromTopic("announcements")
                                     navController.navigate("get_started") { popUpTo(0) { inclusive = true } }
                                 }
                             )
