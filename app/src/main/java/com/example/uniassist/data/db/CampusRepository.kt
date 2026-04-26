@@ -19,4 +19,12 @@ class CampusRepository(private val campusDao: CampusDao) {
     fun getAllDepartments(): Flow<List<DepartmentEntity>> {
         return campusDao.getAllDepartments()
     }
+
+    suspend fun deleteDepartment(id: Int) {
+        campusDao.deleteDepartmentById(id)
+    }
+
+    suspend fun updateDepartment(department: DepartmentEntity) {
+        campusDao.updateDepartment(department)
+    }
 }

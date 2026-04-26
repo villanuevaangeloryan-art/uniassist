@@ -23,4 +23,10 @@ interface CampusDao {
 
     @Query("SELECT * FROM departments")
     fun getAllDepartments(): Flow<List<DepartmentEntity>>
+
+    @Query("DELETE FROM departments WHERE id = :departmentId")
+    suspend fun deleteDepartmentById(departmentId: Int)
+
+    @Update
+    suspend fun updateDepartment(department: DepartmentEntity)
 }
