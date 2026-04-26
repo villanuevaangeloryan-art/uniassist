@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.uniassist.data.AnnouncementRepository
 import com.example.uniassist.ui.screens.Announcement
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -43,7 +44,26 @@ class AnnouncementViewModel(
     fun publish(announcement: Announcement, category: String, isPriority: Boolean) {
         viewModelScope.launch {
             repository.publish(announcement, category, isPriority)
+            // Write a notification trigger to Firestore so a Cloud Function
+            // (or any server-side listener) can fan-out an FCM topic message
+            // to all subscribed students.
+            triggerNotification(
+                title = announcement.title,
+                body  = announcement.content.ifBlank { "New announcement posted." }
+            )
         }
+    }
+
+    private fun triggerNotification(title: String, body: String) {
+        val payload = mapOf(
+            "title"     to title,
+            "body"      to body,
+            "topic"     to "announcements",
+            "timestamp" to System.currentTimeMillis()
+        )
+        FirebaseFirestore.getInstance()
+            .collection("notification_triggers")
+            .add(payload)
     }
 
     fun markAsRead(id: Int) {
