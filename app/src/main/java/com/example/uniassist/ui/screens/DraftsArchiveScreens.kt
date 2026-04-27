@@ -1,25 +1,24 @@
 package com.example.uniassist.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.material.icons.filled.Unarchive
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -30,7 +29,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.uniassist.R
-import com.example.uniassist.ui.theme.DarkGreen
+import com.example.uniassist.ui.theme.*
+
+// ── Colors for consistency ──────────────────────────────────────────────────
+private val BackgroundCream = Color(0xFFFDFDF8)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MENU SCREENS  (entry point — "Drafts Menu" / "Archive Menu")
@@ -64,26 +66,26 @@ private fun MenuTemplate(
     onItemClick: (String) -> Unit
 ) {
     Scaffold(
-        topBar = { DraftArchiveTopBar(title = title, onBackClick = onBackClick) }
+        topBar = { DraftArchiveTopBar(title = title, onBackClick = onBackClick) },
+        containerColor = BackgroundCream
     ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color(0xFFFDFDFB))
         ) {
             Image(
                 painter = painterResource(id = R.drawable.background_rolepick),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                alpha = 0.15f
+                alpha = 0.12f
             )
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 24.dp, vertical = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 items.forEach { item ->
@@ -107,30 +109,29 @@ fun AnnouncementsDraftScreen(
     onDeleteDraft: (Announcement) -> Unit = {}
 ) {
     Scaffold(
-        topBar = { DraftArchiveTopBar(title = "Announcements Draft", onBackClick = onBackClick) }
+        topBar = { DraftArchiveTopBar(title = "Announcements Draft", onBackClick = onBackClick) },
+        containerColor = BackgroundCream
     ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color(0xFFFDFDFB))
         ) {
             Image(
                 painter = painterResource(id = R.drawable.background_rolepick),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                alpha = 0.15f
+                alpha = 0.12f
             )
 
             if (drafts.isEmpty()) {
-                EmptyStateMessage(message = "No draft announcements yet.")
+                EmptyStateMessage(message = "No draft announcements yet.", icon = Icons.Default.EditNote)
             } else {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(drafts, key = { it.id }) { draft ->
                         DraftAnnouncementCard(
@@ -158,30 +159,29 @@ fun AnnouncementsArchiveScreen(
     onDelete: (Announcement) -> Unit = {}
 ) {
     Scaffold(
-        topBar = { DraftArchiveTopBar(title = "Announcements Archive", onBackClick = onBackClick) }
+        topBar = { DraftArchiveTopBar(title = "Announcements Archive", onBackClick = onBackClick) },
+        containerColor = BackgroundCream
     ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color(0xFFFDFDFB))
         ) {
             Image(
                 painter = painterResource(id = R.drawable.background_rolepick),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                alpha = 0.15f
+                alpha = 0.12f
             )
 
             if (archived.isEmpty()) {
-                EmptyStateMessage(message = "No archived announcements yet.")
+                EmptyStateMessage(message = "No archived announcements yet.", icon = Icons.Default.Archive)
             } else {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(archived, key = { it.id }) { item ->
                         ArchivedAnnouncementCard(
@@ -212,150 +212,129 @@ private fun DraftAnnouncementCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFD4E7D5).copy(alpha = 0.9f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, Color(0xFF4CAF50).copy(alpha = 0.3f))
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Image(
-                painter = painterResource(id = R.drawable.background_rolepick),
-                contentDescription = null,
-                modifier = Modifier.matchParentSize(),
-                contentScale = ContentScale.Crop,
-                alpha = 0.25f
-            )
-            Column(modifier = Modifier.padding(16.dp)) {
-                // Title + Category badge row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Title + Category badge row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = announcement.title.ifBlank { "(Untitled Draft)" },
+                    fontFamily = Poppins,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp,
+                    color = DarkGreenText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = Color(0xFFE9B44C).copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, Color(0xFFE9B44C).copy(alpha = 0.5f))
                 ) {
                     Text(
-                        text = announcement.title.ifBlank { "(Untitled)" },
+                        text = "DRAFT",
                         fontFamily = Poppins,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = DarkGreen,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
+                        color = Color(0xFFB8860B),
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Surface(
-                        shape = RoundedCornerShape(20.dp),
-                        color = Color(0xFF99C24D).copy(alpha = 0.35f)
-                    ) {
-                        Text(
-                            text = announcement.category.ifBlank { "General" },
-                            fontFamily = Poppins,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = DarkGreen,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
-                        )
-                    }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
-                // Date
+            // Date & Category
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = announcement.date.ifBlank { "No date set" },
+                    text = announcement.category.ifBlank { "General" },
                     fontFamily = Poppins,
                     fontSize = 11.sp,
-                    color = Color(0xFF5A7A65)
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF56A566)
                 )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // Content preview
                 Text(
-                    text = announcement.content.ifBlank { "No content yet." },
-                    fontFamily = Poppins,
-                    fontSize = 12.sp,
-                    color = Color(0xFF3D5A45),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    text = " • ",
+                    color = Color.LightGray,
+                    fontSize = 11.sp
                 )
+                Text(
+                    text = announcement.date.ifBlank { "Last edited just now" },
+                    fontFamily = Poppins,
+                    fontSize = 11.sp,
+                    color = Color.Gray
+                )
+            }
 
-                Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-                // Action buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+            // Content preview
+            Text(
+                text = announcement.content.ifBlank { "No content description added yet." },
+                fontFamily = Poppins,
+                fontSize = 14.sp,
+                color = Color.DarkGray,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 20.sp
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Action buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Edit button
+                OutlinedButton(
+                    onClick = onEdit,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkGreenText),
+                    border = BorderStroke(1.dp, DarkGreenText),
+                    contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
-                    // Edit button
-                    OutlinedButton(
-                        onClick = onEdit,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkGreen),
-                        border = ButtonDefaults.outlinedButtonBorder.copy(
-                            brush = Brush.horizontalGradient(listOf(DarkGreen, DarkGreen))
-                        ),
-                        contentPadding = PaddingValues(vertical = 8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit",
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = "Edit",
-                            fontFamily = Poppins,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                    Icon(Icons.Default.Edit, "Edit", modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Edit", fontFamily = Poppins, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                }
 
-                    // Publish button
-                    Button(
-                        onClick = { showPublishDialog = true },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF2D6A4F)
-                        ),
-                        contentPadding = PaddingValues(vertical = 8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Send,
-                            contentDescription = "Publish",
-                            modifier = Modifier.size(14.dp),
-                            tint = Color.White
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = "Publish",
-                            fontFamily = Poppins,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
-                        )
-                    }
+                // Publish button
+                Button(
+                    onClick = { showPublishDialog = true },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2D6A4F)),
+                    contentPadding = PaddingValues(vertical = 8.dp)
+                ) {
+                    Icon(Icons.Default.Send, "Publish", modifier = Modifier.size(16.dp), tint = Color.White)
+                    Spacer(Modifier.width(6.dp))
+                    Text("Publish", fontFamily = Poppins, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                }
 
-                    // Delete button
-                    IconButton(
-                        onClick = { showDeleteDialog = true },
-                        modifier = Modifier
-                            .size(38.dp)
-                            .background(Color(0xFFFFEBEE), RoundedCornerShape(10.dp))
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete",
-                            tint = Color(0xFFD32F2F),
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                // Delete button
+                IconButton(
+                    onClick = { showDeleteDialog = true },
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(Color(0xFFFFEBEE), RoundedCornerShape(8.dp))
+                ) {
+                    Icon(Icons.Default.Delete, "Delete", tint = Color(0xFFD32F2F), modifier = Modifier.size(20.dp))
                 }
             }
         }
     }
 
-    // Delete confirmation dialog
     if (showDeleteDialog) {
         ConfirmDialog(
             title = "Delete Draft",
@@ -370,7 +349,6 @@ private fun DraftAnnouncementCard(
         )
     }
 
-    // Publish confirmation dialog
     if (showPublishDialog) {
         ConfirmDialog(
             title = "Publish Draft",
@@ -397,113 +375,86 @@ private fun ArchivedAnnouncementCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE8E8E8).copy(alpha = 0.9f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f))
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Image(
-                painter = painterResource(id = R.drawable.background_rolepick),
-                contentDescription = null,
-                modifier = Modifier.matchParentSize(),
-                contentScale = ContentScale.Crop,
-                alpha = 0.18f
-            )
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = announcement.title,
+                    fontFamily = Poppins,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp,
+                    color = Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = Color(0xFFF5F5F5)
                 ) {
                     Text(
-                        text = announcement.title.ifBlank { "(Untitled)" },
+                        text = "ARCHIVED",
                         fontFamily = Poppins,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = Color(0xFF3D3D3D),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
+                        color = Color.DarkGray,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Surface(
-                        shape = RoundedCornerShape(20.dp),
-                        color = Color(0xFFBDBDBD).copy(alpha = 0.5f)
-                    ) {
-                        Text(
-                            text = announcement.category.ifBlank { "General" },
-                            fontFamily = Poppins,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF616161),
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
-                        )
-                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "Posted on: ${announcement.date}",
+                fontFamily = Poppins,
+                fontSize = 11.sp,
+                color = Color.Gray
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = announcement.content,
+                fontFamily = Poppins,
+                fontSize = 14.sp,
+                color = Color.Gray,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = { showUnarchiveDialog = true },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2D6A4F)),
+                    contentPadding = PaddingValues(vertical = 8.dp)
+                ) {
+                    Icon(Icons.Default.Unarchive, "Restore", modifier = Modifier.size(16.dp), tint = Color.White)
+                    Spacer(Modifier.width(6.dp))
+                    Text("Restore", fontFamily = Poppins, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = announcement.date.ifBlank { "No date" },
-                    fontFamily = Poppins,
-                    fontSize = 11.sp,
-                    color = Color(0xFF757575)
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = announcement.content.ifBlank { "No content." },
-                    fontFamily = Poppins,
-                    fontSize = 12.sp,
-                    color = Color(0xFF616161),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                IconButton(
+                    onClick = { showDeleteDialog = true },
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(Color(0xFFFFEBEE), RoundedCornerShape(8.dp))
                 ) {
-                    // Unarchive button
-                    Button(
-                        onClick = { showUnarchiveDialog = true },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2D6A4F)),
-                        contentPadding = PaddingValues(vertical = 8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Unarchive,
-                            contentDescription = "Restore",
-                            modifier = Modifier.size(14.dp),
-                            tint = Color.White
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = "Restore",
-                            fontFamily = Poppins,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
-                        )
-                    }
-
-                    // Delete button
-                    IconButton(
-                        onClick = { showDeleteDialog = true },
-                        modifier = Modifier
-                            .size(38.dp)
-                            .background(Color(0xFFFFEBEE), RoundedCornerShape(10.dp))
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete",
-                            tint = Color(0xFFD32F2F),
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                    Icon(Icons.Default.Delete, "Delete", tint = Color(0xFFD32F2F), modifier = Modifier.size(20.dp))
                 }
             }
         }
@@ -512,7 +463,7 @@ private fun ArchivedAnnouncementCard(
     if (showUnarchiveDialog) {
         ConfirmDialog(
             title = "Restore Announcement",
-            message = "Restore this announcement to active? It will be visible to students again.",
+            message = "Restore this announcement to active status? It will be visible to students again.",
             confirmLabel = "Restore",
             confirmColor = Color(0xFF2D6A4F),
             onConfirm = {
@@ -525,8 +476,8 @@ private fun ArchivedAnnouncementCard(
 
     if (showDeleteDialog) {
         ConfirmDialog(
-            title = "Delete Announcement",
-            message = "Permanently delete this archived announcement? This cannot be undone.",
+            title = "Delete Permanently",
+            message = "This action cannot be undone. Delete this announcement forever?",
             confirmLabel = "Delete",
             confirmColor = Color(0xFFD32F2F),
             onConfirm = {
@@ -539,7 +490,7 @@ private fun ArchivedAnnouncementCard(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SHARED COMPONENTS (internal to this file)
+// SHARED COMPONENTS
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
@@ -548,41 +499,33 @@ private fun DraftArchiveTopBar(title: String, onBackClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(65.dp)
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF7CA786), Color(0xFFE2F1C6))
-                )
-            )
-            .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.CenterStart
+            .background(Brush.horizontalGradient(listOf(HeaderGreenStart, HeaderGreenEnd)))
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = DarkGreen,
-                    modifier = Modifier.size(26.dp)
-                )
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkGreenText, modifier = Modifier.size(28.dp))
             }
             Text(
                 text = title,
                 fontFamily = Poppins,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = DarkGreen,
-                modifier = Modifier.padding(start = 8.dp)
+                color = DarkGreenText,
+                modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.weight(1f))
-            Icon(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = "Profile",
-                tint = DarkGreen,
-                modifier = Modifier.size(32.dp)
-            )
+            Box(
+                modifier = Modifier.size(34.dp).border(2.dp, DarkGreenText, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.AccountCircle, "Profile", tint = DarkGreenText, modifier = Modifier.size(30.dp))
+            }
         }
     }
 }
@@ -591,12 +534,13 @@ private fun DraftArchiveTopBar(title: String, onBackClick: () -> Unit) {
 private fun MenuCard(title: String, onClick: () -> Unit) {
     Card(
         modifier = Modifier
-            .width(344.dp)
-            .height(86.dp)
+            .fillMaxWidth()
+            .height(90.dp)
             .clickable { onClick() },
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFD4E7D5).copy(alpha = 0.85f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f))
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Image(
@@ -604,48 +548,54 @@ private fun MenuCard(title: String, onClick: () -> Unit) {
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                alpha = 0.35f
+                alpha = 0.08f
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp)
+                modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp)
             ) {
+                Surface(
+                    shape = CircleShape,
+                    color = Color(0xFFF1F8F1),
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(
+                        imageVector = if (title.contains("Draft")) Icons.Default.EditNote else Icons.Default.Archive,
+                        contentDescription = null,
+                        tint = DarkGreenText,
+                        modifier = Modifier.padding(10.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
                 Text(
                     text = title,
                     fontFamily = Poppins,
-                    fontSize = 20.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = DarkGreen,
+                    color = DarkGreenText,
                     modifier = Modifier.weight(1f)
                 )
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = DarkGreen,
-                    modifier = Modifier.size(28.dp)
-                )
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = DarkGreenText, modifier = Modifier.size(26.dp))
             }
         }
     }
 }
 
 @Composable
-private fun EmptyStateMessage(message: String) {
+private fun EmptyStateMessage(message: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(
-                imageVector = Icons.Default.Archive,
+                imageVector = icon,
                 contentDescription = null,
                 tint = Color(0xFFAECFB4),
-                modifier = Modifier.size(64.dp)
+                modifier = Modifier.size(72.dp)
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = message,
                 fontFamily = Poppins,
-                fontSize = 14.sp,
+                fontSize = 15.sp,
                 color = Color(0xFF7AA685),
                 fontWeight = FontWeight.Medium
             )
@@ -664,46 +614,26 @@ private fun ConfirmDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(16.dp),
-        containerColor = Color(0xFFF5FBF5),
+        shape = RoundedCornerShape(20.dp),
+        containerColor = Color.White,
         title = {
-            Text(
-                text = title,
-                fontFamily = Poppins,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                color = DarkGreen
-            )
+            Text(text = title, fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = DarkGreenText)
         },
         text = {
-            Text(
-                text = message,
-                fontFamily = Poppins,
-                fontSize = 13.sp,
-                color = Color(0xFF3D5A45)
-            )
+            Text(text = message, fontFamily = Poppins, fontSize = 14.sp, color = Color.Gray)
         },
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = confirmColor)
             ) {
-                Text(
-                    text = confirmLabel,
-                    fontFamily = Poppins,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
-                )
+                Text(text = confirmLabel, fontFamily = Poppins, fontWeight = FontWeight.Bold, color = Color.White)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(
-                    text = "Cancel",
-                    fontFamily = Poppins,
-                    color = Color(0xFF5A7A65)
-                )
+                Text(text = "Cancel", fontFamily = Poppins, fontWeight = FontWeight.Medium, color = Color.Gray)
             }
         }
     )
@@ -721,12 +651,6 @@ fun PreviewDraftsMenu() {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewArchiveMenu() {
-    ArchiveMenuScreen()
-}
-
-@Preview(showBackground = true)
-@Composable
 fun PreviewAnnouncementsDraftScreen() {
     val sampleDrafts = listOf(
         Announcement(
@@ -734,27 +658,7 @@ fun PreviewAnnouncementsDraftScreen() {
             content = "Please complete your enrollment before the deadline.",
             bullets = emptyList(), footer = "", category = "Academic",
             isArchived = false, isDraft = true
-        ),
-        Announcement(
-            id = 2, title = "Campus Clean-up Drive", date = "2025-06-10",
-            content = "All students are encouraged to join the clean-up activity.",
-            bullets = emptyList(), footer = "", category = "Events",
-            isArchived = false, isDraft = true
         )
     )
     AnnouncementsDraftScreen(drafts = sampleDrafts)
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewAnnouncementsArchiveScreen() {
-    val sampleArchived = listOf(
-        Announcement(
-            id = 3, title = "Old Bulletin Notice", date = "2025-04-10",
-            content = "This announcement has been archived.",
-            bullets = emptyList(), footer = "", category = "General",
-            isArchived = true, isDraft = false
-        )
-    )
-    AnnouncementsArchiveScreen(archived = sampleArchived)
 }

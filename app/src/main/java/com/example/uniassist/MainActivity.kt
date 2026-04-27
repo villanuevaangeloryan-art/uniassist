@@ -87,9 +87,7 @@ class MainActivity : ComponentActivity() {
                             GetStartedScreen(navController = navController)
                         }
 
-                        composable("role_pick") {
-                            RolePickScreen(navController = navController)
-                        }
+                        rolePick(navController)
 
                         composable("login_register/{role}") { backStackEntry ->
                             val role = backStackEntry.arguments?.getString("role") ?: "Student"
@@ -126,17 +124,20 @@ class MainActivity : ComponentActivity() {
 
                             if (role == "Teacher") {
                                 TeacherDashboardScreen(
-                                    userName              = fullName,
-                                    totalStudents         = 128,
-                                    totalAnnouncements    = 23,
-                                    totalUnread           = 5,
+                                    userName = fullName,
+                                    totalStudents = 128,
+                                    totalAnnouncements = 23,
+                                    totalUnread = 5,
+                                    currentRoute = "dashboard",
+                                    announcementViewModel = announcementViewModel,
+                                    onDashboardClick = { },
+                                    onDraftsClick = { navController.navigate("drafts_menu") },
+                                    onArchiveClick = { navController.navigate("archive_menu") },
+                                    onSettingsClick = { navController.navigate("settings/${role}") },
                                     onManageAnnouncements = { navController.navigate("manage_announcements") },
-                                    onManageCampusInfo    = { navController.navigate("manage_campus_department") },
-                                    onViewStudents        = { navController.navigate("view_students") },
-                                    onSettings            = { navController.navigate("settings/${role}") },
-                                    onDrafts              = { navController.navigate("drafts_menu") },
-                                    onArchive             = { navController.navigate("archive_menu") },
-                                    onLogout              = {
+                                    onManageCampusInfo = { navController.navigate("manage_campus_department") },
+                                    onViewStudents = { navController.navigate("view_students") },
+                                    onLogout = {
                                         navController.navigate("get_started") {
                                             popUpTo(0) { inclusive = true }
                                         }
@@ -416,9 +417,12 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+                        // ── SETTINGS SCREEN ───────────────────────────────────
+
                         composable("settings/{role}") { backStackEntry ->
                             val role = backStackEntry.arguments?.getString("role") ?: "Student"
                             SettingsScreen(
+                                role = role,
                                 onDashboardClick = {
                                     navController.navigate("dashboard/${role}//") {
                                         popUpTo("dashboard/${role}//") { inclusive = true }
@@ -426,6 +430,8 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onScheduleClick = { navController.navigate("schedule/${role}") },
                                 onCampusClick   = { navController.navigate("campus/${role}") },
+                                onDraftsClick   = { navController.navigate("drafts_menu") },
+                                onArchiveClick  = { navController.navigate("archive_menu") },
                                 onLogoutClick   = {
                                     com.google.firebase.messaging.FirebaseMessaging.getInstance()
                                         .unsubscribeFromTopic("announcements")
@@ -438,6 +444,12 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    private fun androidx.navigation.NavGraphBuilder.rolePick(navController: androidx.navigation.NavHostController) {
+        composable("role_pick") {
+            RolePickScreen(navController = navController)
         }
     }
 }

@@ -27,6 +27,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun campusDao(): CampusDao
     abstract fun studentDao(): StudentDao
 
+
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
