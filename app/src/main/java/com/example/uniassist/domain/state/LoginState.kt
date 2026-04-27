@@ -5,6 +5,8 @@ data class LoginState(
     val email: String = "",
     val password: String = "",
     val isPasswordVisible: Boolean = false,
+    val authError: String = "",
+    val userRole: String = "",
 
     // User info (filled after successful login)
     val firstName: String = "",
@@ -24,6 +26,7 @@ data class LoginState(
 
     // Form Validity
     val isFormValid: Boolean = false
+
 ) {
     // Helper computed properties
     val hasEmailError: Boolean get() = emailError.isNotEmpty()

@@ -8,16 +8,14 @@ import kotlinx.coroutines.flow.map
 
 
 class AnnouncementRepository(private val dao: AnnouncementDao) {
-
-    // Live stream of all announcements as UI models, newest first.
     val announcements: Flow<List<Announcement>> = dao.getAllFlow().map { entities ->
         entities.map { it.toUiModel() }
     }
 
-    // Live count of unread announcements
+
     val unreadCount: Flow<Int> = dao.getUnreadCountFlow()
 
-    // Called when the teacher taps PUBLISH.
+    //PUBLISH
     suspend fun publish(announcement: Announcement, category: String, isPriority: Boolean) {
         dao.insert(announcement.toEntity(category = category, isPriority = isPriority))
     }
@@ -30,7 +28,6 @@ class AnnouncementRepository(private val dao: AnnouncementDao) {
 }
 
 
-// Converts a Room entity to the Announcement UI model used by DashboardScreen.
 fun AnnouncementEntity.toUiModel(): Announcement {
     val bullets = if (bulletsRaw.isBlank()) {
         emptyList()
@@ -49,7 +46,6 @@ fun AnnouncementEntity.toUiModel(): Announcement {
     )
 }
 
-// Converts the UI Announcement model back to a Room entity for storage.
 fun Announcement.toEntity(category: String, isPriority: Boolean): AnnouncementEntity {
     val bulletsRaw = bullets.joinToString("||") { "${it.first}|${it.second}" }
     return AnnouncementEntity(

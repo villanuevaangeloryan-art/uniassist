@@ -15,6 +15,6 @@ data class AnnouncementEntity(
     val footer: String,
     val category: String,
     val isPriority: Boolean,
-    val isRead: Boolean = false,  // "mark as read" feature
+    val isRead: Boolean = false,  
     val createdAt: Long = System.currentTimeMillis()
 )

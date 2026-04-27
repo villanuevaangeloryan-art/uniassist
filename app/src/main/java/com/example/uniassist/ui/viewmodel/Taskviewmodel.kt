@@ -12,19 +12,16 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-// ── ViewModel
+//  ViewModel
 
 class TaskViewModel(
     private val repository: TaskRepository
 ) : ViewModel() {
 
-    // The currently selected calendar date. When the student taps a day,
-    // the screen calls setSelectedDate() and tasksForSelectedDate updates.
     private val _selectedDateKey = MutableStateFlow(todayKey())
     val selectedDateKey: StateFlow<String> = _selectedDateKey
 
-    // Tasks for the selected date — reacts automatically when either the
-    // selected date changes OR the database changes.
+    // Tasks for the selected date
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val tasksForSelectedDate: StateFlow<List<TaskItem>> = _selectedDateKey
         .flatMapLatest { dateKey -> repository.tasksForDate(dateKey) }
@@ -63,7 +60,7 @@ class TaskViewModel(
         }
     }
 
-    // ── Factory
+
     class Factory(private val repository: TaskRepository) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =

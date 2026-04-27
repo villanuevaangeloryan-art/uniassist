@@ -21,7 +21,7 @@ interface AnnouncementDao {
     suspend fun markAsRead(id: Int)
 
     // Mark ALL announcements as read.
-    @Query("UPDATE announcements SET isRead = 1")
+    @Query("UPDATE announcements SET isRead = 1")   
     suspend fun markAllAsRead()
 
     // Count unread announcements

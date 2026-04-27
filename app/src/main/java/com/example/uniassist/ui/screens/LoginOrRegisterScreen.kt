@@ -1,35 +1,25 @@
 package com.example.uniassist.ui.screens
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -37,166 +27,187 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.uniassist.R
+import com.example.uniassist.data.FirebaseAuthRepository
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import kotlinx.coroutines.launch
 
+// IMPORTING YOUR COLORS DIRECTLY FROM COLOR.KT
+import com.example.uniassist.ui.theme.BottomNavGreen
+import com.example.uniassist.ui.theme.GreyText
+import kotlinx.coroutines.tasks.await
 @Composable
-fun LoginOrRegisterScreen (
+fun LoginOrRegisterScreen(
     navController: NavController,
-    modifier: Modifier = Modifier,
-    role: String // Add role parameter
-){
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-    ){
+    role: String
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val repository = remember { FirebaseAuthRepository() }
+    var errorMessage by remember { mutableStateOf("") }
+
+    // --- GOOGLE SIGN-IN SETUP ---
+    val gso = remember {
+        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(context.getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+    }
+    val googleSignInClient = remember { GoogleSignIn.getClient(context, gso) }
+
+    val googleAuthLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                val idToken = account?.idToken
+                if (idToken != null) {
+                    scope.launch {
+                        try {
+                            val email = repository.signInWithGoogle(idToken)
+                            val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+
+                            if (currentUser != null) {
+                                val alreadyRegistered = repository.isUserRegistered(currentUser.uid)
+
+                                if (alreadyRegistered) {
+                                    // User exists, block registration and show error
+                                    com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                                    errorMessage = "This email is already registered. Please use Login."
+                                } else {
+                                    errorMessage = ""
+                                    navController.navigate("complete_profile/$email/$role")
+                                }
+                            }
+                        } catch (e: Exception) {
+                            errorMessage = "Authentication failed."
+                        }
+                    }
+                }
+            } catch (e: ApiException) {
+                errorMessage = "Google sign-in failed."
+            }
+        }
+    }
+
+    val poppinsBold = FontFamily(Font(R.font.poppins_bold))
+    val poppinsMedium = FontFamily(Font(R.font.poppins_medium))
+
+    Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            contentDescription = "Background Image",
-            painter = painterResource(id = R.drawable.gts_bg_background),
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(0.5f),
+            painter = painterResource(id = R.drawable.background_rolepick),
+            contentDescription = "Background",
+            modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
 
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(Color(0xFFDEF8CB).copy(alpha = 0.5f))
-        )
-
-        Row (
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 30.dp, vertical = 40.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ){
-            IconButton(
-                onClick = {
-                    navController.navigate("role_pick")
-                },
-                modifier = Modifier
-                    .background(Color.White.copy(alpha = 0.6f), shape = RoundedCornerShape(50))
-                    .padding(8.dp)
-                    .size(40.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color(0xFF1B5E3C),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-
         Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Top Left Back Button
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
+                horizontalArrangement = Arrangement.Start
+            ) {
+                IconButton(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier
+                        .background(Color.White, shape = CircleShape)
+                        .size(48.dp)
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = BottomNavGreen)
+                }
+            }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Main content
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+            // Central Logo
+            Image(
+                painter = painterResource(id = R.drawable.gts_uniassist_logo),
+                contentDescription = "UniAssist Logo",
+                modifier = Modifier.scale(0.95f)
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // --- MOVED ERROR MESSAGE HERE ---
+            AnimatedVisibility(visible = errorMessage.isNotEmpty()) {
+                Text(
+                    text = errorMessage,
+                    color = Color(0xFFD32F2F),
+                    fontSize = 14.sp,
+                    fontFamily = poppinsMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+
+            // --- 1. SOLID LOGIN BUTTON ---
+            Button(
+                onClick = { navController.navigate("login/$role") },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = BottomNavGreen),
+                shape = RoundedCornerShape(50.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+            ) {
+                Text("Login", fontSize = 18.sp, fontFamily = poppinsBold, color = Color.White)
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // --- 2. DIVIDER ---
+            Row(
+                modifier = Modifier.fillMaxWidth(0.8f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(modifier = Modifier.weight(1f), color = BottomNavGreen.copy(alpha = 0.5f))
+                Text(
+                    text = "or",
+                    color = BottomNavGreen.copy(alpha = 0.7f),
+                    fontFamily = poppinsMedium,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                HorizontalDivider(modifier = Modifier.weight(1f), color = BottomNavGreen.copy(alpha = 0.5f))
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // --- 3. OUTLINED GOOGLE REGISTER BUTTON ---
+            OutlinedButton(
+                onClick = {
+                    googleSignInClient.signOut().addOnCompleteListener {
+                        googleAuthLauncher.launch(googleSignInClient.signInIntent)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                border = BorderStroke(2.dp, BottomNavGreen),
+                colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent),
+                shape = RoundedCornerShape(50.dp)
             ) {
                 Image(
-                    contentDescription = "UniAssist Logo",
-                    painter = painterResource(id = R.drawable.gts_uniassist_logo),
+                    painter = painterResource(id = R.drawable.googlelogo),
+                    contentDescription = "Google Icon",
+                    modifier = Modifier.size(24.dp)
                 )
-
-                Spacer(modifier = Modifier.height(40.dp))
-
-                //Log in button - Pass role to login
-                Button(
-                    onClick = {
-                        navController.navigate("login/$role")
-                    },
-                    shape = RoundedCornerShape(50.dp),
-                    modifier = Modifier
-                        .size(290.dp, 49.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF245B3D),
-                        contentColor = Color.White
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(1.dp)
-                ){
-                    Text(
-                        "Login",
-                        fontSize = 19.sp,
-                        fontFamily = FontFamily(Font(R.font.poppins_bold))
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(3.dp))
-
-                Row (
-                    verticalAlignment = Alignment.CenterVertically
-                ){
-                    Spacer(modifier = Modifier.width(88.dp))
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(1.dp),
-                        color = Color(0xDA245B3D).copy(alpha = 0.5f)
-                    )
-
-                    Text(
-                        "or",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
-                        color = Color(0xDA245B3D).copy(alpha = 0.5f),
-                        fontSize = 14.sp
-                    )
-
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(1.dp),
-                        color = Color(0xDA245B3D).copy(alpha = 0.5f)
-                    )
-                    Spacer(modifier = Modifier.width(88.dp))
-                }
-
-                Spacer(modifier = Modifier.height(3.dp))
-
-                //Register button - Pass role to register
-                Button(
-                    onClick = {
-                        navController.navigate("register/$role")
-                    },
-                    shape = RoundedCornerShape(50.dp),
-                    modifier = Modifier
-                        .size(290.dp, 49.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = Color(0xFF245B3D)
-                    ),
-                    border = BorderStroke(3.dp, Color(0xff245B3D))
-                ){
-                    Text(
-                        "Register",
-                        fontSize = 19.sp,
-                        fontFamily = FontFamily(Font(R.font.poppins_bold)),
-                    )
-                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text("Register with Google", fontSize = 18.sp, fontFamily = poppinsBold, color = BottomNavGreen)
             }
 
-            Spacer(modifier = Modifier.weight(0.5f))
+            Spacer(modifier = Modifier.height(40.dp))
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 35.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "By TechSpace",
-                    fontFamily = FontFamily(Font(R.font.poppins_bold)),
-                    fontSize = 13.sp,
-                    color = Color(0xFF898989)
-                )
-            }
+            // Footer
+            Text(
+                text = "By TechSpace",
+                fontSize = 13.sp,
+                fontFamily = poppinsBold,
+                color = GreyText,
+                modifier = Modifier.padding(bottom = 20.dp)
+            )
         }
     }
 }

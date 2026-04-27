@@ -2,6 +2,7 @@ package com.example.uniassist.ui.screens
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,8 +34,6 @@ import androidx.navigation.NavController
 import com.example.uniassist.R
 import com.example.uniassist.domain.actions.LoginAction
 import com.example.uniassist.ui.viewmodel.LoginStore
-import kotlinx.coroutines.delay
-import com.example.uniassist.ui.screens.UniAssistLoader   // ← ADD THIS IMPORT
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +55,6 @@ fun LoginScreen(
 
     LaunchedEffect(Unit) {
         showLine = true
-        delay(400)
         showText = true
     }
 
@@ -84,7 +83,6 @@ fun LoginScreen(
         }
     }
 
-    // Show loader when isLoading is true
     if (state.isLoading) {
         UniAssistLoader {
             loginStore.dispatch(LoginAction.LoadingComplete)
@@ -269,12 +267,13 @@ fun LoginScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(75.dp))
+                    // Replaced the inline code with our isolated component call!
+                    ErrorBanner(errorMessage = state.authError)
 
                     Button(
                         onClick = {
                             focusManager.clearFocus()
-                            loginStore.dispatch(LoginAction.LoginButtonClicked)
+                            loginStore.dispatch(LoginAction.LoginButtonClicked(role))
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -284,7 +283,8 @@ fun LoginScreen(
                             disabledContainerColor = Color(0xFF1B5E3C).copy(alpha = 0.5f)
                         ),
                         shape = RoundedCornerShape(50),
-                        enabled = !state.isLoading && state.isFormValid
+                        // Fixed the yellow warning here by removing the redundant state.isLoading check
+                        enabled = state.isFormValid
                     ) {
                         Text("Log in", fontFamily = FontFamily(Font(R.font.poppins_bold)), fontSize = 20.sp, color = Color.White)
                     }
@@ -310,6 +310,55 @@ fun LoginScreen(
                     ) {
                         Text("By TechSpace", fontFamily = FontFamily(Font(R.font.poppins_bold)), fontSize = 13.sp, color = Color(0xFF898989))
                     }
+                }
+            }
+        }
+    }
+}
+
+// --- EXTRACTED COMPONENT TO FIX COMPILER SCOPE ISSUES ---
+@Composable
+fun ErrorBanner(errorMessage: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(95.dp), // Fixed height so the login button doesn't jump
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        androidx.compose.animation.AnimatedVisibility(
+            visible = errorMessage.isNotEmpty(),
+            enter = slideInVertically(initialOffsetY = { 20 }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { 20 }) + fadeOut()
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFDECEA)),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, Color(0xFFD32F2F).copy(alpha = 0.3f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = "Error",
+                        tint = Color(0xFFD32F2F),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = errorMessage,
+                        color = Color(0xFFD32F2F),
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily(Font(R.font.poppins_medium)),
+                        lineHeight = 18.sp
+                    )
                 }
             }
         }
