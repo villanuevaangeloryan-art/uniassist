@@ -24,32 +24,28 @@ class LoginStore(
 
     fun dispatch(action: LoginAction) {
         viewModelScope.launch {
-            _state.update { current ->
-                reducer.reduce(current, action)
-            }
+            _state.update { current -> reducer.reduce(current, action) }
 
             when (action) {
-                // 1. Catch the expectedRole from the action
                 is LoginAction.LoginButtonClicked -> {
                     if (_state.value.isFormValid) performLogin(action.expectedRole)
+                }
+                is LoginAction.GoogleSignInClicked -> {
+                    performGoogleLogin(action.idToken)
                 }
                 else -> {}
             }
         }
     }
 
-    // 2. Add expectedRole as a parameter
     private suspend fun performLogin(expectedRole: String) {
         _state.update { it.copy(isLoading = true, authError = "") }
-
         try {
-            // 3. Pass expectedRole into the repository!
             val authResult = authRepository.signIn(
                 email = _state.value.email,
                 password = _state.value.password,
                 expectedRole = expectedRole
             )
-
             _state.update {
                 it.copy(
                     isLoading = false,
@@ -59,21 +55,43 @@ class LoginStore(
                     navigateToDashboard = true
                 )
             }
-
-            // Retrieve current FCM token and save it to Firestore after login
             saveFcmToken(authResult.uid)
-
-            // Subscribe students to the announcements FCM topic
             if (authResult.role == "Student") {
                 FirebaseMessaging.getInstance().subscribeToTopic("announcements")
             }
         } catch (e: Exception) {
-            // If the gatekeeper throws an error, it gets caught right here!
+            _state.update {
+                it.copy(isLoading = false, authError = e.message ?: "Login failed. Check your connection.")
+            }
+        }
+    }
+
+    // NEW: handles Google sign-in flow
+    private suspend fun performGoogleLogin(idToken: String) {
+        _state.update { it.copy(isLoading = true, authError = "") }
+        try {
+            val email = authRepository.signInWithGoogle(idToken)
+
+            // Fetch the profile from Firestore to get name and role
+            val firestore = FirebaseFirestore.getInstance()
+            val uid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+                ?: throw Exception("Google sign-in failed")
+
+            val doc = firestore.collection("users").document(uid).get().await()
+
             _state.update {
                 it.copy(
                     isLoading = false,
-                    authError = e.message ?: "Login failed. Check your connection."
+                    userRole = doc.getString("role") ?: "Student",
+                    firstName = doc.getString("firstName") ?: "",
+                    lastName = doc.getString("lastName") ?: "",
+                    navigateToDashboard = true
                 )
+            }
+            saveFcmToken(uid)
+        } catch (e: Exception) {
+            _state.update {
+                it.copy(isLoading = false, authError = e.message ?: "Google sign-in failed.")
             }
         }
     }
@@ -87,8 +105,6 @@ class LoginStore(
                 .collection("users")
                 .document(uid)
                 .update("fcmToken", token)
-        } catch (_: Exception) {
-            // Non-critical — token will be saved on next onNewToken callback
-        }
+        } catch (_: Exception) {}
     }
 }

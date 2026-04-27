@@ -1,5 +1,8 @@
 package com.example.uniassist.ui.screens
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
@@ -18,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -34,6 +38,9 @@ import androidx.navigation.NavController
 import com.example.uniassist.R
 import com.example.uniassist.domain.actions.LoginAction
 import com.example.uniassist.ui.viewmodel.LoginStore
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +51,34 @@ fun LoginScreen(
     val loginStore: LoginStore = viewModel()
     val state = loginStore.state.collectAsState().value
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
+
+    // --- Google Sign-In setup ---
+    val googleSignInClient = remember {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(context.getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(context, gso)
+    }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                val idToken = account.idToken
+                if (idToken != null) {
+                    loginStore.dispatch(LoginAction.GoogleSignInClicked(idToken))
+                }
+            } catch (e: ApiException) {
+                // Silently ignore — user cancelled or error
+            }
+        }
+    }
+    // ----------------------------
 
     val modelImage = when (role) {
         "Teacher" -> R.drawable.uniassist_teacher
@@ -267,7 +302,6 @@ fun LoginScreen(
                         )
                     }
 
-                    // Replaced the inline code with our isolated component call!
                     ErrorBanner(errorMessage = state.authError)
 
                     Button(
@@ -283,18 +317,65 @@ fun LoginScreen(
                             disabledContainerColor = Color(0xFF1B5E3C).copy(alpha = 0.5f)
                         ),
                         shape = RoundedCornerShape(50),
-                        // Fixed the yellow warning here by removing the redundant state.isLoading check
                         enabled = state.isFormValid
                     ) {
                         Text("Log in", fontFamily = FontFamily(Font(R.font.poppins_bold)), fontSize = 20.sp, color = Color.White)
                     }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // --- OR divider ---
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray)
+                        Text(
+                            "  or  ",
+                            fontSize = 12.sp,
+                            fontFamily = FontFamily(Font(R.font.poppins_regular)),
+                            color = Color.Gray
+                        )
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray)
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // --- Google Sign-In Button ---
+                    OutlinedButton(
+                        onClick = {
+                            googleSignInClient.signOut().addOnCompleteListener {
+                                googleSignInLauncher.launch(googleSignInClient.signInIntent)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(50),
+                        border = BorderStroke(1.dp, Color.LightGray),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.googlelogo),
+                            contentDescription = "Google",
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            "Continue with Google",
+                            fontFamily = FontFamily(Font(R.font.poppins_medium)),
+                            fontSize = 15.sp,
+                            color = Color.DarkGray
+                        )
+                    }
+                    // ----------------------------
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Don't have an account yet? ", fontSize = 11.sp, fontFamily = FontFamily(Font(R.font.poppins_medium)), color = Color.Gray)
+                        Text("Don't have an account yet? ", fontSize = 11.sp, fontFamily = FontFamily(Font(R.font.poppins_regular)), color = Color.Gray)
                         TextButton(onClick = { loginStore.dispatch(LoginAction.NavigateToRegister) }) {
                             Text("Register here", fontSize = 11.sp, fontFamily = FontFamily(Font(R.font.poppins_bold)), color = Color(0xFF1B5E3C))
                         }
@@ -316,16 +397,15 @@ fun LoginScreen(
     }
 }
 
-// --- EXTRACTED COMPONENT TO FIX COMPILER SCOPE ISSUES ---
 @Composable
 fun ErrorBanner(errorMessage: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(95.dp), // Fixed height so the login button doesn't jump
+            .height(95.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
-        androidx.compose.animation.AnimatedVisibility(
+        AnimatedVisibility(
             visible = errorMessage.isNotEmpty(),
             enter = slideInVertically(initialOffsetY = { 20 }) + fadeIn(),
             exit = slideOutVertically(targetOffsetY = { 20 }) + fadeOut()

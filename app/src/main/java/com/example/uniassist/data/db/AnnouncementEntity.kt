@@ -17,5 +17,6 @@ data class AnnouncementEntity(
     val isPriority: Boolean,
     val isRead: Boolean = false,
     val isArchived: Boolean = false,
+    val isDraft: Boolean = false,
     val createdAt: Long = System.currentTimeMillis()
 )

@@ -40,17 +40,6 @@ val Poppins = FontFamily(
     Font(R.font.poppins_extrabold, FontWeight.ExtraBold)
 )
 
-data class Announcement(
-    val id: Int = 0,
-    val title: String,
-    val date: String,
-    val content: String,
-    val bullets: List<Pair<String, String>>,
-    val footer: String,
-    val category: String = "",
-    val isArchived: Boolean = false
-)
-
 @Composable
 fun DashboardScreen(
     role: String = "Student",
