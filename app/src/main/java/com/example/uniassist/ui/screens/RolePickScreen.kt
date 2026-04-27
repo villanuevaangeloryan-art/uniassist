@@ -5,8 +5,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -32,42 +34,36 @@ fun RolePickScreen(
 ) {
 
     var selectedRole by remember { mutableStateOf("Student") }
-
-    val primaryGreen = Color(0xFF2E7D32)
     val selectedGreen = Color(0xFF2D9E60)
-    val overlayColor = Color(0xAAE8F5E9)
+    val scrollState = rememberScrollState()
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // ✅ Background Image
         Image(
             painter = painterResource(id = R.drawable.background_rolepick),
-            contentDescription = "Background",
+            contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
 
-        // ✅ Overlay
         Box(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .systemBarsPadding()
+                .verticalScroll(scrollState)
                 .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // ✅ Back Arrow - RESTORED TO ORIGINAL
             Row (
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 30.dp, vertical = 40.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                    .padding(top = 16.dp, bottom = 16.dp),
+                horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ){
                 IconButton(
@@ -81,16 +77,15 @@ fun RolePickScreen(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+                        contentDescription = null,
                         tint = Color(0xFF1B5E3C),
                         modifier = Modifier.size(20.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(3.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // ✅ Title
             Text(
                 text = "Continue as",
                 fontFamily = FontFamily(Font(R.font.poppins_bold)),
@@ -101,7 +96,6 @@ fun RolePickScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ✅ Subtitle
             Text(
                 text = "Select your role to personalize your experience",
                 fontFamily = FontFamily(Font(R.font.poppins_medium)),
@@ -110,9 +104,8 @@ fun RolePickScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(45.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            // ✅ Role Cards Row
             Row(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.fillMaxWidth(),
@@ -140,19 +133,17 @@ fun RolePickScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(90.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
-            // ✅ Continue Button - MODIFIED to pass role
             Button(
                 onClick  = {
-                    // Pass the selected role to login_register screen
                     navController.navigate("login_register/$selectedRole")
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF245B3D)),
                 shape = RoundedCornerShape(50),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .size(290.dp , 54.dp)
+                    .height(54.dp)
             ) {
                 Text(
                     text = "Continue",
@@ -163,9 +154,8 @@ fun RolePickScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.weight(0.5f))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            // ✅ Footer
             Text(
                 text = "By TechSpace",
                 fontSize = 12.sp,
@@ -173,7 +163,7 @@ fun RolePickScreen(
                 fontFamily = FontFamily(Font(R.font.poppins_bold))
             )
 
-            Spacer(modifier = Modifier.height(35.dp))
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
@@ -188,11 +178,7 @@ fun RoleCard(
     selectedColor: Color,
     modifier: Modifier = Modifier
 ) {
-
-    val primaryGreen = Color(0xFF2E7D32)
-
     Box(modifier = modifier) {
-
         Card(
             modifier = Modifier
                 .height(350.dp)
@@ -211,16 +197,13 @@ fun RoleCard(
                     .padding(25.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
-                // ✅ Mascot Image
                 Image(
                     painter = painterResource(id = imageRes),
-                    contentDescription = title,
+                    contentDescription = null,
                     modifier = Modifier.size(165.dp),
                     contentScale = ContentScale.Fit
                 )
 
-                // ✅ Role Title
                 Text(
                     text = title,
                     fontFamily = FontFamily(Font(R.font.poppins_bold)),
@@ -231,7 +214,6 @@ fun RoleCard(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                // ✅ Description
                 Text(
                     text = description,
                     fontFamily = FontFamily(Font(R.font.poppins_regular)),
@@ -243,7 +225,6 @@ fun RoleCard(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // ✅ Bottom Pill Button - Now changes color when selected
                 OutlinedButton(
                     onClick = { onClick() },
                     shape = RoundedCornerShape(18),
@@ -268,7 +249,6 @@ fun RoleCard(
             }
         }
 
-        // ✅ Checkmark Badge (Selected Only) - Now using image placeholder
         if (isSelected) {
             Box(
                 modifier = Modifier
@@ -278,10 +258,9 @@ fun RoleCard(
                     .clip(CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                // Using image placeholder for checkmark
                 Image(
-                    painter = painterResource(id = R.drawable.ic_check), // You'll need to add this drawable
-                    contentDescription = "Selected",
+                    painter = painterResource(id = R.drawable.ic_check),
+                    contentDescription = null,
                     modifier = Modifier.size(27.5.dp)
                 )
             }

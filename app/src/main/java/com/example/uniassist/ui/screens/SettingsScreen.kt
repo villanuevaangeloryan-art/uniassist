@@ -4,8 +4,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.DateRange
@@ -14,7 +16,6 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.*
@@ -98,6 +99,7 @@ fun SettingsScreen(
     var showAboutDialog by remember { mutableStateOf(false) }
     var showHelpSupportDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
 
     Scaffold(
         modifier = Modifier
@@ -128,6 +130,7 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(Color.White)
+                .verticalScroll(scrollState)
         ) {
             SettingsTitleSection()
 
@@ -139,9 +142,11 @@ fun SettingsScreen(
                 onHelpSupportClick = { showHelpSupportDialog = true }
             )
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(32.dp))
 
             LogoutButton(onClick = { showLogoutDialog = true })
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 
@@ -220,7 +225,7 @@ fun SettingsHeaderSection(
                         modifier = Modifier.size(28.dp)
                     )
                 }
-                
+
                 DropdownMenu(
                     expanded = showProfileMenu,
                     onDismissRequest = onDismissMenu,
@@ -247,30 +252,30 @@ fun SettingsHeaderSection(
                                 contentScale = ContentScale.Crop
                             )
                         }
-                        
+
                         Spacer(modifier = Modifier.height(12.dp))
-                        
+
                         Text(
                             text = "Juan Dela Cruz",
                             color = Color(0xFF1B5E20),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        
+
                         Spacer(modifier = Modifier.height(4.dp))
-                        
+
                         Text(
                             text = "juan.delacruz@university.edu",
                             color = Color(0xFF666666),
                             fontSize = 12.sp
                         )
-                        
+
                         Spacer(modifier = Modifier.height(16.dp))
-                        
+
                         HorizontalDivider(color = Color(0xFFE0E0E0))
-                        
+
                         Spacer(modifier = Modifier.height(8.dp))
-                        
+
                         DropdownMenuItem(
                             text = { Text("Edit Profile", color = Color(0xFF1B5E20)) },
                             onClick = onEditProfileClick,
@@ -993,25 +998,25 @@ fun HelpSupportDialog(onDismiss: () -> Unit) {
                     fontSize = 14.sp,
                     color = Color(0xFF666666)
                 )
-                
+
                 HelpSupportItem(
                     icon = Icons.Default.Info,
                     title = "FAQ",
                     description = "Find answers to common questions"
                 )
-                
+
                 HelpSupportItem(
                     icon = Icons.Default.Help,
                     title = "Contact Support",
                     description = "support@uniassist.edu"
                 )
-                
+
                 HelpSupportItem(
                     icon = Icons.Default.Info,
                     title = "Report a Problem",
                     description = "Let us know if something isn't working"
                 )
-                
+
                 Text(
                     text = "Response time: Within 24 hours",
                     fontSize = 12.sp,

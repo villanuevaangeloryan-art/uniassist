@@ -51,26 +51,11 @@ class FirebaseAuthRepository(
         )
     }
 
-    // Sign in with Google — creates Firestore profile if first time
     suspend fun signInWithGoogle(idToken: String): String {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         val result = auth.signInWithCredential(credential).await()
         val user = result.user ?: throw Exception("Google Auth Failed")
 
-        // Only create a Firestore profile if one doesn't already exist
-        val isNew = !isUserRegistered(user.uid)
-        if (isNew) {
-            val nameParts = user.displayName?.split(" ") ?: emptyList()
-            saveProfile(
-                uid = user.uid,
-                profileData = mapOf(
-                    "email" to (user.email ?: ""),
-                    "firstName" to (nameParts.firstOrNull() ?: ""),
-                    "lastName" to (if (nameParts.size > 1) nameParts.last() else ""),
-                    "role" to "Student"
-                )
-            )
-        }
 
         return user.email ?: throw Exception("Google Auth Failed")
     }

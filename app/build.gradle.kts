@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.camera.core)
     testImplementation(libs.junit)
     implementation("androidx.navigation:navigation-compose:2.8.5")
     androidTestImplementation(libs.androidx.junit)

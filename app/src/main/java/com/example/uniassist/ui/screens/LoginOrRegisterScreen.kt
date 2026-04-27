@@ -8,8 +8,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -28,15 +30,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.uniassist.R
 import com.example.uniassist.data.FirebaseAuthRepository
+import com.example.uniassist.ui.theme.BottomNavGreen
+import com.example.uniassist.ui.theme.GreyText
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import kotlinx.coroutines.launch
 
-// IMPORTING YOUR COLORS DIRECTLY FROM COLOR.KT
-import com.example.uniassist.ui.theme.BottomNavGreen
-import com.example.uniassist.ui.theme.GreyText
-import kotlinx.coroutines.tasks.await
 @Composable
 fun LoginOrRegisterScreen(
     navController: NavController,
@@ -46,8 +46,8 @@ fun LoginOrRegisterScreen(
     val scope = rememberCoroutineScope()
     val repository = remember { FirebaseAuthRepository() }
     var errorMessage by remember { mutableStateOf("") }
+    val scrollState = rememberScrollState()
 
-    // --- GOOGLE SIGN-IN SETUP ---
     val gso = remember {
         GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(context.getString(R.string.default_web_client_id))
@@ -74,7 +74,6 @@ fun LoginOrRegisterScreen(
                                 val alreadyRegistered = repository.isUserRegistered(currentUser.uid)
 
                                 if (alreadyRegistered) {
-                                    // User exists, block registration and show error
                                     com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
                                     errorMessage = "This email is already registered. Please use Login."
                                 } else {
@@ -99,7 +98,7 @@ fun LoginOrRegisterScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.background_rolepick),
-            contentDescription = "Background",
+            contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
@@ -107,12 +106,15 @@ fun LoginOrRegisterScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .systemBarsPadding()
+                .verticalScroll(scrollState)
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top Left Back Button
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp),
                 horizontalArrangement = Arrangement.Start
             ) {
                 IconButton(
@@ -121,93 +123,96 @@ fun LoginOrRegisterScreen(
                         .background(Color.White, shape = CircleShape)
                         .size(48.dp)
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = BottomNavGreen)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = BottomNavGreen)
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            // Central Logo
             Image(
                 painter = painterResource(id = R.drawable.gts_uniassist_logo),
-                contentDescription = "UniAssist Logo",
+                contentDescription = null,
                 modifier = Modifier.scale(0.95f)
             )
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            // --- MOVED ERROR MESSAGE HERE ---
-            AnimatedVisibility(visible = errorMessage.isNotEmpty()) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                AnimatedVisibility(visible = errorMessage.isNotEmpty()) {
+                    Text(
+                        text = errorMessage,
+                        color = Color(0xFFD32F2F),
+                        fontSize = 14.sp,
+                        fontFamily = poppinsMedium,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
+
+                Button(
+                    onClick = { navController.navigate("login/$role") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = BottomNavGreen),
+                    shape = RoundedCornerShape(50.dp),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                ) {
+                    Text("Login", fontSize = 18.sp, fontFamily = poppinsBold, color = Color.White)
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(0.8f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = BottomNavGreen.copy(alpha = 0.5f))
+                    Text(
+                        text = "or",
+                        color = BottomNavGreen.copy(alpha = 0.7f),
+                        fontFamily = poppinsMedium,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = BottomNavGreen.copy(alpha = 0.5f))
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                OutlinedButton(
+                    onClick = {
+                        googleSignInClient.signOut().addOnCompleteListener {
+                            googleAuthLauncher.launch(googleSignInClient.signInIntent)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    border = BorderStroke(2.dp, BottomNavGreen),
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent),
+                    shape = RoundedCornerShape(50.dp)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.googlelogo),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("Register with Google", fontSize = 18.sp, fontFamily = poppinsBold, color = BottomNavGreen)
+                }
+
+                Spacer(modifier = Modifier.height(40.dp))
+
                 Text(
-                    text = errorMessage,
-                    color = Color(0xFFD32F2F),
-                    fontSize = 14.sp,
-                    fontFamily = poppinsMedium,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    text = "By TechSpace",
+                    fontSize = 13.sp,
+                    fontFamily = poppinsBold,
+                    color = GreyText,
+                    modifier = Modifier.padding(bottom = 20.dp)
                 )
             }
-
-            // --- 1. SOLID LOGIN BUTTON ---
-            Button(
-                onClick = { navController.navigate("login/$role") },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = BottomNavGreen),
-                shape = RoundedCornerShape(50.dp),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
-            ) {
-                Text("Login", fontSize = 18.sp, fontFamily = poppinsBold, color = Color.White)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // --- 2. DIVIDER ---
-            Row(
-                modifier = Modifier.fillMaxWidth(0.8f),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HorizontalDivider(modifier = Modifier.weight(1f), color = BottomNavGreen.copy(alpha = 0.5f))
-                Text(
-                    text = "or",
-                    color = BottomNavGreen.copy(alpha = 0.7f),
-                    fontFamily = poppinsMedium,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-                HorizontalDivider(modifier = Modifier.weight(1f), color = BottomNavGreen.copy(alpha = 0.5f))
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // --- 3. OUTLINED GOOGLE REGISTER BUTTON ---
-            OutlinedButton(
-                onClick = {
-                    googleSignInClient.signOut().addOnCompleteListener {
-                        googleAuthLauncher.launch(googleSignInClient.signInIntent)
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                border = BorderStroke(2.dp, BottomNavGreen),
-                colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent),
-                shape = RoundedCornerShape(50.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.googlelogo),
-                    contentDescription = "Google Icon",
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text("Register with Google", fontSize = 18.sp, fontFamily = poppinsBold, color = BottomNavGreen)
-            }
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Footer
-            Text(
-                text = "By TechSpace",
-                fontSize = 13.sp,
-                fontFamily = poppinsBold,
-                color = GreyText,
-                modifier = Modifier.padding(bottom = 20.dp)
-            )
         }
     }
 }
