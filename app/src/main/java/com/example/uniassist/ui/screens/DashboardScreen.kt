@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +17,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.example.uniassist.R
 import com.example.uniassist.ui.viewmodel.AnnouncementViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.*
@@ -67,6 +70,9 @@ fun DashboardScreen(
         if (role == "Teacher") "Prof. Jane Doe" else "Jane Doe"
     }
 
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+
     // Collect only non-archived announcements for the student view.
     val announcements by announcementViewModel.activeAnnouncements.collectAsState()
     val unreadCount by announcementViewModel.unreadCount.collectAsState()
@@ -81,6 +87,9 @@ fun DashboardScreen(
                 unreadCount = unreadCount,
                 notifications = announcements,
                 onMarkAllAsRead = { announcementViewModel.markAllAsRead() },
+                onViewAnnouncements = {
+                    scope.launch { listState.animateScrollToItem(1) }
+                },
                 onNotificationClicked = { announcement ->
                     announcementViewModel.markAsRead(announcement.id)
                 }
@@ -100,6 +109,7 @@ fun DashboardScreen(
                 .fillMaxSize()
                 .background(Color.White)
                 .padding(paddingValues),
+            state = listState,
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 100.dp)
         ) {
@@ -119,6 +129,7 @@ fun DashboardHeaderSection(
     unreadCount: Int,
     notifications: List<Announcement>,
     onMarkAllAsRead: () -> Unit,
+    onViewAnnouncements: () -> Unit,
     onNotificationClicked: (Announcement) -> Unit
 ) {
     var notificationsExpanded by remember { mutableStateOf(false) }
@@ -210,6 +221,15 @@ fun DashboardHeaderSection(
                             }
                         )
                     }
+
+                    HorizontalDivider()
+                    DropdownMenuItem(
+                        text = { Text("View announcements") },
+                        onClick = {
+                            onViewAnnouncements()
+                            notificationsExpanded = false
+                        }
+                    )
                 }
             }
             Spacer(modifier = Modifier.width(16.dp))
