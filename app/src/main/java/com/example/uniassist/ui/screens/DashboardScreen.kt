@@ -180,10 +180,23 @@ fun DashboardHeaderSection(
                         DropdownMenuItem(
                             text = {
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    Text(
-                                        announcement.title,
-                                        fontWeight = if (announcement.isRead) FontWeight.Normal else FontWeight.Bold
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        if (!announcement.isRead) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(8.dp)
+                                                    .clip(RoundedCornerShape(percent = 50))
+                                                    .background(Color(0xFFE9B44C))
+                                            )
+                                        }
+                                        Text(
+                                            announcement.title,
+                                            fontWeight = if (announcement.isRead) FontWeight.Normal else FontWeight.Bold
+                                        )
+                                    }
                                     Text(
                                         announcement.date,
                                         fontSize = 12.sp,
