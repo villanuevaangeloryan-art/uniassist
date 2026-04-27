@@ -11,8 +11,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,7 +34,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.uniassist.R
 import com.example.uniassist.ui.viewmodel.AnnouncementViewModel
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.*
 
 val Poppins = FontFamily(
@@ -119,9 +125,13 @@ fun DashboardHeaderSection(role: String) {
 
 @Composable
 fun WelcomeSection(userName: String, mascotRes: Int) {
-    val currentDate = Date()
-    val day  = SimpleDateFormat("EEEE", Locale.getDefault()).format(currentDate)
-    val date = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(currentDate)
+    val currentDate = rememberCurrentDateAutoUpdate()
+    val day = remember(currentDate) {
+        SimpleDateFormat("EEEE", Locale.getDefault()).format(currentDate)
+    }
+    val date = remember(currentDate) {
+        SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(currentDate)
+    }
 
     Box(
         modifier = Modifier
@@ -152,6 +162,29 @@ fun WelcomeSection(userName: String, mascotRes: Int) {
             contentScale = ContentScale.Fit
         )
     }
+}
+
+@Composable
+private fun rememberCurrentDateAutoUpdate(): Date {
+    var now by remember { mutableStateOf(Date()) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            val cal = Calendar.getInstance()
+            cal.time = now
+            cal.add(Calendar.DAY_OF_YEAR, 1)
+            cal.set(Calendar.HOUR_OF_DAY, 0)
+            cal.set(Calendar.MINUTE, 0)
+            cal.set(Calendar.SECOND, 0)
+            cal.set(Calendar.MILLISECOND, 0)
+
+            val delayMs = (cal.timeInMillis - System.currentTimeMillis()).coerceAtLeast(1_000)
+            delay(delayMs)
+            now = Date()
+        }
+    }
+
+    return now
 }
 
 @Composable
