@@ -80,6 +80,7 @@ fun DashboardScreen(
                 role = role,
                 unreadCount = unreadCount,
                 notifications = announcements,
+                onMarkAllAsRead = { announcementViewModel.markAllAsRead() },
                 onNotificationClicked = { announcement ->
                     announcementViewModel.markAsRead(announcement.id)
                 }
@@ -117,6 +118,7 @@ fun DashboardHeaderSection(
     role: String,
     unreadCount: Int,
     notifications: List<Announcement>,
+    onMarkAllAsRead: () -> Unit,
     onNotificationClicked: (Announcement) -> Unit
 ) {
     var notificationsExpanded by remember { mutableStateOf(false) }
@@ -164,6 +166,16 @@ fun DashboardHeaderSection(
                         onClick = { notificationsExpanded = false }
                     )
                 } else {
+                    if (unreadCount > 0) {
+                        DropdownMenuItem(
+                            text = { Text("Mark all as read") },
+                            onClick = {
+                                onMarkAllAsRead()
+                                notificationsExpanded = false
+                            }
+                        )
+                        HorizontalDivider()
+                    }
                     notifications.take(5).forEach { announcement ->
                         DropdownMenuItem(
                             text = {
