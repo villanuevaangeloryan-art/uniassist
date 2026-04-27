@@ -7,16 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Help
-import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -98,6 +90,9 @@ fun SettingsScreen(
     var showAboutDialog by remember { mutableStateOf(false) }
     var showHelpSupportDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
+    
+    // Dark Mode State
+    var isDarkMode by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier
@@ -127,11 +122,13 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color.White)
+                .background(if (isDarkMode) Color(0xFF121212) else Color.White)
         ) {
-            SettingsTitleSection()
+            SettingsTitleSection(isDarkMode = isDarkMode)
 
             SettingsContent(
+                isDarkMode = isDarkMode,
+                onDarkModeChange = { isDarkMode = it },
                 onNotificationSettingsClick = { showNotificationSettingsDialog = true },
                 onPrivacySettingsClick = { showPrivacySettingsDialog = true },
                 onChangePasswordClick = { showChangePasswordDialog = true },
@@ -290,7 +287,7 @@ fun SettingsHeaderSection(
 }
 
 @Composable
-fun SettingsTitleSection() {
+fun SettingsTitleSection(isDarkMode: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -306,7 +303,7 @@ fun SettingsTitleSection() {
         Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = "Settings",
-            color = Color(0xFF1B5E20),
+            color = if (isDarkMode) Color.White else Color(0xFF1B5E20),
             fontWeight = FontWeight.ExtraBold,
             fontSize = 30.sp
         )
@@ -315,6 +312,8 @@ fun SettingsTitleSection() {
 
 @Composable
 fun SettingsContent(
+    isDarkMode: Boolean,
+    onDarkModeChange: (Boolean) -> Unit,
     onNotificationSettingsClick: () -> Unit,
     onPrivacySettingsClick: () -> Unit,
     onChangePasswordClick: () -> Unit,
@@ -331,13 +330,26 @@ fun SettingsContent(
             icon = Icons.Default.Notifications,
             title = "Notification Settings",
             subtitle = "Manage your notification preferences",
+            isDarkMode = isDarkMode,
             onClick = onNotificationSettingsClick
+        )
+
+        SettingsOptionCard(
+            icon = Icons.Default.DarkMode,
+            title = "Dark Mode",
+            subtitle = "Toggle dark theme for the app",
+            isDarkMode = isDarkMode,
+            hasSwitch = true,
+            switchState = isDarkMode,
+            onSwitchChange = onDarkModeChange,
+            onClick = { onDarkModeChange(!isDarkMode) }
         )
 
         SettingsOptionCard(
             icon = Icons.Default.Security,
             title = "Privacy Settings",
             subtitle = "Control your privacy and data",
+            isDarkMode = isDarkMode,
             onClick = onPrivacySettingsClick
         )
 
@@ -345,6 +357,7 @@ fun SettingsContent(
             icon = Icons.Default.Lock,
             title = "Change Password",
             subtitle = "Update your account password",
+            isDarkMode = isDarkMode,
             onClick = onChangePasswordClick
         )
 
@@ -352,6 +365,7 @@ fun SettingsContent(
             icon = Icons.Default.Info,
             title = "About",
             subtitle = "App version and information",
+            isDarkMode = isDarkMode,
             onClick = onAboutClick
         )
 
@@ -359,6 +373,7 @@ fun SettingsContent(
             icon = Icons.Default.Help,
             title = "Help & Support",
             subtitle = "Get help and contact support",
+            isDarkMode = isDarkMode,
             onClick = onHelpSupportClick
         )
     }
@@ -369,6 +384,10 @@ fun SettingsOptionCard(
     icon: ImageVector,
     title: String,
     subtitle: String,
+    isDarkMode: Boolean = false,
+    hasSwitch: Boolean = false,
+    switchState: Boolean = false,
+    onSwitchChange: (Boolean) -> Unit = {},
     onClick: () -> Unit
 ) {
     Card(
@@ -376,7 +395,9 @@ fun SettingsOptionCard(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F8)),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDarkMode) Color(0xFF1E1E1E) else Color(0xFFF8F8F8)
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -405,16 +426,29 @@ fun SettingsOptionCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    color = Color(0xFF1B5E20),
+                    color = if (isDarkMode) Color.White else Color(0xFF1B5E20),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = subtitle,
-                    color = Color(0xFF666666),
+                    color = if (isDarkMode) Color.LightGray else Color(0xFF666666),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal
+                )
+            }
+
+            if (hasSwitch) {
+                Switch(
+                    checked = switchState,
+                    onCheckedChange = onSwitchChange,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = Color(0xFF1B5E20),
+                        uncheckedThumbColor = Color.Gray,
+                        uncheckedTrackColor = Color.LightGray
+                    )
                 )
             }
         }

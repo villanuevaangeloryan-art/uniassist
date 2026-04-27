@@ -58,7 +58,7 @@ data class ManageScreenAnnouncement(
     val statusColor: Color,
     val description: String? = null,
     val isArchived: Boolean = false,
-    val isRead: Boolean = false 
+    val isRead: Boolean = false
 )
 
 fun Announcement.toManageCard(): ManageScreenAnnouncement {
@@ -196,7 +196,7 @@ fun ManageAnnouncementsScreen(
                             onArchive       = onArchive,
                             onUnarchive     = onUnarchive,
                             onDeleteRequest = { announcementToDelete = it },
-                            onEditRequest   = { onEditNavigate(announcement.id) }
+                            onEditRequest   = onEditNavigate // Directly pass the function
                         )
                     }
                 }
