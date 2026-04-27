@@ -105,6 +105,8 @@ fun DashboardScreen(
 
 @Composable
 fun DashboardHeaderSection(role: String, unreadCount: Int) {
+    var notificationsExpanded by remember { mutableStateOf(false) }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -124,7 +126,23 @@ fun DashboardHeaderSection(role: String, unreadCount: Int) {
                     }
                 }
             ) {
-                Icon(Icons.Default.Notifications, null, tint = Color(0xFF1B5E20), modifier = Modifier.size(32.dp))
+                IconButton(onClick = { notificationsExpanded = true }) {
+                    Icon(
+                        Icons.Default.Notifications,
+                        null,
+                        tint = Color(0xFF1B5E20),
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+            DropdownMenu(
+                expanded = notificationsExpanded,
+                onDismissRequest = { notificationsExpanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("No notifications yet") },
+                    onClick = { notificationsExpanded = false }
+                )
             }
             Spacer(modifier = Modifier.width(16.dp))
             Icon(Icons.Default.AccountCircle, null, tint = Color(0xFF1B5E20), modifier = Modifier.size(32.dp))
