@@ -9,16 +9,23 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-
 @Database(
-    entities = [AnnouncementEntity::class, TaskEntity::class],
-    version = 1,
+    entities = [
+        AnnouncementEntity::class,
+        TaskEntity::class,
+        CampusEntity::class,
+        DepartmentEntity::class,
+        StudentEntity::class
+    ],
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun announcementDao(): AnnouncementDao
     abstract fun taskDao(): TaskDao
+    abstract fun campusDao(): CampusDao
+    abstract fun studentDao(): StudentDao
 
     companion object {
         @Volatile
@@ -31,6 +38,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "uniassist_db"
                 )
+                    // Allows adding new tables without a complex migration script
+                    .fallbackToDestructiveMigration()
                     .addCallback(SeedCallback())
                     .build()
                     .also { INSTANCE = it }
@@ -39,13 +48,16 @@ abstract class AppDatabase : RoomDatabase() {
     }
 
     private class SeedCallback : RoomDatabase.Callback() {
+        // onCreate only runs the VERY FIRST time the database is created
         override fun onCreate(db: SupportSQLiteDatabase) {
             super.onCreate(db)
-            // Run inserts off the main thread
             INSTANCE?.let { database ->
                 CoroutineScope(Dispatchers.IO).launch {
-                    val dao = database.announcementDao()
-                    dao.insert(
+                    val announcementDao = database.announcementDao()
+                    val campusDao = database.campusDao()
+
+                    // --- 1. INSERT ANNOUNCEMENTS ---
+                    announcementDao.insert(
                         AnnouncementEntity(
                             title      = "Campus Operations & Class Suspension",
                             date       = "January 19, 2026",
@@ -57,7 +69,7 @@ abstract class AppDatabase : RoomDatabase() {
                             createdAt  = 1L
                         )
                     )
-                    dao.insert(
+                    announcementDao.insert(
                         AnnouncementEntity(
                             title      = "Scholarship Applications Open",
                             date       = "January 25, 2026",
@@ -69,7 +81,7 @@ abstract class AppDatabase : RoomDatabase() {
                             createdAt  = 2L
                         )
                     )
-                    dao.insert(
+                    announcementDao.insert(
                         AnnouncementEntity(
                             title      = "Library Hours Extended",
                             date       = "February 1, 2026",
@@ -79,6 +91,47 @@ abstract class AppDatabase : RoomDatabase() {
                             category   = "General",
                             isPriority = false,
                             createdAt  = 3L
+                        )
+                    )
+
+                    // --- 2. INSERT DUMMY CAMPUS & DEPARTMENTS ---
+                    // Insert the main campus first so foreign keys work
+                    campusDao.insertCampus(
+                        CampusEntity(
+                            id = 1,
+                            name = "Main Campus",
+                            address = "University Avenue",
+                            contactNumber = "+63 123 456 7890"
+                        )
+                    )
+
+                    // Insert the 4 default departments attached to Campus #1
+                    campusDao.insertDepartment(
+                        DepartmentEntity(
+                            campusId = 1,
+                            departmentName = "College of Computer Studies / Information Technology",
+                            description = "Mr. Alvin M. Dimaunahan | alvinccsdimauanahan@gmail.com | +639829901987"
+                        )
+                    )
+                    campusDao.insertDepartment(
+                        DepartmentEntity(
+                            campusId = 1,
+                            departmentName = "College of Engineering",
+                            description = "Ms. Jennelyn V. Tan | tanjennelyncoe@gmail.com | +639549932855"
+                        )
+                    )
+                    campusDao.insertDepartment(
+                        DepartmentEntity(
+                            campusId = 1,
+                            departmentName = "College of Business Administration / Accountancy",
+                            description = "Ms. Vilma R. Cacho | rcachocbaa@gmail.com | +639549932855"
+                        )
+                    )
+                    campusDao.insertDepartment(
+                        DepartmentEntity(
+                            campusId = 1,
+                            departmentName = "College of Education",
+                            description = "Ms. George C. Bacsa | geocalmacoedue@gmail.com | +639877718241"
                         )
                     )
                 }

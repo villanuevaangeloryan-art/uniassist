@@ -24,20 +24,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.uniassist.R
+import com.example.uniassist.ui.viewmodel.CampusViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditCampusDepartmentScreen(
-    department: Department,
+    viewModel: CampusViewModel, // <-- 1. ADDED VIEWMODEL
+    departmentId: Int,          // <-- 2. ADDED DB ID
     onBackClick: () -> Unit = {},
-    onUpdate: (Department) -> Unit = {}
+    onUpdate: () -> Unit = {}   // <-- 3. CHANGED TO TRIGGER NAVIGATION
 ) {
-    var departmentName by remember { mutableStateOf(department.name) }
-    var representative by remember { mutableStateOf(department.representative) }
-    var email by remember { mutableStateOf(department.email) }
-    var phone by remember { mutableStateOf(department.phone) }
+    // Fetch live data from Database
+    val dbDepartments by viewModel.departments.collectAsState()
+    val targetEntity = dbDepartments.find { it.id == departmentId }
+
+    // State Variables (Initially Empty)
+    var departmentName by remember { mutableStateOf("") }
+    var representative by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+
+    // Your existing Image/Date states
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var postDate by remember { mutableStateOf(Date()) }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -48,6 +57,17 @@ fun EditCampusDepartmentScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         selectedImageUri = uri
+    }
+
+    // 4. WHEN SCREEN OPENS: Fill the text boxes with the EXACT database info
+    LaunchedEffect(targetEntity) {
+        targetEntity?.let {
+            departmentName = it.departmentName
+            val details = it.description.split(" | ")
+            representative = details.getOrElse(0) { "" }
+            email = details.getOrElse(1) { "" }
+            phone = details.getOrElse(2) { "" }
+        }
     }
 
     Scaffold(
@@ -68,156 +88,89 @@ fun EditCampusDepartmentScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Department Name Field
-            Text(
-                text = "Department",
-                color = Color(0xFF1B5E20),
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
+            Text("Department", color = Color(0xFF1B5E20), fontWeight = FontWeight.Bold, fontSize = 16.sp)
             OutlinedTextField(
                 value = departmentName,
                 onValueChange = { departmentName = it },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Enter Department", color = Color(0xFFBDBDBD)) },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF66BB6A),
-                    unfocusedBorderColor = Color(0xFFBDBDBD),
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    focusedBorderColor = Color(0xFF66BB6A), unfocusedBorderColor = Color(0xFFBDBDBD),
+                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White
                 ),
                 shape = RoundedCornerShape(8.dp)
             )
 
-            // Department Representative Field
-            Text(
-                text = "Department Representative",
-                color = Color(0xFF1B5E20),
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
+            // Representative Field
+            Text("Department Representative", color = Color(0xFF1B5E20), fontWeight = FontWeight.Bold, fontSize = 16.sp)
             OutlinedTextField(
                 value = representative,
                 onValueChange = { representative = it },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Enter Department Representative", color = Color(0xFFBDBDBD)) },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF66BB6A),
-                    unfocusedBorderColor = Color(0xFFBDBDBD),
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    focusedBorderColor = Color(0xFF66BB6A), unfocusedBorderColor = Color(0xFFBDBDBD),
+                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White
                 ),
                 shape = RoundedCornerShape(8.dp)
             )
 
             // Email Field
-            Text(
-                text = "Email",
-                color = Color(0xFF1B5E20),
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
+            Text("Email", color = Color(0xFF1B5E20), fontWeight = FontWeight.Bold, fontSize = 16.sp)
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Enter email", color = Color(0xFFBDBDBD)) },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF66BB6A),
-                    unfocusedBorderColor = Color(0xFFBDBDBD),
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    focusedBorderColor = Color(0xFF66BB6A), unfocusedBorderColor = Color(0xFFBDBDBD),
+                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White
                 ),
                 shape = RoundedCornerShape(8.dp)
             )
 
-            // Phone Number Field
-            Text(
-                text = "Phone Number",
-                color = Color(0xFF1B5E20),
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
+            // Phone Field
+            Text("Phone Number", color = Color(0xFF1B5E20), fontWeight = FontWeight.Bold, fontSize = 16.sp)
             OutlinedTextField(
                 value = phone,
                 onValueChange = { phone = it },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Enter phone number", color = Color(0xFFBDBDBD)) },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF66BB6A),
-                    unfocusedBorderColor = Color(0xFFBDBDBD),
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    focusedBorderColor = Color(0xFF66BB6A), unfocusedBorderColor = Color(0xFFBDBDBD),
+                    focusedContainerColor = Color.White, unfocusedContainerColor = Color.White
                 ),
                 shape = RoundedCornerShape(8.dp)
             )
 
             // Image Upload Section
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .border(1.dp, Color(0xFFBDBDBD), RoundedCornerShape(8.dp))
-                    .clickable { imagePickerLauncher.launch("image/*") }
-                    .padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp).border(1.dp, Color(0xFFBDBDBD), RoundedCornerShape(8.dp))
+                    .clickable { imagePickerLauncher.launch("image/*") }.padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(
                     onClick = { imagePickerLauncher.launch("image/*") },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE8F5E9)
-                    ),
-                    shape = RoundedCornerShape(4.dp),
-                    modifier = Modifier.height(40.dp)
-                ) {
-                    Text(
-                        "Choose photo",
-                        color = Color(0xFF1B5E20),
-                        fontSize = 14.sp
-                    )
-                }
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE8F5E9)),
+                    shape = RoundedCornerShape(4.dp), modifier = Modifier.height(40.dp)
+                ) { Text("Choose photo", color = Color(0xFF1B5E20), fontSize = 14.sp) }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = if (selectedImageUri != null) "Photo selected" else "No photo selected",
-                    color = Color(0xFF666666),
-                    fontSize = 14.sp
-                )
+                Text(if (selectedImageUri != null) "Photo selected" else "No photo selected", color = Color(0xFF666666), fontSize = 14.sp)
             }
 
             // Post Date Section
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Post Date",
-                    color = Color(0xFF1B5E20),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
+                Text("Post Date", color = Color(0xFF1B5E20), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 OutlinedButton(
                     onClick = { showDatePicker = true },
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color.White
-                    ),
-                    border = androidx.compose.foundation.BorderStroke(
-                        width = 1.dp,
-                        color = Color(0xFFBDBDBD)
-                    ),
-                    shape = RoundedCornerShape(8.dp)
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBDBDBD)), shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(
-                        text = dateFormatter.format(postDate),
-                        color = Color(0xFF1B5E20),
-                        fontSize = 14.sp
-                    )
+                    Text(dateFormatter.format(postDate), color = Color(0xFF1B5E20), fontSize = 14.sp)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        imageVector = Icons.Default.CalendarToday,
-                        contentDescription = "Calendar",
-                        tint = Color(0xFF1B5E20),
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Icon(Icons.Default.CalendarToday, "Calendar", tint = Color(0xFF1B5E20), modifier = Modifier.size(18.dp))
                 }
             }
 
@@ -226,67 +179,42 @@ fun EditCampusDepartmentScreen(
             // Update Button
             Button(
                 onClick = {
-                    val updatedDept = Department(
+                    // 5. SEND THE EDITED DATA TO THE DATABASE
+                    viewModel.updateDepartment(
+                        id = departmentId,
+                        campusId = 1,
                         name = departmentName,
-                        representative = representative,
+                        rep = representative,
                         email = email,
-                        phone = phone,
-                        logoRes = department.logoRes
+                        phone = phone
                     )
-                    onUpdate(updatedDept)
+                    onUpdate() // Navigate back
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1B5E20)
-                ),
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20)),
                 shape = RoundedCornerShape(8.dp),
-                enabled = departmentName.isNotBlank() && representative.isNotBlank() &&
-                        email.isNotBlank() && phone.isNotBlank()
+                enabled = departmentName.isNotBlank() && representative.isNotBlank() && email.isNotBlank() && phone.isNotBlank()
             ) {
-                Text(
-                    text = "UPDATE",
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("UPDATE", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
         }
 
         // Date Picker Dialog
         if (showDatePicker) {
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = postDate.time
-            )
+            val datePickerState = rememberDatePickerState(initialSelectedDateMillis = postDate.time)
             DatePickerDialog(
                 onDismissRequest = { showDatePicker = false },
                 confirmButton = {
-                    TextButton(
-                        onClick = {
-                            datePickerState.selectedDateMillis?.let {
-                                postDate = Date(it)
-                            }
-                            showDatePicker = false
-                        }
-                    ) {
-                        Text("OK", color = Color(0xFF245B3D))
-                    }
+                    TextButton(onClick = {
+                        datePickerState.selectedDateMillis?.let { postDate = Date(it) }
+                        showDatePicker = false
+                    }) { Text("OK", color = Color(0xFF245B3D)) }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showDatePicker = false }) {
-                        Text("Cancel", color = Color(0xFF666666))
-                    }
+                    TextButton(onClick = { showDatePicker = false }) { Text("Cancel", color = Color(0xFF666666)) }
                 }
             ) {
-                DatePicker(
-                    state = datePickerState,
-                    colors = DatePickerDefaults.colors(
-                        selectedDayContainerColor = Color(0xFF245B3D),
-                        todayContentColor = Color(0xFF245B3D),
-                        todayDateBorderColor = Color(0xFF245B3D)
-                    )
-                )
+                DatePicker(state = datePickerState, colors = DatePickerDefaults.colors(selectedDayContainerColor = Color(0xFF245B3D), todayContentColor = Color(0xFF245B3D), todayDateBorderColor = Color(0xFF245B3D)))
             }
         }
     }
@@ -294,49 +222,13 @@ fun EditCampusDepartmentScreen(
 
 @Composable
 fun EditDepartmentHeaderSection(onBackClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(65.dp)
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        Color(0xFF7CA786),
-                        Color(0xFFE2F1C6)
-                    )
-                )
-            )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .align(Alignment.Center),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+    Box(modifier = Modifier.fillMaxWidth().height(65.dp).background(brush = Brush.horizontalGradient(colors = listOf(Color(0xFF7CA786), Color(0xFFE2F1C6))))) {
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).align(Alignment.Center), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color(0xFF1B5E20),
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-                Text(
-                    text = "Edit Department",
-                    color = Color(0xFF1B5E20),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
+                IconButton(onClick = onBackClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color(0xFF1B5E20), modifier = Modifier.size(28.dp)) }
+                Text("Edit Department", color = Color(0xFF1B5E20), fontWeight = FontWeight.Bold, fontSize = 20.sp)
             }
-            Icon(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = "Profile",
-                tint = Color(0xFF1B5E20),
-                modifier = Modifier.size(32.dp)
-            )
+            Icon(Icons.Default.AccountCircle, "Profile", tint = Color(0xFF1B5E20), modifier = Modifier.size(32.dp))
         }
     }
 }
