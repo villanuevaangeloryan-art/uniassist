@@ -69,12 +69,13 @@ fun DashboardScreen(
 
     // Collect only non-archived announcements for the student view.
     val announcements by announcementViewModel.activeAnnouncements.collectAsState()
+    val unreadCount by announcementViewModel.unreadCount.collectAsState()
 
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding(),
-        topBar = { DashboardHeaderSection(role) },
+        topBar = { DashboardHeaderSection(role = role, unreadCount = unreadCount) },
         bottomBar = {
             DashboardBottomNavigationBar(
                 currentRoute = "dashboard",
@@ -103,7 +104,7 @@ fun DashboardScreen(
 }
 
 @Composable
-fun DashboardHeaderSection(role: String) {
+fun DashboardHeaderSection(role: String, unreadCount: Int) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -116,7 +117,15 @@ fun DashboardHeaderSection(role: String) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(role, color = Color(0xFF1B5E20), fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 16.dp))
-            Icon(Icons.Default.Notifications, null, tint = Color(0xFF1B5E20), modifier = Modifier.size(32.dp))
+            BadgedBox(
+                badge = {
+                    if (role == "Student" && unreadCount > 0) {
+                        Badge { Text(unreadCount.coerceAtMost(99).toString()) }
+                    }
+                }
+            ) {
+                Icon(Icons.Default.Notifications, null, tint = Color(0xFF1B5E20), modifier = Modifier.size(32.dp))
+            }
             Spacer(modifier = Modifier.width(16.dp))
             Icon(Icons.Default.AccountCircle, null, tint = Color(0xFF1B5E20), modifier = Modifier.size(32.dp))
         }
