@@ -163,79 +163,107 @@ fun DashboardHeaderSection(
                     )
                 }
             }
-            DropdownMenu(
+            NotificationsDropdownMenu(
+                role = role,
+                unreadCount = unreadCount,
+                notifications = notifications,
                 expanded = notificationsExpanded,
-                onDismissRequest = { notificationsExpanded = false }
-            ) {
-                if (role != "Student") {
-                    DropdownMenuItem(
-                        text = { Text("Notifications are available for students") },
-                        onClick = { notificationsExpanded = false }
-                    )
-                } else if (notifications.isEmpty()) {
-                    DropdownMenuItem(
-                        text = { Text("No notifications yet") },
-                        onClick = { notificationsExpanded = false }
-                    )
-                } else {
-                    if (unreadCount > 0) {
-                        DropdownMenuItem(
-                            text = { Text("Mark all as read") },
-                            onClick = {
-                                onMarkAllAsRead()
-                                notificationsExpanded = false
-                            }
-                        )
-                        HorizontalDivider()
-                    }
-                    notifications.take(5).forEach { announcement ->
-                        DropdownMenuItem(
-                            text = {
-                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        if (!announcement.isRead) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(8.dp)
-                                                    .clip(RoundedCornerShape(percent = 50))
-                                                    .background(Color(0xFFE9B44C))
-                                            )
-                                        }
-                                        Text(
-                                            announcement.title,
-                                            fontWeight = if (announcement.isRead) FontWeight.Normal else FontWeight.Bold
-                                        )
-                                    }
-                                    Text(
-                                        announcement.date,
-                                        fontSize = 12.sp,
-                                        color = Color(0xFF1B5E20).copy(alpha = 0.75f)
-                                    )
-                                }
-                            },
-                            onClick = {
-                                onNotificationClicked(announcement)
-                                notificationsExpanded = false
-                            }
-                        )
-                    }
-
-                    HorizontalDivider()
-                    DropdownMenuItem(
-                        text = { Text("View announcements") },
-                        onClick = {
-                            onViewAnnouncements()
-                            notificationsExpanded = false
-                        }
-                    )
-                }
-            }
+                onDismiss = { notificationsExpanded = false },
+                onMarkAllAsRead = onMarkAllAsRead,
+                onViewAnnouncements = onViewAnnouncements,
+                onNotificationClicked = onNotificationClicked
+            )
             Spacer(modifier = Modifier.width(16.dp))
             Icon(Icons.Default.AccountCircle, null, tint = Color(0xFF1B5E20), modifier = Modifier.size(32.dp))
         }
+    }
+}
+
+@Composable
+private fun NotificationsDropdownMenu(
+    role: String,
+    unreadCount: Int,
+    notifications: List<Announcement>,
+    expanded: Boolean,
+    onDismiss: () -> Unit,
+    onMarkAllAsRead: () -> Unit,
+    onViewAnnouncements: () -> Unit,
+    onNotificationClicked: (Announcement) -> Unit
+) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismiss
+    ) {
+        if (role != "Student") {
+            DropdownMenuItem(
+                text = { Text("Notifications are available for students") },
+                onClick = onDismiss
+            )
+            return@DropdownMenu
+        }
+
+        if (notifications.isEmpty()) {
+            DropdownMenuItem(
+                text = { Text("No notifications yet") },
+                onClick = onDismiss
+            )
+            return@DropdownMenu
+        }
+
+        if (unreadCount > 0) {
+            DropdownMenuItem(
+                text = { Text("Mark all as read") },
+                onClick = {
+                    onMarkAllAsRead()
+                    onDismiss()
+                }
+            )
+            HorizontalDivider()
+        }
+
+        notifications.take(5).forEach { announcement ->
+            DropdownMenuItem(
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            if (!announcement.isRead) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(RoundedCornerShape(percent = 50))
+                                        .background(Color(0xFFE9B44C))
+                                )
+                            }
+                            Text(
+                                announcement.title,
+                                fontWeight = if (announcement.isRead) FontWeight.Normal else FontWeight.Bold
+                            )
+                        }
+                        Text(
+                            announcement.date,
+                            fontSize = 12.sp,
+                            color = Color(0xFF1B5E20).copy(alpha = 0.75f)
+                        )
+                    }
+                },
+                onClick = {
+                    onNotificationClicked(announcement)
+                    onDismiss()
+                }
+            )
+        }
+
+        HorizontalDivider()
+        DropdownMenuItem(
+            text = { Text("View announcements") },
+            onClick = {
+                onViewAnnouncements()
+                onDismiss()
+            }
+        )
     }
 }
 
