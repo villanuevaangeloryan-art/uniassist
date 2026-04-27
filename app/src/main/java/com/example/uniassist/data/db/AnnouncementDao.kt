@@ -59,8 +59,4 @@ interface AnnouncementDao {
     // Delete all
     @Query("DELETE FROM announcements")
     suspend fun deleteAll()
-
-    // ── NEW: Get a single announcement by id (for editing a draft) ────────────
-    @Query("SELECT * FROM announcements WHERE id = :id LIMIT 1")
-    suspend fun getById(id: Int): AnnouncementEntity?
 }

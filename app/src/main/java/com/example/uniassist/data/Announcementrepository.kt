@@ -52,9 +52,6 @@ class AnnouncementRepository(private val dao: AnnouncementDao) {
     // ── NEW: Restore archived announcement to active ──────────────────────────
     suspend fun unarchive(id: Int) = dao.unarchive(id)
 
-    // ── NEW: Get a single entity by id (for loading a draft into the edit screen) ──
-    suspend fun getById(id: Int): AnnouncementEntity? = dao.getById(id)
-
     suspend fun markAsRead(id: Int) = dao.markAsRead(id)
 
     suspend fun markAllAsRead() = dao.markAllAsRead()
