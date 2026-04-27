@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -31,30 +33,37 @@ import androidx.compose.ui.unit.sp
 import com.example.uniassist.R
 import com.example.uniassist.ui.theme.*
 
-// ── Colors for consistency ──────────────────────────────────────────────────
-private val BackgroundCream = Color(0xFFFDFDF8)
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MENU SCREENS  (entry point — "Drafts Menu" / "Archive Menu")
-// ─────────────────────────────────────────────────────────────────────────────
+// ── MENU SCREENS  (entry point — "Drafts Menu" / "Archive Menu") ─────────────────────────────
 
 @Composable
-fun DraftsMenuScreen(onBackClick: () -> Unit = {}, onNavigate: (String) -> Unit = {}) {
+fun DraftsMenuScreen(
+    onNavigate: (String) -> Unit = {},
+    onDashboardClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
+) {
     MenuTemplate(
         title = "Drafts Menu",
         items = listOf("Announcements Draft", "Information Draft"),
-        onBackClick = onBackClick,
-        onItemClick = onNavigate
+        currentRoute = "drafts",
+        onItemClick = onNavigate,
+        onDashboardClick = onDashboardClick,
+        onSettingsClick = onSettingsClick
     )
 }
 
 @Composable
-fun ArchiveMenuScreen(onBackClick: () -> Unit = {}, onNavigate: (String) -> Unit = {}) {
+fun ArchiveMenuScreen(
+    onNavigate: (String) -> Unit = {},
+    onDashboardClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
+) {
     MenuTemplate(
         title = "Archive Menu",
         items = listOf("Announcements Archive", "Information Archive"),
-        onBackClick = onBackClick,
-        onItemClick = onNavigate
+        currentRoute = "archive",
+        onItemClick = onNavigate,
+        onDashboardClick = onDashboardClick,
+        onSettingsClick = onSettingsClick
     )
 }
 
@@ -62,12 +71,23 @@ fun ArchiveMenuScreen(onBackClick: () -> Unit = {}, onNavigate: (String) -> Unit
 private fun MenuTemplate(
     title: String,
     items: List<String>,
-    onBackClick: () -> Unit,
-    onItemClick: (String) -> Unit
+    currentRoute: String,
+    onItemClick: (String) -> Unit,
+    onDashboardClick: () -> Unit,
+    onSettingsClick: () -> Unit
 ) {
     Scaffold(
-        topBar = { DraftArchiveTopBar(title = title, onBackClick = onBackClick) },
-        containerColor = BackgroundCream
+        topBar = { DraftArchiveTopBar(title = title) },
+        bottomBar = {
+            TeacherFloatingBottomBar(
+                currentRoute = currentRoute,
+                onDashboardClick = onDashboardClick,
+                onDraftsClick = { if (currentRoute != "drafts") onItemClick("Drafts Menu") },
+                onArchiveClick = { if (currentRoute != "archive") onItemClick("Archive Menu") },
+                onSettingsClick = onSettingsClick
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Box(
             modifier = Modifier
@@ -96,21 +116,30 @@ private fun MenuTemplate(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ANNOUNCEMENTS DRAFT LIST SCREEN
-// ─────────────────────────────────────────────────────────────────────────────
+// ── ANNOUNCEMENTS DRAFT LIST SCREEN ─────────────────────────────────────────────────────────
 
 @Composable
 fun AnnouncementsDraftScreen(
     drafts: List<Announcement>,
-    onBackClick: () -> Unit = {},
     onEditDraft: (Announcement) -> Unit = {},
     onPublishDraft: (Announcement) -> Unit = {},
-    onDeleteDraft: (Announcement) -> Unit = {}
+    onDeleteDraft: (Announcement) -> Unit = {},
+    onDashboardClick: () -> Unit = {},
+    onArchiveClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
 ) {
     Scaffold(
-        topBar = { DraftArchiveTopBar(title = "Announcements Draft", onBackClick = onBackClick) },
-        containerColor = BackgroundCream
+        topBar = { DraftArchiveTopBar(title = "Announcements Draft") },
+        bottomBar = {
+            TeacherFloatingBottomBar(
+                currentRoute = "drafts",
+                onDashboardClick = onDashboardClick,
+                onDraftsClick = {},
+                onArchiveClick = onArchiveClick,
+                onSettingsClick = onSettingsClick
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Box(
             modifier = Modifier
@@ -147,20 +176,29 @@ fun AnnouncementsDraftScreen(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ANNOUNCEMENTS ARCHIVE LIST SCREEN
-// ─────────────────────────────────────────────────────────────────────────────
+// ── ANNOUNCEMENTS ARCHIVE LIST SCREEN ────────────────────────────────────────────────────────
 
 @Composable
 fun AnnouncementsArchiveScreen(
     archived: List<Announcement>,
-    onBackClick: () -> Unit = {},
     onUnarchive: (Announcement) -> Unit = {},
-    onDelete: (Announcement) -> Unit = {}
+    onDelete: (Announcement) -> Unit = {},
+    onDashboardClick: () -> Unit = {},
+    onDraftsClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
 ) {
     Scaffold(
-        topBar = { DraftArchiveTopBar(title = "Announcements Archive", onBackClick = onBackClick) },
-        containerColor = BackgroundCream
+        topBar = { DraftArchiveTopBar(title = "Announcements Archive") },
+        bottomBar = {
+            TeacherFloatingBottomBar(
+                currentRoute = "archive",
+                onDashboardClick = onDashboardClick,
+                onDraftsClick = onDraftsClick,
+                onArchiveClick = {},
+                onSettingsClick = onSettingsClick
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Box(
             modifier = Modifier
@@ -196,9 +234,7 @@ fun AnnouncementsArchiveScreen(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CARDS
-// ─────────────────────────────────────────────────────────────────────────────
+// ── CARDS ───────────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun DraftAnnouncementCard(
@@ -209,13 +245,16 @@ private fun DraftAnnouncementCard(
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showPublishDialog by remember { mutableStateOf(false) }
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark) Color(0xFF2C2C2C) else Color.White
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, Color(0xFF4CAF50).copy(alpha = 0.3f))
+        border = BorderStroke(1.dp, if (isDark) Color.DarkGray else Color(0xFF4CAF50).copy(alpha = 0.3f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Title + Category badge row
@@ -228,7 +267,7 @@ private fun DraftAnnouncementCard(
                     fontFamily = Poppins,
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp,
-                    color = DarkGreenText,
+                    color = if (isDark) MaterialTheme.colorScheme.primary else DarkGreenText,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
@@ -259,7 +298,7 @@ private fun DraftAnnouncementCard(
                     fontFamily = Poppins,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF56A566)
+                    color = if (isDark) MaterialTheme.colorScheme.secondary else Color(0xFF56A566)
                 )
                 Text(
                     text = " • ",
@@ -281,7 +320,7 @@ private fun DraftAnnouncementCard(
                 text = announcement.content.ifBlank { "No content description added yet." },
                 fontFamily = Poppins,
                 fontSize = 14.sp,
-                color = Color.DarkGray,
+                color = if (isDark) Color.LightGray else Color.DarkGray,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 lineHeight = 20.sp
@@ -300,8 +339,10 @@ private fun DraftAnnouncementCard(
                     onClick = onEdit,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkGreenText),
-                    border = BorderStroke(1.dp, DarkGreenText),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = if (isDark) MaterialTheme.colorScheme.primary else DarkGreenText
+                    ),
+                    border = BorderStroke(1.dp, if (isDark) MaterialTheme.colorScheme.primary else DarkGreenText),
                     contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
                     Icon(Icons.Default.Edit, "Edit", modifier = Modifier.size(16.dp))
@@ -317,7 +358,7 @@ private fun DraftAnnouncementCard(
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2D6A4F)),
                     contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
-                    Icon(Icons.Default.Send, "Publish", modifier = Modifier.size(16.dp), tint = Color.White)
+                    Icon(Icons.AutoMirrored.Filled.Send, "Publish", modifier = Modifier.size(16.dp), tint = Color.White)
                     Spacer(Modifier.width(6.dp))
                     Text("Publish", fontFamily = Poppins, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
                 }
@@ -327,7 +368,7 @@ private fun DraftAnnouncementCard(
                     onClick = { showDeleteDialog = true },
                     modifier = Modifier
                         .size(40.dp)
-                        .background(Color(0xFFFFEBEE), RoundedCornerShape(8.dp))
+                        .background(if (isDark) Color(0xFF4B1D1D) else Color(0xFFFFEBEE), RoundedCornerShape(8.dp))
                 ) {
                     Icon(Icons.Default.Delete, "Delete", tint = Color(0xFFD32F2F), modifier = Modifier.size(20.dp))
                 }
@@ -372,11 +413,14 @@ private fun ArchivedAnnouncementCard(
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showUnarchiveDialog by remember { mutableStateOf(false) }
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark) Color(0xFF2C2C2C) else Color.White
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f))
     ) {
@@ -390,21 +434,21 @@ private fun ArchivedAnnouncementCard(
                     fontFamily = Poppins,
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp,
-                    color = Color.Gray,
+                    color = if (isDark) Color.Gray else Color.Gray,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
                 Surface(
                     shape = RoundedCornerShape(4.dp),
-                    color = Color(0xFFF5F5F5)
+                    color = if (isDark) Color.DarkGray else Color(0xFFF5F5F5)
                 ) {
                     Text(
                         text = "ARCHIVED",
                         fontFamily = Poppins,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.DarkGray,
+                        color = if (isDark) Color.LightGray else Color.DarkGray,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
@@ -452,7 +496,7 @@ private fun ArchivedAnnouncementCard(
                     onClick = { showDeleteDialog = true },
                     modifier = Modifier
                         .size(40.dp)
-                        .background(Color(0xFFFFEBEE), RoundedCornerShape(8.dp))
+                        .background(if (isDark) Color(0xFF4B1D1D) else Color(0xFFFFEBEE), RoundedCornerShape(8.dp))
                 ) {
                     Icon(Icons.Default.Delete, "Delete", tint = Color(0xFFD32F2F), modifier = Modifier.size(20.dp))
                 }
@@ -489,12 +533,11 @@ private fun ArchivedAnnouncementCard(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SHARED COMPONENTS
-// ─────────────────────────────────────────────────────────────────────────────
+// ── SHARED COMPONENTS ───────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun DraftArchiveTopBar(title: String, onBackClick: () -> Unit) {
+private fun DraftArchiveTopBar(title: String) {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -506,25 +549,24 @@ private fun DraftArchiveTopBar(title: String, onBackClick: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBackClick) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DarkGreenText, modifier = Modifier.size(28.dp))
-            }
+            Spacer(modifier = Modifier.width(48.dp)) 
+            
             Text(
                 text = title,
                 fontFamily = Poppins,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = DarkGreenText,
-                modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                color = if (isDark) Color.White else DarkGreenText,
+                modifier = Modifier.weight(1f),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Box(
-                modifier = Modifier.size(34.dp).border(2.dp, DarkGreenText, CircleShape),
+                modifier = Modifier.size(34.dp).border(2.dp, if (isDark) Color.White else DarkGreenText, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.AccountCircle, "Profile", tint = DarkGreenText, modifier = Modifier.size(30.dp))
+                Icon(Icons.Default.AccountCircle, "Profile", tint = if (isDark) Color.White else DarkGreenText, modifier = Modifier.size(30.dp))
             }
         }
     }
@@ -532,15 +574,18 @@ private fun DraftArchiveTopBar(title: String, onBackClick: () -> Unit) {
 
 @Composable
 private fun MenuCard(title: String, onClick: () -> Unit) {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(90.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark) Color(0xFF2C2C2C) else Color.White
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f))
+        border = BorderStroke(1.dp, if (isDark) Color.DarkGray else Color.LightGray.copy(alpha = 0.5f))
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Image(
@@ -556,13 +601,13 @@ private fun MenuCard(title: String, onClick: () -> Unit) {
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = Color(0xFFF1F8F1),
+                    color = if (isDark) Color.DarkGray else Color(0xFFF1F8F1),
                     modifier = Modifier.size(44.dp)
                 ) {
                     Icon(
                         imageVector = if (title.contains("Draft")) Icons.Default.EditNote else Icons.Default.Archive,
                         contentDescription = null,
-                        tint = DarkGreenText,
+                        tint = if (isDark) MaterialTheme.colorScheme.primary else DarkGreenText,
                         modifier = Modifier.padding(10.dp)
                     )
                 }
@@ -572,10 +617,10 @@ private fun MenuCard(title: String, onClick: () -> Unit) {
                     fontFamily = Poppins,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = DarkGreenText,
+                    color = if (isDark) MaterialTheme.colorScheme.onSurface else DarkGreenText,
                     modifier = Modifier.weight(1f)
                 )
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = DarkGreenText, modifier = Modifier.size(26.dp))
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = if (isDark) Color.Gray else DarkGreenText, modifier = Modifier.size(26.dp))
             }
         }
     }
@@ -612,15 +657,16 @@ private fun ConfirmDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(20.dp),
-        containerColor = Color.White,
+        containerColor = if (isDark) Color(0xFF1E1E1E) else Color.White,
         title = {
-            Text(text = title, fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = DarkGreenText)
+            Text(text = title, fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = if (isDark) Color.White else DarkGreenText)
         },
         text = {
-            Text(text = message, fontFamily = Poppins, fontSize = 14.sp, color = Color.Gray)
+            Text(text = message, fontFamily = Poppins, fontSize = 14.sp, color = if (isDark) Color.LightGray else Color.Gray)
         },
         confirmButton = {
             Button(
@@ -633,32 +679,8 @@ private fun ConfirmDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "Cancel", fontFamily = Poppins, fontWeight = FontWeight.Medium, color = Color.Gray)
+                Text(text = "Cancel", fontFamily = Poppins, fontWeight = FontWeight.Medium, color = if (isDark) Color.Gray else Color.Gray)
             }
         }
     )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PREVIEWS
-// ─────────────────────────────────────────────────────────────────────────────
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewDraftsMenu() {
-    DraftsMenuScreen()
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewAnnouncementsDraftScreen() {
-    val sampleDrafts = listOf(
-        Announcement(
-            id = 1, title = "Enrollment Reminder", date = "2025-06-01",
-            content = "Please complete your enrollment before the deadline.",
-            bullets = emptyList(), footer = "", category = "Academic",
-            isArchived = false, isDraft = true
-        )
-    )
-    AnnouncementsDraftScreen(drafts = sampleDrafts)
 }

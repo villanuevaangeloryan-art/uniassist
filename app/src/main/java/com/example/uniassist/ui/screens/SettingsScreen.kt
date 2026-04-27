@@ -22,8 +22,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.uniassist.R
@@ -37,10 +37,10 @@ fun StudentSettingsBottomNavigationBar(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-            .height(58.dp),
-        shape = RoundedCornerShape(35.dp),
-        color = Color(0xFF245B3D),
+            .padding(16.dp)
+            .height(64.dp),
+        shape = RoundedCornerShape(32.dp),
+        color = Color(0xFF1B5E20),
         shadowElevation = 8.dp
     ) {
         Row(
@@ -48,30 +48,10 @@ fun StudentSettingsBottomNavigationBar(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomNavItem(
-                icon = Icons.Default.Home,
-                label = "Dashboard",
-                isSelected = false,
-                onClick = onDashboardClick
-            )
-            BottomNavItem(
-                icon = Icons.Default.DateRange,
-                label = "Schedules",
-                isSelected = false,
-                onClick = onScheduleClick
-            )
-            BottomNavItem(
-                icon = Icons.Default.Info,
-                label = "Campus",
-                isSelected = false,
-                onClick = onCampusClick
-            )
-            BottomNavItem(
-                icon = Icons.Default.Settings,
-                label = "Settings",
-                isSelected = true,
-                onClick = {}
-            )
+            BottomNavItem(Icons.Default.Home, "Home", false, onDashboardClick)
+            BottomNavItem(Icons.Default.DateRange, "Schedules", false, onScheduleClick)
+            BottomNavItem(Icons.Default.Info, "Campus", false, onCampusClick)
+            BottomNavItem(Icons.Default.Settings, "Settings", true, {})
         }
     }
 }
@@ -85,10 +65,10 @@ fun TeacherSettingsBottomNavigationBar(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-            .height(58.dp),
-        shape = RoundedCornerShape(35.dp),
-        color = Color(0xFF245B3D),
+            .padding(16.dp)
+            .height(64.dp),
+        shape = RoundedCornerShape(32.dp),
+        color = Color(0xFF1B5E20),
         shadowElevation = 8.dp
     ) {
         Row(
@@ -96,30 +76,10 @@ fun TeacherSettingsBottomNavigationBar(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomNavItem(
-                icon = Icons.Default.Home,
-                label = "Dashboard",
-                isSelected = false,
-                onClick = onDashboardClick
-            )
-            BottomNavItem(
-                icon = Icons.Default.Description,
-                label = "Drafts",
-                isSelected = false,
-                onClick = onDraftsClick
-            )
-            BottomNavItem(
-                icon = Icons.Default.Archive,
-                label = "Archive",
-                isSelected = false,
-                onClick = onArchiveClick
-            )
-            BottomNavItem(
-                icon = Icons.Default.Settings,
-                label = "Settings",
-                isSelected = true,
-                onClick = {}
-            )
+            BottomNavItem(Icons.Default.Home, "Home", false, onDashboardClick)
+            BottomNavItem(Icons.Default.Description, "Drafts", false, onDraftsClick)
+            BottomNavItem(Icons.Default.Archive, "Archive", false, onArchiveClick)
+            BottomNavItem(Icons.Default.Settings, "Settings", true, {})
         }
     }
 }
@@ -127,6 +87,8 @@ fun TeacherSettingsBottomNavigationBar(
 @Composable
 fun SettingsScreen(
     role: String = "Student",
+    isDarkMode: Boolean = false,
+    onDarkModeChange: (Boolean) -> Unit = {},
     onDashboardClick: () -> Unit = {},
     onScheduleClick: () -> Unit = {},
     onCampusClick: () -> Unit = {},
@@ -143,9 +105,8 @@ fun SettingsScreen(
     var showHelpSupportDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
 
-    // Dark Mode State
-    var isDarkMode by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
+    val bgColor = if (isDarkMode) Color(0xFF1A1A1A) else Color.White
 
     Scaffold(
         modifier = Modifier
@@ -178,13 +139,13 @@ fun SettingsScreen(
                 )
             }
         },
-        containerColor = if (isDarkMode) Color(0xFF121212) else Color.White
+        containerColor = bgColor
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(if (isDarkMode) Color(0xFF121212) else Color.White)
+                .background(bgColor)
                 .verticalScroll(scrollState)
         ) {
             SettingsTitleSection(isDarkMode = isDarkMode)
@@ -192,7 +153,7 @@ fun SettingsScreen(
             SettingsContent(
                 role = role,
                 isDarkMode = isDarkMode,
-                onDarkModeChange = { isDarkMode = it },
+                onDarkModeChange = onDarkModeChange,
                 onNotificationSettingsClick = { showNotificationSettingsDialog = true },
                 onPrivacySettingsClick = { showPrivacySettingsDialog = true },
                 onChangePasswordClick = { showChangePasswordDialog = true },
@@ -201,16 +162,14 @@ fun SettingsScreen(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-
             LogoutButton(onClick = { showLogoutDialog = true })
-
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 
-    // Dialogs (Implementations assumed to be handled elsewhere or using these placeholders)
-    if (showEditProfileDialog) EditProfileDialog(onDismiss = { showEditProfileDialog = false })
-    if (showNotificationSettingsDialog) NotificationSettingsDialog(onDismiss = { showNotificationSettingsDialog = false })
+    // Dialogs Implementation
+    if (showEditProfileDialog) EditProfileDialog(role = role, onDismiss = { showEditProfileDialog = false })
+    if (showNotificationSettingsDialog) NotificationSettingsDialog(role = role, onDismiss = { showNotificationSettingsDialog = false })
     if (showPrivacySettingsDialog) PrivacySettingsDialog(onDismiss = { showPrivacySettingsDialog = false })
     if (showChangePasswordDialog) ChangePasswordDialog(onDismiss = { showChangePasswordDialog = false })
     if (showAboutDialog) AboutDialog(onDismiss = { showAboutDialog = false })
@@ -238,90 +197,37 @@ fun SettingsHeaderSection(
         modifier = Modifier
             .fillMaxWidth()
             .height(65.dp)
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF7CA786), Color(0xFFE2F1C6))
-                )
-            )
+            .background(Brush.horizontalGradient(colors = listOf(Color(0xFF7CA786), Color(0xFFE2F1C6))))
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .align(Alignment.Center),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).align(Alignment.Center),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = role,
-                color = Color(0xFF1B5E20),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = Poppins
-            )
+            Text(text = role, color = Color(0xFF1B5E20), fontSize = 14.sp, fontWeight = FontWeight.Bold, fontFamily = Poppins)
             
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (role == "Student") {
-                    Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = "Notifications",
-                        tint = Color(0xFF1B5E20),
-                        modifier = Modifier.size(28.dp)
-                    )
+                    Icon(imageVector = Icons.Default.Notifications, contentDescription = "Notifications", tint = Color(0xFF1B5E20), modifier = Modifier.size(28.dp))
                     Spacer(modifier = Modifier.width(16.dp))
                 }
                 Box {
                     IconButton(onClick = onProfileClick) {
-                        Icon(
-                            imageVector = Icons.Default.AccountCircle,
-                            contentDescription = "Profile",
-                            tint = Color(0xFF1B5E20),
-                            modifier = Modifier.size(32.dp)
-                        )
+                        Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile", tint = Color(0xFF1B5E20), modifier = Modifier.size(32.dp))
                     }
-
-                    DropdownMenu(
-                        expanded = showProfileMenu,
-                        onDismissRequest = onDismissMenu,
-                        modifier = Modifier.width(280.dp).background(Color.White)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Box(
-                                modifier = Modifier.size(80.dp).clip(CircleShape).background(Color(0xFF66BB6A))
-                            ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.profile),
-                                    contentDescription = null,
-                                    modifier = Modifier.fillMaxSize().clip(CircleShape),
-                                    contentScale = ContentScale.Crop
-                                )
+                    DropdownMenu(expanded = showProfileMenu, onDismissRequest = onDismissMenu, modifier = Modifier.width(280.dp).background(Color.White)) {
+                        Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Box(modifier = Modifier.size(80.dp).clip(CircleShape).background(Color(0xFF66BB6A))) {
+                                Image(painter = painterResource(id = R.drawable.profile), contentDescription = null, modifier = Modifier.fillMaxSize().clip(CircleShape), contentScale = ContentScale.Crop)
                             }
                             Spacer(modifier = Modifier.height(12.dp))
-                            Text(
-                                text = if (role == "Teacher") "Prof. Angelo Villanueva" else "Juan Dela Cruz",
-                                color = Color(0xFF1B5E20),
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = Poppins
-                            )
+                            Text(text = if (role == "Teacher") "Prof. Angelo Villanueva" else "Juan Dela Cruz", color = Color(0xFF1B5E20), fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = Poppins)
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = if (role == "Teacher") "angelo.v@university.edu" else "juan.d@university.edu",
-                                color = Color(0xFF666666),
-                                fontSize = 12.sp,
-                                fontFamily = Poppins
-                            )
+                            Text(text = if (role == "Teacher") "angelo.v@university.edu" else "juan.d@university.edu", color = Color(0xFF666666), fontSize = 12.sp, fontFamily = Poppins)
                             Spacer(modifier = Modifier.height(16.dp))
                             HorizontalDivider(color = Color(0xFFE0E0E0))
                             Spacer(modifier = Modifier.height(8.dp))
-                            DropdownMenuItem(
-                                text = { Text("Edit Profile", color = Color(0xFF1B5E20), fontFamily = Poppins) },
-                                onClick = onEditProfileClick,
-                                leadingIcon = { Icon(Icons.Default.AccountCircle, null, tint = Color(0xFF1B5E20)) }
-                            )
+                            DropdownMenuItem(text = { Text("Edit Profile", color = Color(0xFF1B5E20), fontFamily = Poppins) }, onClick = onEditProfileClick, leadingIcon = { Icon(Icons.Default.AccountCircle, null, tint = Color(0xFF1B5E20)) })
                         }
                     }
                 }
@@ -336,19 +242,11 @@ fun SettingsTitleSection(isDarkMode: Boolean) {
         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.settingsicon),
-            contentDescription = null,
-            modifier = Modifier.size(40.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = "Settings",
-            color = if (isDarkMode) Color.White else Color(0xFF1B5E20),
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 30.sp,
-            fontFamily = Poppins
-        )
+        Surface(color = Color(0xFF99C24D), shape = RoundedCornerShape(10.dp), modifier = Modifier.size(44.dp)) {
+            Icon(Icons.Default.Settings, null, tint = Color.White, modifier = Modifier.padding(10.dp))
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(text = "Settings", color = if (isDarkMode) Color.White else Color(0xFF1B5E20), fontWeight = FontWeight.ExtraBold, fontSize = 28.sp, fontFamily = Poppins)
     }
 }
 
@@ -368,73 +266,21 @@ fun SettingsContent(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         if (role == "Teacher") {
-            SettingsOptionCard(
-                icon = Icons.Default.Campaign,
-                title = "Notification Broadcast",
-                subtitle = "Manage global announcement alerts",
-                isDarkMode = isDarkMode,
-                onClick = onNotificationSettingsClick
-            )
-            
-            SettingsOptionCard(
-                icon = Icons.Default.ManageAccounts,
-                title = "Account Permissions",
-                subtitle = "Manage teacher administrative rights",
-                isDarkMode = isDarkMode,
-                onClick = {}
-            )
+            SettingsOptionCard(icon = Icons.Default.Campaign, title = "Notification Broadcast", subtitle = "Manage global announcement alerts", isDarkMode = isDarkMode, onClick = onNotificationSettingsClick)
+            SettingsOptionCard(icon = Icons.Default.ManageAccounts, title = "Account Permissions", subtitle = "Manage teacher administrative rights", isDarkMode = isDarkMode, onClick = {})
         } else {
-            SettingsOptionCard(
-                icon = Icons.Default.Notifications,
-                title = "Notification Settings",
-                subtitle = "Manage your notification preferences",
-                isDarkMode = isDarkMode,
-                onClick = onNotificationSettingsClick
-            )
+            SettingsOptionCard(icon = Icons.Default.Notifications, title = "Notification Settings", subtitle = "Manage your notification preferences", isDarkMode = isDarkMode, onClick = onNotificationSettingsClick)
         }
 
-        SettingsOptionCard(
-            icon = Icons.Default.DarkMode,
-            title = "Dark Mode",
-            subtitle = "Toggle dark theme for the app",
-            isDarkMode = isDarkMode,
-            hasSwitch = true,
-            switchState = isDarkMode,
-            onSwitchChange = onDarkModeChange,
-            onClick = { onDarkModeChange(!isDarkMode) }
-        )
+        SettingsOptionCard(icon = Icons.Default.DarkMode, title = "Dark Mode", subtitle = "Toggle dark theme for the app", isDarkMode = isDarkMode, hasSwitch = true, switchState = isDarkMode, onSwitchChange = onDarkModeChange, onClick = { onDarkModeChange(!isDarkMode) })
+        SettingsOptionCard(icon = Icons.Default.Security, title = "Privacy Settings", subtitle = "Control your privacy and data", isDarkMode = isDarkMode, onClick = onPrivacySettingsClick)
 
-        SettingsOptionCard(
-            icon = Icons.Default.Security,
-            title = "Privacy Settings",
-            subtitle = "Control your privacy and data",
-            isDarkMode = isDarkMode,
-            onClick = onPrivacySettingsClick
-        )
-
-        SettingsOptionCard(
-            icon = Icons.Default.Lock,
-            title = "Change Password",
-            subtitle = "Update your account password",
-            isDarkMode = isDarkMode,
-            onClick = onChangePasswordClick
-        )
-
-        SettingsOptionCard(
-            icon = Icons.Default.Info,
-            title = "About",
-            subtitle = "App version and information",
-            isDarkMode = isDarkMode,
-            onClick = onAboutClick
-        )
-
-        SettingsOptionCard(
-            icon = Icons.Default.Help,
-            title = "Help & Support",
-            subtitle = "Get help and contact support",
-            isDarkMode = isDarkMode,
-            onClick = onHelpSupportClick
-        )
+        if (role == "Student") {
+            SettingsOptionCard(icon = Icons.Default.Lock, title = "Change Password", subtitle = "Update your account password", isDarkMode = isDarkMode, onClick = onChangePasswordClick)
+        }
+        
+        SettingsOptionCard(icon = Icons.Default.Info, title = "About", subtitle = "App version and information", isDarkMode = isDarkMode, onClick = onAboutClick)
+        SettingsOptionCard(icon = Icons.Default.Help, title = "Help & Support", subtitle = "Get help and contact support", isDarkMode = isDarkMode, onClick = onHelpSupportClick)
     }
 }
 
@@ -451,41 +297,30 @@ fun SettingsOptionCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDarkMode) Color(0xFF1E1E1E) else Color(0xFFF8F8F8)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = if (isDarkMode) Color(0xFF2C2C2C) else Color(0xFFF1F8F1)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(modifier = Modifier.size(48.dp), shape = CircleShape, color = Color(0xFF1B5E20)) {
                 Icon(imageVector = icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp).padding(12.dp))
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title, 
-                    color = if (isDarkMode) Color.White else Color(0xFF1B5E20), 
-                    fontSize = 16.sp, 
-                    fontWeight = FontWeight.SemiBold,
-                    fontFamily = Poppins
-                )
+                Text(text = title, color = if (isDarkMode) Color.White else Color(0xFF1B5E20), fontSize = 16.sp, fontWeight = FontWeight.Bold, fontFamily = Poppins)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = subtitle, 
-                    color = if (isDarkMode) Color.LightGray else Color(0xFF666666), 
-                    fontSize = 14.sp,
-                    fontFamily = Poppins
-                )
+                Text(text = subtitle, color = if (isDarkMode) Color(0xFFBBBBBB) else Color(0xFF4C6B4F), fontSize = 12.sp, fontFamily = Poppins)
             }
             if (hasSwitch) {
                 Switch(
                     checked = switchState,
                     onCheckedChange = onSwitchChange,
-                    colors = SwitchDefaults.colors(checkedTrackColor = Color(0xFF1B5E20))
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = Color(0xFF1B5E20),
+                        uncheckedThumbColor = Color.Gray,
+                        uncheckedTrackColor = Color.LightGray
+                    )
                 )
             }
         }
@@ -498,17 +333,112 @@ fun LogoutButton(onClick: () -> Unit) {
         onClick = onClick,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(56.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(16.dp)
     ) {
         Text(text = "Log Out", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White, fontFamily = Poppins)
     }
 }
 
-// Dialog Implementation placeholders
-@Composable fun EditProfileDialog(onDismiss: () -> Unit) {}
-@Composable fun ChangePasswordDialog(onDismiss: () -> Unit) {}
-@Composable fun LogoutConfirmationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {}
-@Composable fun NotificationSettingsDialog(onDismiss: () -> Unit) {}
-@Composable fun PrivacySettingsDialog(onDismiss: () -> Unit) {}
-@Composable fun AboutDialog(onDismiss: () -> Unit) {}
-@Composable fun HelpSupportDialog(onDismiss: () -> Unit) {}
+// Implementations of functional dialogs
+@Composable
+fun EditProfileDialog(role: String, onDismiss: () -> Unit) {
+    var name by remember { mutableStateOf(if (role == "Teacher") "Prof. Angelo Villanueva" else "Juan Dela Cruz") }
+    var email by remember { mutableStateOf(if (role == "Teacher") "angelo.v@university.edu" else "juan.d@university.edu") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Profile", fontWeight = FontWeight.Bold, fontFamily = Poppins) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Save") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
+}
+
+@Composable
+fun ChangePasswordDialog(onDismiss: () -> Unit) {
+    var oldPass by remember { mutableStateOf("") }
+    var newPass by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Change Password", fontWeight = FontWeight.Bold, fontFamily = Poppins) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(value = oldPass, onValueChange = { oldPass = it }, label = { Text("Current Password") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = newPass, onValueChange = { newPass = it }, label = { Text("New Password") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Update") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
+}
+
+@Composable
+fun LogoutConfirmationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Log Out", fontWeight = FontWeight.Bold, fontFamily = Poppins) },
+        text = { Text("Are you sure you want to log out of UniAssist?", fontFamily = Poppins) },
+        confirmButton = { Button(onClick = onConfirm, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))) { Text("Log Out", color = Color.White) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
+}
+
+@Composable
+fun NotificationSettingsDialog(role: String, onDismiss: () -> Unit) {
+    var pushEnabled by remember { mutableStateOf(true) }
+    var emailEnabled by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (role == "Teacher") "Broadcast Settings" else "Notifications", fontWeight = FontWeight.Bold, fontFamily = Poppins) },
+        text = {
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = pushEnabled, onCheckedChange = { pushEnabled = it })
+                    Text("Push Notifications", fontFamily = Poppins)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = emailEnabled, onCheckedChange = { emailEnabled = it })
+                    Text("Email Notifications", fontFamily = Poppins)
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } }
+    )
+}
+
+@Composable
+fun PrivacySettingsDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Privacy", fontWeight = FontWeight.Bold, fontFamily = Poppins) },
+        text = { Text("Your data is encrypted and managed according to university policies. No student data is shared with third parties.", fontFamily = Poppins) },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("OK") } }
+    )
+}
+
+@Composable
+fun AboutDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("About UniAssist", fontWeight = FontWeight.Bold, fontFamily = Poppins) },
+        text = { Text("Version 1.0.2\nDeveloped for Case Study 2025.\nAn all-in-one assistant for university life.", fontFamily = Poppins) },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
+    )
+}
+
+@Composable
+fun HelpSupportDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Help & Support", fontWeight = FontWeight.Bold, fontFamily = Poppins) },
+        text = { Text("Email: support@university.edu\nPhone: (123) 456-7890\nOffice Hours: Mon-Fri, 8AM-5PM", fontFamily = Poppins) },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
+    )
+}

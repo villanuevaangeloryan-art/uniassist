@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -50,9 +51,10 @@ fun TeacherDashboardScreen(
 ) {
     val mascotRes = R.drawable.uniassist_teacher
     var menuExpanded by remember { mutableStateOf(false) }
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     
     Scaffold(
-        containerColor = Color.White,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TeacherDashboardTopBar(
                 role = role,
@@ -87,7 +89,7 @@ fun TeacherDashboardScreen(
                                 Icon(Icons.Default.AutoAwesome, null, tint = Color.White, modifier = Modifier.padding(8.dp))
                             }
                             Spacer(Modifier.width(12.dp))
-                            Text("Management", fontFamily = Poppins, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, color = GreenDark)
+                            Text("Management", fontFamily = Poppins, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, color = if (isDark) MaterialTheme.colorScheme.primary else GreenDark)
                         }
 
                         Spacer(Modifier.height(8.dp))
@@ -103,12 +105,12 @@ fun TeacherDashboardScreen(
                     Card(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFD5FFDE)),
-                        border = BorderStroke(1.dp, GreenDark)
+                        colors = CardDefaults.cardColors(containerColor = if (isDark) Color(0xFF2C2C2C) else Color(0xFFD5FFDE)),
+                        border = BorderStroke(1.dp, if (isDark) Color.DarkGray else GreenDark)
                     ) {
                         Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)) {
                             StatRow("Total Students", totalStudents)
-                            HorizontalDivider(color = Color(0xFF78C48A))
+                            HorizontalDivider(color = if (isDark) Color.DarkGray else Color(0xFF78C48A))
                             StatRow("Active Announcements", totalAnnouncements)
                         }
                     }
@@ -200,28 +202,30 @@ fun TeacherDashboardBottomNavigationBar(
 
 @Composable
 private fun ActionItem(icon: ImageVector, label: String, onClick: () -> Unit) {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 6.dp).height(64.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F8F1)),
-        border = BorderStroke(1.dp, Color(0xFFDDE9E1))
+        colors = CardDefaults.cardColors(containerColor = if (isDark) Color(0xFF242424) else Color(0xFFF1F8F1)),
+        border = BorderStroke(1.dp, if (isDark) Color.DarkGray else Color(0xFFDDE9E1))
     ) {
         Row(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(GreenLight), contentAlignment = Alignment.Center) {
-                Icon(icon, null, tint = GreenDark, modifier = Modifier.size(22.dp))
+            Box(modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(if (isDark) Color(0xFF1B5E20) else GreenLight), contentAlignment = Alignment.Center) {
+                Icon(icon, null, tint = if (isDark) Color.White else GreenDark, modifier = Modifier.size(22.dp))
             }
             Spacer(Modifier.width(16.dp))
-            Text(label, fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 15.sp, color = Color(0xFF2B4B49), modifier = Modifier.weight(1f))
-            Icon(Icons.Default.ChevronRight, null, tint = GreenDark)
+            Text(label, fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 15.sp, color = if (isDark) Color.White else Color(0xFF2B4B49), modifier = Modifier.weight(1f))
+            Icon(Icons.Default.ChevronRight, null, tint = if (isDark) Color.Gray else GreenDark)
         }
     }
 }
 
 @Composable
 private fun StatRow(label: String, value: Int) {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text(label, fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF245B3D))
-        Text(value.toString(), fontFamily = Poppins, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp, color = GreenDark)
+        Text(label, fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = if (isDark) Color.LightGray else Color(0xFF245B3D))
+        Text(value.toString(), fontFamily = Poppins, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp, color = if (isDark) MaterialTheme.colorScheme.primary else GreenDark)
     }
 }

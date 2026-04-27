@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,6 +29,7 @@ fun StudentListScreen(
     onBackClick: () -> Unit
 ) {
     val students by viewModel.students.collectAsState()
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
     Scaffold(
         modifier = Modifier.fillMaxSize().statusBarsPadding(),
@@ -49,11 +51,11 @@ fun StudentListScreen(
                 }
             }
         },
-        containerColor = Color(0xFFF5F5F5)
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         if (students.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
-                Text("No registered students found in database.", color = Color.Gray)
+                Text("No registered students found in database.", color = if (isDark) Color.LightGray else Color.Gray)
             }
         } else {
             LazyColumn(
@@ -64,18 +66,20 @@ fun StudentListScreen(
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isDark) Color(0xFF2C2C2C) else Color.White
+                        )
                     ) {
                         Row(
                             modifier = Modifier.padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Person, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(40.dp))
+                            Icon(Icons.Default.Person, contentDescription = null, tint = if (isDark) MaterialTheme.colorScheme.primary else Color.Gray, modifier = Modifier.size(40.dp))
                             Spacer(modifier = Modifier.width(16.dp))
                             Column {
-                                Text(text = student.fullName, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                Text(text = student.email, fontSize = 14.sp, color = Color.DarkGray)
-                                Text(text = student.course, fontSize = 12.sp, color = Color.Gray)
+                                Text(text = student.fullName, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = if (isDark) Color.White else Color.Black)
+                                Text(text = student.email, fontSize = 14.sp, color = if (isDark) Color.LightGray else Color.DarkGray)
+                                Text(text = student.course, fontSize = 12.sp, color = if (isDark) Color.Gray else Color.Gray)
                             }
                         }
                     }

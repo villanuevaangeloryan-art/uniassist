@@ -24,18 +24,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-// import androidx.compose.ui.tooling.preview.Preview // Commented out to prevent preview errors with ViewModel
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.uniassist.R
-import com.example.uniassist.ui.theme.UniassistTheme
-import com.example.uniassist.ui.viewmodel.CampusViewModel // <-- NEW IMPORT
+import com.example.uniassist.ui.viewmodel.CampusViewModel
 
-// If you already have this data class defined in another file, you can remove this one to avoid duplicates!
 data class Department(
     val name: String,
     val representative: String,
@@ -46,16 +44,14 @@ data class Department(
 
 @Composable
 fun CampusInformationScreen(
-    viewModel: CampusViewModel, // <-- ADDED VIEWMODEL
+    viewModel: CampusViewModel,
     onDashboardClick: () -> Unit = {},
     onScheduleClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {}
 ) {
-    // 1. COLLECT DATA FROM THE LIVE DATABASE
     val dbDepartments by viewModel.departments.collectAsState()
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
-    // 2. Map the Database Entity to your UI Data Class
-// 2. Map Database Entity to UI Model with FOOLPROOF Logo Logic
     val departments = dbDepartments.map { entity ->
         val details = entity.description.split(" | ")
         val name = entity.departmentName
@@ -91,30 +87,29 @@ fun CampusInformationScreen(
                 onSettingsClick = onSettingsClick
             )
         },
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
 
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color.White),
-            contentPadding = PaddingValues(bottom = 20.dp)
+                .background(MaterialTheme.colorScheme.background),
+            contentPadding = PaddingValues(bottom = 100.dp)
         ) {
             item {
-                TitleSection()
+                TitleSection(isDark = isDark)
             }
             item {
                 Text(
                     text = "College Departments",
-                    color = Color(0xFF1B5E20),
+                    color = if (isDark) MaterialTheme.colorScheme.primary else Color(0xFF1B5E20),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 25.5.sp,
+                    fontSize = 25.sp,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
 
-            // Show a placeholder if no departments exist yet
             if (departments.isEmpty()) {
                 item {
                     Text(
@@ -125,7 +120,7 @@ fun CampusInformationScreen(
                 }
             } else {
                 items(departments) { department ->
-                    DepartmentCard(department)
+                    DepartmentCard(department, isDark = isDark)
                 }
             }
         }
@@ -140,10 +135,7 @@ fun CampusHeaderSection() {
             .height(65.dp)
             .background(
                 brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        Color(0xFF7CA786),
-                        Color(0xFFE2F1C6)
-                    )
+                    colors = listOf(Color(0xFF7CA786), Color(0xFFE2F1C6))
                 )
             )
     ) {
@@ -180,10 +172,10 @@ fun CampusBottomNavigationBar(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-            .height(58.dp),
-        shape = RoundedCornerShape(35.dp),
-        color = Color(0xFF245B3D),
+            .padding(16.dp)
+            .height(64.dp),
+        shape = RoundedCornerShape(32.dp),
+        color = Color(0xFF1B5E20),
         shadowElevation = 8.dp
     ) {
         Row(
@@ -191,36 +183,16 @@ fun CampusBottomNavigationBar(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomNavItem(
-                icon = Icons.Default.Home,
-                label = "Dashboard",
-                isSelected = false,
-                onClick = onDashboardClick
-            )
-            BottomNavItem(
-                icon = Icons.Default.DateRange,
-                label = "Schedules",
-                isSelected = false,
-                onClick = onScheduleClick
-            )
-            BottomNavItem(
-                icon = Icons.Default.Info,
-                label = "Campus",
-                isSelected = true,
-                onClick = {}
-            )
-            BottomNavItem(
-                icon = Icons.Default.Settings,
-                label = "Settings",
-                isSelected = false,
-                onClick = onSettingsClick
-            )
+            BottomNavItem(Icons.Default.Home, "Home", false, onDashboardClick)
+            BottomNavItem(Icons.Default.DateRange, "Schedules", false, onScheduleClick)
+            BottomNavItem(Icons.Default.Info, "Campus", true, {})
+            BottomNavItem(Icons.Default.Settings, "Settings", false, onSettingsClick)
         }
     }
 }
 
 @Composable
-fun TitleSection() {
+fun TitleSection(isDark: Boolean) {
     Column(
         modifier = Modifier.padding(20.dp),
         horizontalAlignment = Alignment.Start
@@ -241,7 +213,7 @@ fun TitleSection() {
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = "Campus Information",
-                color = Color(0xFF1B5E20),
+                color = if (isDark) MaterialTheme.colorScheme.primary else Color(0xFF1B5E20),
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 26.sp,
                 textAlign = TextAlign.Left
@@ -251,26 +223,26 @@ fun TitleSection() {
         Text(
             text = "To assist with your inquiries and help you navigate our academic offerings, we have provided an overview of our university's structure below...",
             textAlign = TextAlign.Justify,
-            color = Color(0xFF2E7D32),
+            color = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFF2E7D32),
             fontSize = 14.sp,
-            lineHeight = 16.sp,
+            lineHeight = 18.sp,
             fontWeight = FontWeight.Medium,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(all = 2.dp)
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
 
 @Composable
-fun DepartmentCard(dept: Department) {
+fun DepartmentCard(dept: Department, isDark: Boolean) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .border(2.dp, Color(0xFF66BB6A), RoundedCornerShape(12.dp)),
+            .border(2.dp, if (isDark) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else Color(0xFF66BB6A), RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F3F3))
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark) Color(0xFF2C2C2C) else Color(0xFFF3F3F3)
+        )
     ) {
         Row(
             modifier = Modifier
@@ -292,23 +264,23 @@ fun DepartmentCard(dept: Department) {
                     text = dept.name,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    color = Color.Black
+                    color = if (isDark) Color.White else Color.Black
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Department representative: ${dept.representative}",
                     fontSize = 12.sp,
-                    color = Color.Black
+                    color = if (isDark) Color.LightGray else Color.Black
                 )
                 Text(
                     text = "Email: ${dept.email}",
                     fontSize = 12.sp,
-                    color = Color.Black
+                    color = if (isDark) Color.LightGray else Color.Black
                 )
                 Text(
                     text = "Phone number: ${dept.phone}",
                     fontSize = 12.sp,
-                    color = Color.Black
+                    color = if (isDark) Color.LightGray else Color.Black
                 )
             }
         }

@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -35,6 +36,7 @@ fun ManageCampusDepartmentScreen(
 ) {
     // 1. COLLECT DATA FROM THE DATABASE
     val dbDepartments by viewModel.departments.collectAsState()
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
     // 2. Map the Database Entity to your UI Data Class with LOGO LOGIC
     val uiDepartments = dbDepartments.map { entity ->
@@ -43,7 +45,6 @@ fun ManageCampusDepartmentScreen(
         val email = details.getOrElse(1) { "No Email" }
         val phone = details.getOrElse(2) { "No Phone" }
 
-        // --- THE MISSING LOGO LOGIC HAS BEEN ADDED HERE ---
         val rawName = entity.departmentName.lowercase()
         val correctLogo = when {
             rawName.contains("engineering") || rawName.contains("coe") -> R.drawable.coedeptlogo
@@ -57,7 +58,7 @@ fun ManageCampusDepartmentScreen(
             representative = rep,
             email = email,
             phone = phone,
-            logoRes = correctLogo // <-- NO LONGER HARDCODED!
+            logoRes = correctLogo
         )
     }
 
@@ -68,18 +69,18 @@ fun ManageCampusDepartmentScreen(
             .fillMaxSize()
             .statusBarsPadding(),
         topBar = {
-            ManageCampusHeaderSection(onBackClick = onBackClick)
+            ManageCampusHeaderSection(onBackClick = onBackClick, isDark = isDark)
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddDepartmentClick,
-                containerColor = Color(0xFF245B3D),
-                contentColor = Color.White
+                containerColor = if (isDark) MaterialTheme.colorScheme.primary else Color(0xFF245B3D),
+                contentColor = if (isDark) Color.Black else Color.White
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Department")
             }
         },
-        containerColor = Color(0xFFF5F5F5)
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
 
         // Show a message if the database is empty
@@ -90,7 +91,7 @@ fun ManageCampusDepartmentScreen(
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No departments found. Click + to add one!", color = Color.Gray)
+                Text("No departments found. Click + to add one!", color = if (isDark) Color.LightGray else Color.Gray)
             }
         } else {
             LazyColumn(
@@ -111,15 +112,14 @@ fun ManageCampusDepartmentScreen(
                             expandedMenuIndex = null
                         },
                         onDelete = {
-                            // --- UNCOMMENTED: THIS NOW TELLS THE DATABASE TO DELETE ---
                             viewModel.deleteDepartment(dbDepartments[index].id)
                             expandedMenuIndex = null
                         },
                         onArchive = {
-                            // Temporary: mapping archive to delete since there is no archive boolean yet
                             viewModel.deleteDepartment(dbDepartments[index].id)
                             expandedMenuIndex = null
-                        }
+                        },
+                        isDark = isDark
                     )
                 }
             }
@@ -128,7 +128,7 @@ fun ManageCampusDepartmentScreen(
 }
 
 @Composable
-fun ManageCampusHeaderSection(onBackClick: () -> Unit) {
+fun ManageCampusHeaderSection(onBackClick: () -> Unit, isDark: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -183,14 +183,17 @@ fun ManageDepartmentCard(
     onMenuClick: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    onArchive: () -> Unit
+    onArchive: () -> Unit,
+    isDark: Boolean
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(2.dp, Color(0xFF66BB6A), RoundedCornerShape(12.dp)),
+            .border(2.dp, if (isDark) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else Color(0xFF66BB6A), RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark) Color(0xFF2C2C2C) else Color.White
+        )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -211,23 +214,23 @@ fun ManageDepartmentCard(
                         text = department.name,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
-                        color = Color.Black
+                        color = if (isDark) Color.White else Color.Black
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Department representative: ${department.representative}",
                         fontSize = 12.sp,
-                        color = Color(0xFF666666)
+                        color = if (isDark) Color.LightGray else Color(0xFF666666)
                     )
                     Text(
                         text = "Email: ${department.email}",
                         fontSize = 12.sp,
-                        color = Color(0xFF666666)
+                        color = if (isDark) Color.LightGray else Color(0xFF666666)
                     )
                     Text(
                         text = "Phone number: ${department.phone}",
                         fontSize = 12.sp,
-                        color = Color(0xFF666666)
+                        color = if (isDark) Color.LightGray else Color(0xFF666666)
                     )
                 }
                 Box {
@@ -235,25 +238,26 @@ fun ManageDepartmentCard(
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = "Menu",
-                            tint = Color(0xFF1B5E20)
+                            tint = if (isDark) MaterialTheme.colorScheme.primary else Color(0xFF1B5E20)
                         )
                     }
                     DropdownMenu(
                         expanded = isMenuExpanded,
-                        onDismissRequest = onMenuClick
+                        onDismissRequest = onMenuClick,
+                        modifier = Modifier.background(if (isDark) Color(0xFF1E1E1E) else Color.White)
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Edit") },
+                            text = { Text("Edit", color = if (isDark) Color.White else Color.Unspecified) },
                             leadingIcon = { Icon(Icons.Default.Edit, null, tint = Color(0xFF1B5E20)) },
                             onClick = onEdit
                         )
                         DropdownMenuItem(
-                            text = { Text("Delete") },
+                            text = { Text("Delete", color = if (isDark) Color.White else Color.Unspecified) },
                             leadingIcon = { Icon(Icons.Default.Delete, null, tint = Color(0xFFD32F2F)) },
                             onClick = onDelete
                         )
                         DropdownMenuItem(
-                            text = { Text("Archive") },
+                            text = { Text("Archive", color = if (isDark) Color.White else Color.Unspecified) },
                             leadingIcon = { Icon(Icons.Default.Archive, null, tint = Color(0xFF666666)) },
                             onClick = onArchive
                         )

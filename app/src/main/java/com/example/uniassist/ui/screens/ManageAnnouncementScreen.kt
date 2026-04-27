@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -111,6 +112,7 @@ fun ManageAnnouncementsScreen(
     var selectedDate   by remember { mutableStateOf<String?>(null) }
 
     var announcementToDelete by remember { mutableStateOf<ManageScreenAnnouncement?>(null) }
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
     val displayed = remember(dbAnnouncements, searchQuery, selectedSort, selectedFilter, selectedDate) {
         var result = if (searchQuery.isBlank()) dbAnnouncements
@@ -137,13 +139,13 @@ fun ManageAnnouncementsScreen(
     }
 
     Scaffold(
-        containerColor               = BackgroundCream,
+        containerColor               = MaterialTheme.colorScheme.background,
         floatingActionButtonPosition = FabPosition.Center,
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick        = onCreateClick,
-                containerColor = Color(0xFF2E5E3E),
-                contentColor   = Color.White,
+                containerColor = if (isDark) MaterialTheme.colorScheme.primary else Color(0xFF2E5E3E),
+                contentColor   = if (isDark) Color.Black else Color.White,
                 shape          = RoundedCornerShape(12.dp),
                 modifier       = Modifier.fillMaxWidth().padding(horizontal = 24.dp).height(56.dp)
             ) {
@@ -187,7 +189,7 @@ fun ManageAnnouncementsScreen(
                 }
             } else {
                 LazyColumn(
-                    contentPadding      = PaddingValues(bottom = 80.dp),
+                    contentPadding      = PaddingValues(bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(displayed, key = { it.id }) { announcement ->
@@ -196,7 +198,8 @@ fun ManageAnnouncementsScreen(
                             onArchive       = onArchive,
                             onUnarchive     = onUnarchive,
                             onDeleteRequest = { announcementToDelete = it },
-                            onEditRequest   = onEditNavigate // Directly pass the function
+                            onEditRequest   = onEditNavigate,
+                            isDark = isDark
                         )
                     }
                 }
@@ -211,13 +214,16 @@ private fun ManageAnnouncementCard(
     onArchive       : (Int) -> Unit = {},
     onUnarchive     : (Int) -> Unit = {},
     onDeleteRequest : (ManageScreenAnnouncement) -> Unit = {},
-    onEditRequest   : (Int) -> Unit = {}
+    onEditRequest   : (Int) -> Unit = {},
+    isDark: Boolean
 ) {
     var moreExpanded by remember { mutableStateOf(false) }
 
     Card(
         shape     = RoundedCornerShape(12.dp),
-        colors    = CardDefaults.cardColors(containerColor = Color.White),
+        colors    = CardDefaults.cardColors(
+            containerColor = if (isDark) Color(0xFF2C2C2C) else Color.White
+        ),
         border    = BorderStroke(
             width = 1.dp,
             color = if (!announcement.isRead && !announcement.isArchived) Color(0xFF4CAF50).copy(alpha = 0.5f) else Color.LightGray.copy(alpha = 0.5f)
@@ -237,7 +243,7 @@ private fun ManageAnnouncementCard(
                         fontFamily = Poppins,
                         fontWeight = FontWeight.Bold,
                         fontSize   = 17.sp,
-                        color      = GreenDark,
+                        color      = if (isDark) MaterialTheme.colorScheme.primary else GreenDark,
                         maxLines   = 1,
                         overflow   = TextOverflow.Ellipsis,
                         modifier   = Modifier.weight(1f, fill = false)
@@ -251,9 +257,9 @@ private fun ManageAnnouncementCard(
                 }
                 Box {
                     IconButton(onClick = { moreExpanded = true }, modifier = Modifier.size(24.dp)) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.Gray)
+                        Icon(Icons.Default.MoreVert, contentDescription = "More", tint = if (isDark) Color.LightGray else Color.Gray)
                     }
-                    DropdownMenu(expanded = moreExpanded, onDismissRequest = { moreExpanded = false }, modifier = Modifier.background(Color.White)) {
+                    DropdownMenu(expanded = moreExpanded, onDismissRequest = { moreExpanded = false }, modifier = Modifier.background(if (isDark) Color(0xFF1E1E1E) else Color.White)) {
                         DropdownMenuItem(
                             text        = { Text("Edit", fontFamily = Poppins, fontSize = 12.sp) },
                             leadingIcon = { Icon(Icons.Outlined.Edit, null, modifier = Modifier.size(16.dp)) },
@@ -271,18 +277,18 @@ private fun ManageAnnouncementCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(announcement.categoryIcon, contentDescription = null, tint = announcement.categoryColor, modifier = Modifier.size(14.dp))
+                Icon(announcement.categoryIcon, contentDescription = null, tint = if (isDark) MaterialTheme.colorScheme.secondary else announcement.categoryColor, modifier = Modifier.size(14.dp))
                 Spacer(Modifier.width(4.dp))
-                Text(announcement.category, fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, color = announcement.categoryColor)
+                Text(announcement.category, fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, color = if (isDark) MaterialTheme.colorScheme.secondary else announcement.categoryColor)
                 Spacer(Modifier.width(8.dp))
                 Text("|", color = Color.LightGray, fontSize = 12.sp)
                 Spacer(Modifier.width(8.dp))
-                Text(announcement.timePosted, fontFamily = Poppins, fontSize = 11.sp, color = Color.Gray)
+                Text(announcement.timePosted, fontFamily = Poppins, fontSize = 11.sp, color = if (isDark) Color.LightGray else Color.Gray)
             }
 
             if (announcement.description != null) {
-                Box(modifier = Modifier.fillMaxWidth().background(Color(0xFFF7F9F8)).padding(16.dp)) {
-                    Text(announcement.description, fontFamily = Poppins, fontSize = 14.sp, color = Color.Black)
+                Box(modifier = Modifier.fillMaxWidth().background(if (isDark) Color(0xFF1E1E1E) else Color(0xFFF7F9F8)).padding(16.dp)) {
+                    Text(announcement.description, fontFamily = Poppins, fontSize = 14.sp, color = if (isDark) Color.White else Color.Black)
                 }
             }
 
@@ -291,7 +297,7 @@ private fun ManageAnnouncementCard(
                 Button(
                     onClick = { /* Teacher preview or detailed view */ },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (announcement.isRead) Color(0xFFDDE9E1) else GreenDark
+                        containerColor = if (announcement.isRead) (if (isDark) Color(0xFF333333) else Color(0xFFDDE9E1)) else (if (isDark) MaterialTheme.colorScheme.primary else GreenDark)
                     ),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.height(32.dp),
@@ -301,14 +307,14 @@ private fun ManageAnnouncementCard(
                         imageVector = if (announcement.isRead) Icons.Default.DoneAll else Icons.Default.MenuBook,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = if (announcement.isRead) GreenDark else Color.White
+                        tint = if (announcement.isRead) (if (isDark) Color.White else GreenDark) else (if (isDark) Color.Black else Color.White)
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
                         text = if (announcement.isRead) "Viewed" else "Read",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (announcement.isRead) GreenDark else Color.White
+                        color = if (announcement.isRead) (if (isDark) Color.White else GreenDark) else (if (isDark) Color.Black else Color.White)
                     )
                 }
             }

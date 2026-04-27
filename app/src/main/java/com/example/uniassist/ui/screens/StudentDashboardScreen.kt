@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -59,7 +60,7 @@ fun DashboardScreen(
     val fullName = if (firstName.isNotBlank() && lastName.isNotBlank()) {
         "$firstName $lastName"
     } else {
-        if (role == "Teacher") "Prof. Jane Doe" else "Jane Doe"
+        if (role == "Teacher") "Prof. Angelo Villanueva" else "Angelo Villanueva"
     }
 
     val listState = rememberLazyListState()
@@ -93,12 +94,13 @@ fun DashboardScreen(
                 onCampusClick = onCampusClick,
                 onSettingsClick = onSettingsClick
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(paddingValues),
             state = listState,
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -121,6 +123,8 @@ fun AnnouncementCard(
     announcement: Announcement,
     onReadClick: () -> Unit
 ) {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -131,7 +135,7 @@ fun AnnouncementCard(
                 shape = RoundedCornerShape(12.dp)
             ),
         colors = CardDefaults.cardColors(
-            containerColor = if (!announcement.isRead) Color(0xFFF1F8F1) else Color(0xFFF8FAF8)
+            containerColor = if (isDark) MaterialTheme.colorScheme.surface else (if (!announcement.isRead) Color(0xFFF1F8F1) else Color(0xFFF8FAF8))
         )
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -145,7 +149,7 @@ fun AnnouncementCard(
                     fontFamily = Poppins,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 18.sp,
-                    color = Color(0xFF1B5E20),
+                    color = if (isDark) MaterialTheme.colorScheme.primary else Color(0xFF1B5E20),
                     modifier = Modifier.weight(1f)
                 )
                 if (!announcement.isRead) {
@@ -170,7 +174,7 @@ fun AnnouncementCard(
                 fontFamily = Poppins,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
-                color = Color(0xFF1B5E20).copy(alpha = 0.8f)
+                color = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFF1B5E20).copy(alpha = 0.8f)
             )
 
             Text(
@@ -178,7 +182,7 @@ fun AnnouncementCard(
                 fontFamily = Poppins,
                 fontSize = 14.sp,
                 lineHeight = 20.sp,
-                color = Color(0xFF1B5E20)
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             if (announcement.bullets.isNotEmpty()) {
@@ -188,13 +192,13 @@ fun AnnouncementCard(
                             withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("${it.first} ") }
                             append(it.second)
                         },
-                        fontFamily = Poppins, fontSize = 14.sp, lineHeight = 20.sp, color = Color(0xFF1B5E20)
+                        fontFamily = Poppins, fontSize = 14.sp, lineHeight = 20.sp, color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
 
             if (announcement.footer.isNotBlank()) {
-                Text(announcement.footer, fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF1B5E20))
+                Text(announcement.footer, fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = if (isDark) MaterialTheme.colorScheme.primary else Color(0xFF1B5E20))
             }
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -204,7 +208,7 @@ fun AnnouncementCard(
                     onClick = onReadClick,
                     enabled = !announcement.isRead,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1B5E20),
+                        containerColor = if (isDark) MaterialTheme.colorScheme.primary else Color(0xFF1B5E20),
                         disabledContainerColor = Color(0xFFDDE9E1)
                     ),
                     shape = RoundedCornerShape(8.dp),
@@ -215,14 +219,14 @@ fun AnnouncementCard(
                         imageVector = if (announcement.isRead) Icons.Default.DoneAll else Icons.Default.MenuBook,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = if (announcement.isRead) Color(0xFF1B5E20) else Color.White
+                        tint = if (announcement.isRead) (if (isDark) MaterialTheme.colorScheme.onSurface else Color(0xFF1B5E20)) else Color.White
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = if (announcement.isRead) "Read" else "Read",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (announcement.isRead) Color(0xFF1B5E20) else Color.White
+                        color = if (announcement.isRead) (if (isDark) MaterialTheme.colorScheme.onSurface else Color(0xFF1B5E20)) else Color.White
                     )
                 }
             }
@@ -435,6 +439,7 @@ private fun rememberCurrentDateAutoUpdate(): Date {
 
 @Composable
 fun AnnouncementHeader() {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     Row(
         modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -452,7 +457,7 @@ fun AnnouncementHeader() {
             fontFamily = Poppins,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 22.sp,
-            color = Color(0xFF1B5E20)
+            color = if (isDark) MaterialTheme.colorScheme.primary else Color(0xFF1B5E20)
         )
     }
 }

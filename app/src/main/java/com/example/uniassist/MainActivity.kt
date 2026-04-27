@@ -10,8 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
@@ -67,8 +66,10 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            UniassistTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
+            var isDarkMode by remember { mutableStateOf(false) }
+
+            UniassistTheme(darkTheme = isDarkMode) {
+                Surface(modifier = Modifier.fillMaxSize(), color = if (isDarkMode) Color(0xFF121212) else Color.White) {
                     val navController = rememberNavController()
 
                     val allAnnouncements      by announcementViewModel.announcements.collectAsState()
@@ -87,7 +88,9 @@ class MainActivity : ComponentActivity() {
                             GetStartedScreen(navController = navController)
                         }
 
-                        rolePick(navController)
+                        composable("role_pick") {
+                            RolePickScreen(navController = navController)
+                        }
 
                         composable("login_register/{role}") { backStackEntry ->
                             val role = backStackEntry.arguments?.getString("role") ?: "Student"
@@ -119,7 +122,7 @@ class MainActivity : ComponentActivity() {
                             val fullName  = if (firstName.isNotBlank() && lastName.isNotBlank()) {
                                 "$firstName $lastName"
                             } else {
-                                if (role == "Teacher") "Prof. Angelo Villanueva" else "Angelo\nVillanueva"
+                                if (role == "Teacher") "Prof. Angelo Villanueva" else "Angelo Villanueva"
                             }
 
                             if (role == "Teacher") {
@@ -245,14 +248,16 @@ class MainActivity : ComponentActivity() {
 
                         composable("drafts_menu") {
                             DraftsMenuScreen(
-                                onBackClick = {
+                                onDashboardClick = {
                                     navController.navigate("dashboard/Teacher//") {
-                                        popUpTo("drafts_menu") { inclusive = true }
+                                        popUpTo("dashboard/Teacher//") { inclusive = true }
                                     }
                                 },
+                                onSettingsClick = { navController.navigate("settings/Teacher") },
                                 onNavigate = { item ->
                                     when (item) {
                                         "Announcements Draft" -> navController.navigate("announcements_draft")
+                                        "Archive Menu" -> navController.navigate("archive_menu")
                                     }
                                 }
                             )
@@ -262,12 +267,14 @@ class MainActivity : ComponentActivity() {
 
                         composable("announcements_draft") {
                             AnnouncementsDraftScreen(
-                                drafts      = draftAnnouncements,
-                                onBackClick = {
-                                    navController.navigate("drafts_menu") {
-                                        popUpTo("announcements_draft") { inclusive = true }
+                                drafts = draftAnnouncements,
+                                onDashboardClick = {
+                                    navController.navigate("dashboard/Teacher//") {
+                                        popUpTo("dashboard/Teacher//") { inclusive = true }
                                     }
                                 },
+                                onArchiveClick = { navController.navigate("archive_menu") },
+                                onSettingsClick = { navController.navigate("settings/Teacher") },
                                 onEditDraft = { draft ->
                                     navController.navigate("edit_draft/${draft.id}")
                                 },
@@ -299,22 +306,16 @@ class MainActivity : ComponentActivity() {
                             EditAnnouncementScreen(
                                 draft       = draft,
                                 onBackClick = {
-                                    navController.navigate("announcements_draft") {
-                                        popUpTo("edit_draft/${draft.id}") { inclusive = true }
-                                    }
+                                    navController.popBackStack()
                                 },
                                 onSaveDraft = { updated, category, isPriority ->
                                     announcementViewModel.updateDraft(updated, category, isPriority)
-                                    navController.navigate("announcements_draft") {
-                                        popUpTo("edit_draft/${draft.id}") { inclusive = true }
-                                    }
+                                    navController.popBackStack()
                                 },
                                 onPublish = { updated, category, isPriority ->
                                     announcementViewModel.updateDraft(updated, category, isPriority)
                                     announcementViewModel.publishDraft(updated)
-                                    navController.navigate("announcements_draft") {
-                                        popUpTo("edit_draft/${draft.id}") { inclusive = true }
-                                    }
+                                    navController.popBackStack()
                                 }
                             )
                         }
@@ -323,14 +324,16 @@ class MainActivity : ComponentActivity() {
 
                         composable("archive_menu") {
                             ArchiveMenuScreen(
-                                onBackClick = {
+                                onDashboardClick = {
                                     navController.navigate("dashboard/Teacher//") {
-                                        popUpTo("archive_menu") { inclusive = true }
+                                        popUpTo("dashboard/Teacher//") { inclusive = true }
                                     }
                                 },
+                                onSettingsClick = { navController.navigate("settings/Teacher") },
                                 onNavigate = { item ->
                                     when (item) {
                                         "Announcements Archive" -> navController.navigate("announcements_archive")
+                                        "Drafts Menu" -> navController.navigate("drafts_menu")
                                     }
                                 }
                             )
@@ -340,12 +343,14 @@ class MainActivity : ComponentActivity() {
 
                         composable("announcements_archive") {
                             AnnouncementsArchiveScreen(
-                                archived    = archivedAnnouncements,
-                                onBackClick = {
-                                    navController.navigate("archive_menu") {
-                                        popUpTo("announcements_archive") { inclusive = true }
+                                archived = archivedAnnouncements,
+                                onDashboardClick = {
+                                    navController.navigate("dashboard/Teacher//") {
+                                        popUpTo("dashboard/Teacher//") { inclusive = true }
                                     }
                                 },
+                                onDraftsClick = { navController.navigate("drafts_menu") },
+                                onSettingsClick = { navController.navigate("settings/Teacher") },
                                 onUnarchive = { announcement ->
                                     announcementViewModel.unarchive(announcement.id)
                                 },
@@ -423,6 +428,8 @@ class MainActivity : ComponentActivity() {
                             val role = backStackEntry.arguments?.getString("role") ?: "Student"
                             SettingsScreen(
                                 role = role,
+                                isDarkMode = isDarkMode,
+                                onDarkModeChange = { isDarkMode = it },
                                 onDashboardClick = {
                                     navController.navigate("dashboard/${role}//") {
                                         popUpTo("dashboard/${role}//") { inclusive = true }
@@ -444,12 +451,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        }
-    }
-
-    private fun androidx.navigation.NavGraphBuilder.rolePick(navController: androidx.navigation.NavHostController) {
-        composable("role_pick") {
-            RolePickScreen(navController = navController)
         }
     }
 }
