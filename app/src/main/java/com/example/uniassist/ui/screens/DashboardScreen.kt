@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,8 +12,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,12 +31,16 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.uniassist.R
 import com.example.uniassist.ui.viewmodel.AnnouncementViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.*
 
 val Poppins = FontFamily(
@@ -61,14 +71,31 @@ fun DashboardScreen(
         if (role == "Teacher") "Prof. Jane Doe" else "Jane Doe"
     }
 
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+
     // Collect only non-archived announcements for the student view.
     val announcements by announcementViewModel.activeAnnouncements.collectAsState()
+    val unreadCount by announcementViewModel.unreadCount.collectAsState()
 
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding(),
-        topBar = { DashboardHeaderSection(role) },
+        topBar = {
+            DashboardHeaderSection(
+                role = role,
+                unreadCount = unreadCount,
+                notifications = announcements,
+                onMarkAllAsRead = { announcementViewModel.markAllAsRead() },
+                onViewAnnouncements = {
+                    scope.launch { listState.animateScrollToItem(1) }
+                },
+                onNotificationClicked = { announcement ->
+                    announcementViewModel.markAsRead(announcement.id)
+                }
+            )
+        },
         bottomBar = {
             DashboardBottomNavigationBar(
                 currentRoute = "dashboard",
@@ -83,6 +110,7 @@ fun DashboardScreen(
                 .fillMaxSize()
                 .background(Color.White)
                 .padding(paddingValues),
+            state = listState,
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 100.dp)
         ) {
@@ -97,7 +125,16 @@ fun DashboardScreen(
 }
 
 @Composable
-fun DashboardHeaderSection(role: String) {
+fun DashboardHeaderSection(
+    role: String,
+    unreadCount: Int,
+    notifications: List<Announcement>,
+    onMarkAllAsRead: () -> Unit,
+    onViewAnnouncements: () -> Unit,
+    onNotificationClicked: (Announcement) -> Unit
+) {
+    var notificationsExpanded by remember { mutableStateOf(false) }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -110,7 +147,32 @@ fun DashboardHeaderSection(role: String) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(role, color = Color(0xFF1B5E20), fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 16.dp))
-            Icon(Icons.Default.Notifications, null, tint = Color(0xFF1B5E20), modifier = Modifier.size(32.dp))
+            BadgedBox(
+                badge = {
+                    if (role == "Student" && unreadCount > 0) {
+                        Badge { Text(unreadCount.coerceAtMost(99).toString()) }
+                    }
+                }
+            ) {
+                IconButton(onClick = { notificationsExpanded = true }) {
+                    Icon(
+                        Icons.Default.Notifications,
+                        null,
+                        tint = Color(0xFF1B5E20),
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+            NotificationsDropdownMenu(
+                role = role,
+                unreadCount = unreadCount,
+                notifications = notifications,
+                expanded = notificationsExpanded,
+                onDismiss = { notificationsExpanded = false },
+                onMarkAllAsRead = onMarkAllAsRead,
+                onViewAnnouncements = onViewAnnouncements,
+                onNotificationClicked = onNotificationClicked
+            )
             Spacer(modifier = Modifier.width(16.dp))
             Icon(Icons.Default.AccountCircle, null, tint = Color(0xFF1B5E20), modifier = Modifier.size(32.dp))
         }
@@ -118,10 +180,102 @@ fun DashboardHeaderSection(role: String) {
 }
 
 @Composable
+private fun NotificationsDropdownMenu(
+    role: String,
+    unreadCount: Int,
+    notifications: List<Announcement>,
+    expanded: Boolean,
+    onDismiss: () -> Unit,
+    onMarkAllAsRead: () -> Unit,
+    onViewAnnouncements: () -> Unit,
+    onNotificationClicked: (Announcement) -> Unit
+) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismiss
+    ) {
+        if (role != "Student") {
+            DropdownMenuItem(
+                text = { Text("Notifications are available for students") },
+                onClick = onDismiss
+            )
+            return@DropdownMenu
+        }
+
+        if (notifications.isEmpty()) {
+            DropdownMenuItem(
+                text = { Text("No notifications yet") },
+                onClick = onDismiss
+            )
+            return@DropdownMenu
+        }
+
+        if (unreadCount > 0) {
+            DropdownMenuItem(
+                text = { Text("Mark all as read") },
+                onClick = {
+                    onMarkAllAsRead()
+                    onDismiss()
+                }
+            )
+            HorizontalDivider()
+        }
+
+        notifications.take(5).forEach { announcement ->
+            DropdownMenuItem(
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            if (!announcement.isRead) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(RoundedCornerShape(percent = 50))
+                                        .background(Color(0xFFE9B44C))
+                                )
+                            }
+                            Text(
+                                announcement.title,
+                                fontWeight = if (announcement.isRead) FontWeight.Normal else FontWeight.Bold
+                            )
+                        }
+                        Text(
+                            announcement.date,
+                            fontSize = 12.sp,
+                            color = Color(0xFF1B5E20).copy(alpha = 0.75f)
+                        )
+                    }
+                },
+                onClick = {
+                    onNotificationClicked(announcement)
+                    onDismiss()
+                }
+            )
+        }
+
+        HorizontalDivider()
+        DropdownMenuItem(
+            text = { Text("View announcements") },
+            onClick = {
+                onViewAnnouncements()
+                onDismiss()
+            }
+        )
+    }
+}
+
+@Composable
 fun WelcomeSection(userName: String, mascotRes: Int) {
-    val currentDate = Date()
-    val day  = SimpleDateFormat("EEEE", Locale.getDefault()).format(currentDate)
-    val date = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(currentDate)
+    val currentDate = rememberCurrentDateAutoUpdate()
+    val day = remember(currentDate) {
+        SimpleDateFormat("EEEE", Locale.getDefault()).format(currentDate)
+    }
+    val date = remember(currentDate) {
+        SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(currentDate)
+    }
 
     Box(
         modifier = Modifier
@@ -136,11 +290,24 @@ fun WelcomeSection(userName: String, mascotRes: Int) {
             )
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(20.dp).align(Alignment.CenterStart),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp)
+                .padding(end = 140.dp)
+                .align(Alignment.CenterStart),
             verticalArrangement = Arrangement.Center
         ) {
             Text("Welcome back,", fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 18.sp, color = Color.White)
-            Text(userName, fontFamily = Poppins, fontWeight = FontWeight.ExtraBold, lineHeight = 32.sp, fontSize = 30.sp, color = Color.White)
+            Text(
+                userName,
+                fontFamily = Poppins,
+                fontWeight = FontWeight.ExtraBold,
+                lineHeight = 32.sp,
+                fontSize = 30.sp,
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
             Spacer(modifier = Modifier.height(8.dp))
             Text(day,  fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 16.sp, color = Color.White)
             Text(date, fontFamily = Poppins, fontWeight = FontWeight.Normal, fontSize = 14.sp, color = Color.White.copy(alpha = 0.9f))
@@ -148,10 +315,36 @@ fun WelcomeSection(userName: String, mascotRes: Int) {
         Image(
             painter = painterResource(id = mascotRes),
             contentDescription = "Mascot",
-            modifier = Modifier.size(165.dp).align(Alignment.BottomEnd).offset(y = 25.dp).clip(RoundedCornerShape(16.dp)),
+            modifier = Modifier
+                .size(165.dp)
+                .align(Alignment.BottomEnd)
+                .clip(RoundedCornerShape(16.dp)),
             contentScale = ContentScale.Fit
         )
     }
+}
+
+@Composable
+private fun rememberCurrentDateAutoUpdate(): Date {
+    var now by remember { mutableStateOf(Date()) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            val cal = Calendar.getInstance()
+            cal.time = now
+            cal.add(Calendar.DAY_OF_YEAR, 1)
+            cal.set(Calendar.HOUR_OF_DAY, 0)
+            cal.set(Calendar.MINUTE, 0)
+            cal.set(Calendar.SECOND, 0)
+            cal.set(Calendar.MILLISECOND, 0)
+
+            val delayMs = (cal.timeInMillis - System.currentTimeMillis()).coerceAtLeast(1_000)
+            delay(delayMs)
+            now = Date()
+        }
+    }
+
+    return now
 }
 
 @Composable

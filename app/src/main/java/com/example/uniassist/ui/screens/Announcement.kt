@@ -9,6 +9,7 @@ data class Announcement(
     val bullets: List<Pair<String, String>>,
     val footer: String,
     val category: String,
+    val isRead: Boolean = false,
     val isArchived: Boolean = false,
     val isDraft: Boolean = false          // ← NEW: true when saved as draft
 )
