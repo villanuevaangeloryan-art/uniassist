@@ -11,14 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,7 +33,6 @@ import com.example.uniassist.ui.viewmodel.AnnouncementViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.*
 
 val Poppins = FontFamily(
@@ -55,7 +47,6 @@ fun DashboardScreen(
     role: String = "Student",
     firstName: String = "",
     lastName: String = "",
-    // MVVM
     announcementViewModel: AnnouncementViewModel,
     onScheduleClick: () -> Unit = {},
     onCampusClick: () -> Unit = {},
@@ -74,7 +65,6 @@ fun DashboardScreen(
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
-    // Collect only non-archived announcements for the student view.
     val announcements by announcementViewModel.activeAnnouncements.collectAsState()
     val unreadCount by announcementViewModel.unreadCount.collectAsState()
 
@@ -116,9 +106,125 @@ fun DashboardScreen(
         ) {
             item { WelcomeSection(userName = fullName, mascotRes = mascotRes) }
             item { AnnouncementHeader() }
-            // Driven by StateFlow
             items(announcements) { announcement ->
-                AnnouncementCard(announcement)
+                AnnouncementCard(
+                    announcement = announcement,
+                    onReadClick = { announcementViewModel.markAsRead(announcement.id) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun AnnouncementCard(
+    announcement: Announcement,
+    onReadClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .border(
+                width = 1.dp,
+                color = if (!announcement.isRead) Color(0xFF4CAF50).copy(alpha = 0.5f) else Color(0xFFDDE9E1),
+                shape = RoundedCornerShape(12.dp)
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (!announcement.isRead) Color(0xFFF1F8F1) else Color(0xFFF8FAF8)
+        )
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = announcement.title,
+                    fontFamily = Poppins,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 18.sp,
+                    color = Color(0xFF1B5E20),
+                    modifier = Modifier.weight(1f)
+                )
+                if (!announcement.isRead) {
+                    Surface(
+                        color = Color(0xFFE9B44C),
+                        shape = RoundedCornerShape(4.dp),
+                        modifier = Modifier.padding(start = 8.dp)
+                    ) {
+                        Text(
+                            text = "NEW",
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+
+            Text(
+                text = "Date: ${announcement.date}",
+                fontFamily = Poppins,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                color = Color(0xFF1B5E20).copy(alpha = 0.8f)
+            )
+
+            Text(
+                text = announcement.content,
+                fontFamily = Poppins,
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+                color = Color(0xFF1B5E20)
+            )
+
+            if (announcement.bullets.isNotEmpty()) {
+                announcement.bullets.forEach {
+                    Text(
+                        buildAnnotatedString {
+                            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("${it.first} ") }
+                            append(it.second)
+                        },
+                        fontFamily = Poppins, fontSize = 14.sp, lineHeight = 20.sp, color = Color(0xFF1B5E20)
+                    )
+                }
+            }
+
+            if (announcement.footer.isNotBlank()) {
+                Text(announcement.footer, fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF1B5E20))
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Button(
+                    onClick = onReadClick,
+                    enabled = !announcement.isRead,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF1B5E20),
+                        disabledContainerColor = Color(0xFFDDE9E1)
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+                    modifier = Modifier.height(36.dp)
+                ) {
+                    Icon(
+                        imageVector = if (announcement.isRead) Icons.Default.DoneAll else Icons.Default.MenuBook,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = if (announcement.isRead) Color(0xFF1B5E20) else Color.White
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (announcement.isRead) "Read" else "Read",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (announcement.isRead) Color(0xFF1B5E20) else Color.White
+                    )
+                }
             }
         }
     }
@@ -143,38 +249,41 @@ fun DashboardHeaderSection(
     ) {
         Row(
             modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.End,
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(role, color = Color(0xFF1B5E20), fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 16.dp))
-            BadgedBox(
-                badge = {
-                    if (role == "Student" && unreadCount > 0) {
-                        Badge { Text(unreadCount.coerceAtMost(99).toString()) }
+            Text(role, color = Color(0xFF1B5E20), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                BadgedBox(
+                    badge = {
+                        if (unreadCount > 0) {
+                            Badge(containerColor = Color(0xFFE9B44C)) { Text(unreadCount.coerceAtMost(99).toString()) }
+                        }
+                    }
+                ) {
+                    IconButton(onClick = { notificationsExpanded = true }) {
+                        Icon(
+                            Icons.Default.Notifications,
+                            null,
+                            tint = Color(0xFF1B5E20),
+                            modifier = Modifier.size(28.dp)
+                        )
                     }
                 }
-            ) {
-                IconButton(onClick = { notificationsExpanded = true }) {
-                    Icon(
-                        Icons.Default.Notifications,
-                        null,
-                        tint = Color(0xFF1B5E20),
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
+                NotificationsDropdownMenu(
+                    role = role,
+                    unreadCount = unreadCount,
+                    notifications = notifications,
+                    expanded = notificationsExpanded,
+                    onDismiss = { notificationsExpanded = false },
+                    onMarkAllAsRead = onMarkAllAsRead,
+                    onViewAnnouncements = onViewAnnouncements,
+                    onNotificationClicked = onNotificationClicked
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(Icons.Default.AccountCircle, null, tint = Color(0xFF1B5E20), modifier = Modifier.size(32.dp))
             }
-            NotificationsDropdownMenu(
-                role = role,
-                unreadCount = unreadCount,
-                notifications = notifications,
-                expanded = notificationsExpanded,
-                onDismiss = { notificationsExpanded = false },
-                onMarkAllAsRead = onMarkAllAsRead,
-                onViewAnnouncements = onViewAnnouncements,
-                onNotificationClicked = onNotificationClicked
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Icon(Icons.Default.AccountCircle, null, tint = Color(0xFF1B5E20), modifier = Modifier.size(32.dp))
         }
     }
 }
@@ -194,14 +303,6 @@ private fun NotificationsDropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismiss
     ) {
-        if (role != "Student") {
-            DropdownMenuItem(
-                text = { Text("Notifications are available for students") },
-                onClick = onDismiss
-            )
-            return@DropdownMenu
-        }
-
         if (notifications.isEmpty()) {
             DropdownMenuItem(
                 text = { Text("No notifications yet") },
@@ -212,7 +313,7 @@ private fun NotificationsDropdownMenu(
 
         if (unreadCount > 0) {
             DropdownMenuItem(
-                text = { Text("Mark all as read") },
+                text = { Text("Mark all as read", fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20)) },
                 onClick = {
                     onMarkAllAsRead()
                     onDismiss()
@@ -239,13 +340,15 @@ private fun NotificationsDropdownMenu(
                             }
                             Text(
                                 announcement.title,
-                                fontWeight = if (announcement.isRead) FontWeight.Normal else FontWeight.Bold
+                                fontWeight = if (announcement.isRead) FontWeight.Normal else FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                         Text(
                             announcement.date,
-                            fontSize = 12.sp,
-                            color = Color(0xFF1B5E20).copy(alpha = 0.75f)
+                            fontSize = 11.sp,
+                            color = Color.Gray
                         )
                     }
                 },
@@ -258,7 +361,7 @@ private fun NotificationsDropdownMenu(
 
         HorizontalDivider()
         DropdownMenuItem(
-            text = { Text("View announcements") },
+            text = { Text("View all announcements", fontSize = 13.sp, color = Color(0xFF1B5E20)) },
             onClick = {
                 onViewAnnouncements()
                 onDismiss()
@@ -270,22 +373,18 @@ private fun NotificationsDropdownMenu(
 @Composable
 fun WelcomeSection(userName: String, mascotRes: Int) {
     val currentDate = rememberCurrentDateAutoUpdate()
-    val day = remember(currentDate) {
-        SimpleDateFormat("EEEE", Locale.getDefault()).format(currentDate)
-    }
-    val date = remember(currentDate) {
-        SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(currentDate)
-    }
+    val day = remember(currentDate) { SimpleDateFormat("EEEE", Locale.getDefault()).format(currentDate) }
+    val date = remember(currentDate) { SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(currentDate) }
 
     Box(
         modifier = Modifier
             .padding(horizontal = 24.dp, vertical = 16.dp)
             .fillMaxWidth()
-            .height(195.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .height(180.dp)
+            .clip(RoundedCornerShape(16.dp))
             .background(
                 brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF377243).copy(alpha = 0.8f), Color(0xFF56A566).copy(alpha = 0.8f))
+                    colors = listOf(Color(0xFF377243), Color(0xFF56A566))
                 )
             )
     ) {
@@ -293,32 +392,30 @@ fun WelcomeSection(userName: String, mascotRes: Int) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(20.dp)
-                .padding(end = 140.dp)
-                .align(Alignment.CenterStart),
+                .padding(end = 120.dp),
             verticalArrangement = Arrangement.Center
         ) {
-            Text("Welcome back,", fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 18.sp, color = Color.White)
+            Text("Welcome back,", fontFamily = Poppins, fontSize = 16.sp, color = Color.White.copy(alpha = 0.9f))
             Text(
                 userName,
                 fontFamily = Poppins,
                 fontWeight = FontWeight.ExtraBold,
-                lineHeight = 32.sp,
-                fontSize = 30.sp,
+                fontSize = 24.sp,
                 color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(day,  fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 16.sp, color = Color.White)
-            Text(date, fontFamily = Poppins, fontWeight = FontWeight.Normal, fontSize = 14.sp, color = Color.White.copy(alpha = 0.9f))
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(day,  fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
+            Text(date, fontFamily = Poppins, fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f))
         }
         Image(
             painter = painterResource(id = mascotRes),
-            contentDescription = "Mascot",
+            contentDescription = null,
             modifier = Modifier
-                .size(165.dp)
+                .size(150.dp)
                 .align(Alignment.BottomEnd)
-                .clip(RoundedCornerShape(16.dp)),
+                .offset(x = 10.dp, y = 10.dp),
             contentScale = ContentScale.Fit
         )
     }
@@ -327,63 +424,36 @@ fun WelcomeSection(userName: String, mascotRes: Int) {
 @Composable
 private fun rememberCurrentDateAutoUpdate(): Date {
     var now by remember { mutableStateOf(Date()) }
-
     LaunchedEffect(Unit) {
         while (true) {
-            val cal = Calendar.getInstance()
-            cal.time = now
-            cal.add(Calendar.DAY_OF_YEAR, 1)
-            cal.set(Calendar.HOUR_OF_DAY, 0)
-            cal.set(Calendar.MINUTE, 0)
-            cal.set(Calendar.SECOND, 0)
-            cal.set(Calendar.MILLISECOND, 0)
-
-            val delayMs = (cal.timeInMillis - System.currentTimeMillis()).coerceAtLeast(1_000)
-            delay(delayMs)
+            delay(60000)
             now = Date()
         }
     }
-
     return now
 }
 
 @Composable
 fun AnnouncementHeader() {
-    Row(Modifier.padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
-        Surface(color = Color(0xFFE9B44C), shape = RoundedCornerShape(10.dp), modifier = Modifier.size(44.dp)) {
+    Row(
+        modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Surface(
+            color = Color(0xFFE9B44C),
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.size(40.dp)
+        ) {
             Icon(Icons.Default.Campaign, null, tint = Color.White, modifier = Modifier.padding(8.dp))
         }
         Spacer(modifier = Modifier.width(12.dp))
-        Text("Announcements", fontFamily = Poppins, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp, color = Color(0xFF1B5E20))
-    }
-}
-
-@Composable
-fun AnnouncementCard(announcement: Announcement) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .border(1.dp, Color(0xFFDDE9E1), RoundedCornerShape(12.dp)),
-        colors = CardDefaults.cardColors(Color(0xFFF8FAF8))
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(announcement.title, fontFamily = Poppins, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = Color(0xFF1B5E20))
-            Text("Date: ${announcement.date}", fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF1B5E20).copy(alpha = 0.8f))
-            Text(announcement.content, fontFamily = Poppins, fontSize = 14.sp, lineHeight = 20.sp, color = Color(0xFF1B5E20))
-            announcement.bullets.forEach {
-                Text(
-                    buildAnnotatedString {
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("${it.first} ") }
-                        append(it.second)
-                    },
-                    fontFamily = Poppins, fontSize = 14.sp, lineHeight = 20.sp, color = Color(0xFF1B5E20)
-                )
-            }
-            if (announcement.footer.isNotBlank()) {
-                Text(announcement.footer, fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF1B5E20))
-            }
-        }
+        Text(
+            "Announcements",
+            fontFamily = Poppins,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 22.sp,
+            color = Color(0xFF1B5E20)
+        )
     }
 }
 
@@ -395,16 +465,23 @@ fun DashboardBottomNavigationBar(
     onSettingsClick: () -> Unit
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth().padding(16.dp).height(64.dp),
-        shape = RoundedCornerShape(35.dp),
-        color = Color(0xFF245B3D),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .height(64.dp),
+        shape = RoundedCornerShape(32.dp),
+        color = Color(0xFF1B5E20),
         shadowElevation = 8.dp
     ) {
-        Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-            BottomNavItem(Icons.Default.Home,          "Dashboard", currentRoute == "dashboard", {})
-            BottomNavItem(Icons.Default.CalendarMonth, "Schedules", currentRoute == "schedule",  onScheduleClick)
-            BottomNavItem(Icons.Default.Info,          "Campus",    currentRoute == "campus",    onCampusClick)
-            BottomNavItem(Icons.Default.Settings,      "Settings",  currentRoute == "settings",  onSettingsClick)
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BottomNavItem(Icons.Default.Home, "Home", currentRoute == "dashboard", {})
+            BottomNavItem(Icons.Default.CalendarMonth, "Schedules", currentRoute == "schedule", onScheduleClick)
+            BottomNavItem(Icons.Default.Info, "Campus", currentRoute == "campus", onCampusClick)
+            BottomNavItem(Icons.Default.Settings, "Settings", currentRoute == "settings", onSettingsClick)
         }
     }
 }
