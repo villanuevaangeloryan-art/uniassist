@@ -31,6 +31,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -269,7 +270,16 @@ fun WelcomeSection(userName: String, mascotRes: Int) {
             verticalArrangement = Arrangement.Center
         ) {
             Text("Welcome back,", fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 18.sp, color = Color.White)
-            Text(userName, fontFamily = Poppins, fontWeight = FontWeight.ExtraBold, lineHeight = 32.sp, fontSize = 30.sp, color = Color.White)
+            Text(
+                userName,
+                fontFamily = Poppins,
+                fontWeight = FontWeight.ExtraBold,
+                lineHeight = 32.sp,
+                fontSize = 30.sp,
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
             Spacer(modifier = Modifier.height(8.dp))
             Text(day,  fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 16.sp, color = Color.White)
             Text(date, fontFamily = Poppins, fontWeight = FontWeight.Normal, fontSize = 14.sp, color = Color.White.copy(alpha = 0.9f))
