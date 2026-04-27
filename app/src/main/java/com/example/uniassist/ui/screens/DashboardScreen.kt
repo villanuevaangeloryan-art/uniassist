@@ -75,7 +75,16 @@ fun DashboardScreen(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding(),
-        topBar = { DashboardHeaderSection(role = role, unreadCount = unreadCount) },
+        topBar = {
+            DashboardHeaderSection(
+                role = role,
+                unreadCount = unreadCount,
+                notifications = announcements,
+                onNotificationClicked = { announcement ->
+                    announcementViewModel.markAsRead(announcement.id)
+                }
+            )
+        },
         bottomBar = {
             DashboardBottomNavigationBar(
                 currentRoute = "dashboard",
@@ -104,7 +113,12 @@ fun DashboardScreen(
 }
 
 @Composable
-fun DashboardHeaderSection(role: String, unreadCount: Int) {
+fun DashboardHeaderSection(
+    role: String,
+    unreadCount: Int,
+    notifications: List<Announcement>,
+    onNotificationClicked: (Announcement) -> Unit
+) {
     var notificationsExpanded by remember { mutableStateOf(false) }
 
     Box(
@@ -139,10 +153,39 @@ fun DashboardHeaderSection(role: String, unreadCount: Int) {
                 expanded = notificationsExpanded,
                 onDismissRequest = { notificationsExpanded = false }
             ) {
-                DropdownMenuItem(
-                    text = { Text("No notifications yet") },
-                    onClick = { notificationsExpanded = false }
-                )
+                if (role != "Student") {
+                    DropdownMenuItem(
+                        text = { Text("Notifications are available for students") },
+                        onClick = { notificationsExpanded = false }
+                    )
+                } else if (notifications.isEmpty()) {
+                    DropdownMenuItem(
+                        text = { Text("No notifications yet") },
+                        onClick = { notificationsExpanded = false }
+                    )
+                } else {
+                    notifications.take(5).forEach { announcement ->
+                        DropdownMenuItem(
+                            text = {
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(
+                                        announcement.title,
+                                        fontWeight = if (announcement.isRead) FontWeight.Normal else FontWeight.Bold
+                                    )
+                                    Text(
+                                        announcement.date,
+                                        fontSize = 12.sp,
+                                        color = Color(0xFF1B5E20).copy(alpha = 0.75f)
+                                    )
+                                }
+                            },
+                            onClick = {
+                                onNotificationClicked(announcement)
+                                notificationsExpanded = false
+                            }
+                        )
+                    }
+                }
             }
             Spacer(modifier = Modifier.width(16.dp))
             Icon(Icons.Default.AccountCircle, null, tint = Color(0xFF1B5E20), modifier = Modifier.size(32.dp))
