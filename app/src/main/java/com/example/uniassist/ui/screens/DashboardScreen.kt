@@ -146,7 +146,11 @@ fun WelcomeSection(userName: String, mascotRes: Int) {
             )
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(20.dp).align(Alignment.CenterStart),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp)
+                .padding(end = 140.dp)
+                .align(Alignment.CenterStart),
             verticalArrangement = Arrangement.Center
         ) {
             Text("Welcome back,", fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 18.sp, color = Color.White)
@@ -158,7 +162,10 @@ fun WelcomeSection(userName: String, mascotRes: Int) {
         Image(
             painter = painterResource(id = mascotRes),
             contentDescription = "Mascot",
-            modifier = Modifier.size(165.dp).align(Alignment.BottomEnd).offset(y = 25.dp).clip(RoundedCornerShape(16.dp)),
+            modifier = Modifier
+                .size(165.dp)
+                .align(Alignment.BottomEnd)
+                .clip(RoundedCornerShape(16.dp)),
             contentScale = ContentScale.Fit
         )
     }
