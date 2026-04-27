@@ -6,10 +6,13 @@ import com.example.uniassist.data.FirebaseAuthRepository
 import com.example.uniassist.domain.actions.LoginAction
 import com.example.uniassist.domain.reducer.LoginReducer
 import com.example.uniassist.domain.state.LoginState
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class LoginStore(
     private val authRepository: FirebaseAuthRepository = FirebaseAuthRepository()
@@ -56,6 +59,14 @@ class LoginStore(
                     navigateToDashboard = true
                 )
             }
+
+            // Retrieve current FCM token and save it to Firestore after login
+            saveFcmToken(authResult.uid)
+
+            // Subscribe students to the announcements FCM topic
+            if (authResult.role == "Student") {
+                FirebaseMessaging.getInstance().subscribeToTopic("announcements")
+            }
         } catch (e: Exception) {
             // If the gatekeeper throws an error, it gets caught right here!
             _state.update {
@@ -68,4 +79,16 @@ class LoginStore(
     }
 
     fun resetNavigation() = dispatch(LoginAction.ResetNavigation)
+
+    private suspend fun saveFcmToken(uid: String) {
+        try {
+            val token = FirebaseMessaging.getInstance().token.await()
+            FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(uid)
+                .update("fcmToken", token)
+        } catch (_: Exception) {
+            // Non-critical — token will be saved on next onNewToken callback
+        }
+    }
 }

@@ -1,15 +1,20 @@
 package com.example.uniassist
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -24,6 +29,11 @@ import com.example.uniassist.ui.theme.UniassistTheme
 import com.example.uniassist.ui.viewmodel.*
 
 class MainActivity : ComponentActivity() {
+
+    // Request POST_NOTIFICATIONS permission on Android 13+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* permission result — notifications will work if granted */ }
 
     // DB → DAO → Repository → ViewModel
     private val db by lazy { AppDatabase.getInstance(this) }
@@ -51,13 +61,23 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, true)
         WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = true
 
+        // Request notification permission on Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
         setContent {
             UniassistTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
                     val navController = rememberNavController()
 
-                    // Teacher's manage-screen list (UI only, not persisted).
-                    val publishedAnnouncements = remember { mutableStateListOf<ManageScreenAnnouncement>() }
+                    // DB-backed list for the teacher's manage screen (all announcements incl. archived)
+                    val allAnnouncements by announcementViewModel.announcements.collectAsState()
+                    val dbManageList = allAnnouncements.map { it.toManageCard() }
 
                     NavHost(navController = navController, startDestination = "get_started") {
 
@@ -146,9 +166,10 @@ class MainActivity : ComponentActivity() {
 
                         composable("manage_announcements") {
                             ManageAnnouncementsScreen(
-                                onBackClick  = { navController.popBackStack() },
+                                onBackClick   = { navController.popBackStack() },
                                 onCreateClick = { navController.navigate("create_announcement") },
-                                publishedAnnouncements = publishedAnnouncements
+                                dbAnnouncements = dbManageList,
+                                onArchive = { id -> announcementViewModel.archive(id) }
                             )
                         }
 
@@ -157,24 +178,18 @@ class MainActivity : ComponentActivity() {
                                 onBackClick  = { navController.popBackStack() },
                                 onSaveDraft  = { navController.popBackStack() },
                                 onPublish = { newAnnouncement ->
-
-                                    publishedAnnouncements.add(
-                                        0,
-                                        newAnnouncement.toManageCard(id = publishedAnnouncements.size + 100)
-                                    )
-
                                     announcementViewModel.publish(
                                         announcement = Announcement(
                                             title   = newAnnouncement.title,
                                             date    = newAnnouncement.postDate,
                                             content = newAnnouncement.message,
                                             bullets = emptyList(),
-                                            footer  = if (newAnnouncement.isPriority) "⚠ Priority Announcement" else ""
+                                            footer  = if (newAnnouncement.isPriority) "⚠ Priority Announcement" else "",
+                                            category = newAnnouncement.category
                                         ),
                                         category   = newAnnouncement.category,
                                         isPriority = newAnnouncement.isPriority
                                     )
-
                                     navController.popBackStack()
                                 }
                             )
@@ -253,6 +268,8 @@ class MainActivity : ComponentActivity() {
                                 onScheduleClick = { navController.navigate("schedule/${role}") },
                                 onCampusClick   = { navController.navigate("campus/${role}") },
                                 onLogoutClick   = {
+                                    com.google.firebase.messaging.FirebaseMessaging.getInstance()
+                                        .unsubscribeFromTopic("announcements")
                                     navController.navigate("get_started") { popUpTo(0) { inclusive = true } }
                                 }
                             )

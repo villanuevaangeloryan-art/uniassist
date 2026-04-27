@@ -67,7 +67,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     // Import the Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation("com.google.android.gms:play-services-auth:20.7.0")
@@ -76,6 +76,8 @@ dependencies {
     implementation("androidx.room:room-ktx:2.7.1")
     ksp("androidx.room:room-compiler:2.7.1")
 
+    // Firebase Cloud Messaging (version managed by BoM above)
+    implementation("com.google.firebase:firebase-messaging-ktx")
 
     // ViewModel for Compose
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
