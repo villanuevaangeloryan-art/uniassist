@@ -1,9 +1,9 @@
 package com.example.uniassist.data
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
-import com.google.firebase.auth.GoogleAuthProvider
 
 data class AuthResult(
     val uid: String,
@@ -17,18 +17,19 @@ class FirebaseAuthRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
-    // Account with Gmail and Password
+
+    // Create account with email and password
     suspend fun signUp(email: String, password: String): String {
         val result = auth.createUserWithEmailAndPassword(email, password).await()
         return result.user?.uid ?: throw Exception("Sign up failed")
     }
 
-    // Save the extra info (names, role) to Firestore
+    // Save extra info (names, role) to Firestore
     suspend fun saveProfile(uid: String, profileData: Map<String, Any>) {
         firestore.collection("users").document(uid).set(profileData).await()
     }
 
-    // UPDATED: Now requires the 'expectedRole' to verify authorization
+    // Sign in with email/password and verify role
     suspend fun signIn(email: String, password: String, expectedRole: String): AuthResult {
         val authResult = auth.signInWithEmailAndPassword(email, password).await()
         val user = authResult.user ?: throw Exception("Login failed")
@@ -36,13 +37,10 @@ class FirebaseAuthRepository(
 
         val actualRole = doc.getString("role") ?: "Student"
 
-        // --- THE GATEKEEPER ---
         if (actualRole != expectedRole) {
-            // Immediately sign them out of Firebase so they aren't stuck authenticated in the background
             auth.signOut()
             throw Exception("Access Denied: You are registered as a $actualRole, not a $expectedRole.")
         }
-        // ----------------------
 
         return AuthResult(
             uid = user.uid,
@@ -53,10 +51,28 @@ class FirebaseAuthRepository(
         )
     }
 
+    // Sign in with Google — creates Firestore profile if first time
     suspend fun signInWithGoogle(idToken: String): String {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         val result = auth.signInWithCredential(credential).await()
-        return result.user?.email ?: throw Exception("Google Auth Failed")
+        val user = result.user ?: throw Exception("Google Auth Failed")
+
+        // Only create a Firestore profile if one doesn't already exist
+        val isNew = !isUserRegistered(user.uid)
+        if (isNew) {
+            val nameParts = user.displayName?.split(" ") ?: emptyList()
+            saveProfile(
+                uid = user.uid,
+                profileData = mapOf(
+                    "email" to (user.email ?: ""),
+                    "firstName" to (nameParts.firstOrNull() ?: ""),
+                    "lastName" to (if (nameParts.size > 1) nameParts.last() else ""),
+                    "role" to "Student"
+                )
+            )
+        }
+
+        return user.email ?: throw Exception("Google Auth Failed")
     }
 
     suspend fun isUserRegistered(uid: String): Boolean {

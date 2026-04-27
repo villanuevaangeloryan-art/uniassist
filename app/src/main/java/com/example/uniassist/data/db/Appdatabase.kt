@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
         DepartmentEntity::class,
         StudentEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
