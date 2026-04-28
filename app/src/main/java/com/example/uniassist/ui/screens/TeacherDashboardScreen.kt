@@ -1,16 +1,15 @@
 package com.example.uniassist.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,26 +17,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.uniassist.R
-import java.text.SimpleDateFormat
-import java.util.*
+import com.example.uniassist.ui.viewmodel.AnnouncementViewModel
 
-// Import Poppins from the existing DashboardScreen (same package)
-import com.example.uniassist.ui.screens.Poppins
-
-// ── Colors ────────────────────────────────────────────────────────────────────
 private val GreenDark       = Color(0xFF1B5E20)
 private val GreenMedium     = Color(0xFF56A566)
 private val GreenLight      = Color(0xFFB7E4C7)
 
-// ── Teacher Dashboard ─────────────────────────────────────────────────────────
 @Composable
 fun TeacherDashboardScreen(
     role: String = "Teacher",
@@ -45,383 +38,194 @@ fun TeacherDashboardScreen(
     totalStudents: Int = 0,
     totalAnnouncements: Int = 0,
     totalUnread: Int = 0,
+    currentRoute: String = "dashboard",
+    announcementViewModel: AnnouncementViewModel,
+    onDashboardClick: () -> Unit = {},
+    onDraftsClick: () -> Unit = {},
+    onArchiveClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
     onManageAnnouncements: () -> Unit = {},
     onManageCampusInfo: () -> Unit = {},
     onViewStudents: () -> Unit = {},
-    onSettings: () -> Unit = {},
-    onDrafts: () -> Unit = {},
-    onArchive: () -> Unit = {},
-    onLogout: () -> Unit = {}   // ← new logout callback
+    onLogout: () -> Unit = {}
 ) {
-    val currentDate = remember { Date() }
-    val dayLabel  = remember { SimpleDateFormat("EEEE", Locale.getDefault()).format(currentDate) }
-    val dateLabel = remember { SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(currentDate) }
-
     val mascotRes = R.drawable.uniassist_teacher
-
     var menuExpanded by remember { mutableStateOf(false) }
-
-    Scaffold(containerColor = Color.White) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-        ) {
-            // Top Nav Bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(65.dp)
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(Color(0xFF7CA786), Color(0xFFE2F1C6))
-                        )
-                    )
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            TeacherDashboardTopBar(
+                role = role,
+                onLogout = onLogout,
+                menuExpanded = menuExpanded,
+                onToggleMenu = { menuExpanded = it }
+            )
+        },
+        bottomBar = {
+            TeacherDashboardBottomNavigationBar(
+                currentRoute = currentRoute,
+                onDashboardClick = onDashboardClick,
+                onDraftsClick = onDraftsClick,
+                onArchiveClick = onArchiveClick,
+                onSettingsClick = onSettingsClick
+            )
+        }
+    ) { innerPadding ->
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(bottom = 24.dp)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box {
-                        IconButton(onClick = { menuExpanded = true }) {
-                            Icon(
-                                Icons.Default.AccountCircle,
-                                contentDescription = "Profile",
-                                tint = GreenDark,
-                                modifier = Modifier.size(30.dp)
-                            )
+                item { WelcomeSection(userName = userName, mascotRes = mascotRes) }
+                
+                // Management Section
+                item {
+                    Column(modifier = Modifier.padding(top = 8.dp)) {
+                        Row(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Surface(color = GreenMedium, shape = RoundedCornerShape(10.dp), modifier = Modifier.size(40.dp)) {
+                                Icon(Icons.Default.AutoAwesome, null, tint = Color.White, modifier = Modifier.padding(8.dp))
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Text("Management", fontFamily = Poppins, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, color = if (isDark) MaterialTheme.colorScheme.primary else GreenDark)
                         }
-                        DropdownMenu(
-                            expanded = menuExpanded,
-                            onDismissRequest = { menuExpanded = false },
-                            modifier = Modifier.background(Color.White)
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Settings", fontFamily = Poppins, fontSize = 14.sp) },
-                                leadingIcon = {
-                                    Icon(Icons.Outlined.Settings, null, modifier = Modifier.size(18.dp))
-                                },
-                                onClick = {
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Drafts", fontFamily = Poppins, fontSize = 14.sp) },
-                                leadingIcon = {
-                                    Icon(Icons.Outlined.Description, null, modifier = Modifier.size(18.dp))
-                                },
-                                onClick = {
-                                    menuExpanded = false
-                                    onDrafts()
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Archive", fontFamily = Poppins, fontSize = 14.sp) },
-                                leadingIcon = {
-                                    Icon(Icons.Outlined.Archive, null, modifier = Modifier.size(18.dp))
-                                },
-                                onClick = {
-                                    menuExpanded = false
-                                    onArchive()
-                                }
-                            )
-                            Divider()
-                            DropdownMenuItem(
-                                text = { Text("Logout", fontFamily = Poppins, fontSize = 14.sp, color = Color(0xFFD32F2F)) },
-                                leadingIcon = {
-                                    Icon(Icons.AutoMirrored.Outlined.Logout, null, tint = Color(0xFFD32F2F), modifier = Modifier.size(18.dp))
-                                },
-                                onClick = {
-                                    menuExpanded = false
-                                    onLogout()
-                                }
-                            )
+
+                        Spacer(Modifier.height(8.dp))
+
+                        ActionItem(icon = Icons.Default.Campaign, label = "Announcements", onClick = onManageAnnouncements)
+                        ActionItem(icon = Icons.Default.Business, label = "Campus Info", onClick = onManageCampusInfo)
+                        ActionItem(icon = Icons.Default.People,   label = "Students List", onClick = onViewStudents)
+                    }
+                }
+
+                item {
+                    // Stats Card
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = if (isDark) Color(0xFF2C2C2C) else Color(0xFFD5FFDE)),
+                        border = BorderStroke(1.dp, if (isDark) Color.DarkGray else GreenDark)
+                    ) {
+                        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)) {
+                            StatRow("Total Students", totalStudents)
+                            HorizontalDivider(color = if (isDark) Color.DarkGray else Color(0xFF78C48A))
+                            StatRow("Active Announcements", totalAnnouncements)
                         }
                     }
                 }
             }
-
-            // Welcome Banner (unchanged)
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 24.dp, vertical = 16.dp)
-                    .fillMaxWidth()
-                    .height(195.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                Color(0xFF377243).copy(alpha = 0.8f),
-                                Color(0xFF56A566).copy(alpha = 0.8f)
-                            )
-                        )
-                    )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(20.dp)
-                        .align(Alignment.CenterStart),
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        "Welcome back,",
-                        fontFamily = Poppins,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 18.sp,
-                        color = Color.White
-                    )
-                    Text(
-                        userName,
-                        fontFamily = Poppins,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 28.sp,
-                        color = Color.White,
-                        lineHeight = 32.sp
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        dayLabel,
-                        fontFamily = Poppins,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 15.sp,
-                        color = Color.White
-                    )
-                    Text(
-                        dateLabel,
-                        fontFamily = Poppins,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 13.sp,
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
-                }
-
-                Image(
-                    painter = painterResource(id = mascotRes),
-                    contentDescription = "Mascot",
-                    modifier = Modifier
-                        .size(165.dp)
-                        .align(Alignment.BottomEnd)
-                        .offset(y = 25.dp),
-                    contentScale = ContentScale.Fit
-                )
-            }
-
-            // Actions Header
-            Row(
-                modifier = Modifier.padding(horizontal = 24.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    color = GreenMedium,
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        Icons.Default.AutoAwesome,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.padding(8.dp)
-                    )
-                }
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    "Actions",
-                    fontFamily = Poppins,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 26.sp,
-                    color = GreenDark
-                )
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            ActionItem(
-                icon = Icons.Default.Campaign,
-                label = "Manage Announcements",
-                backgroundRes = R.drawable.background_rolepick,
-                onClick = onManageAnnouncements
-            )
-            Spacer(Modifier.height(10.dp))
-            ActionItem(
-                icon = Icons.Default.Business,
-                label = "Manage Campus Information",
-                backgroundRes = R.drawable.background_rolepick,
-                onClick = onManageCampusInfo
-            )
-            Spacer(Modifier.height(10.dp))
-            ActionItem(
-                icon = Icons.Default.People,
-                label = "View Students",
-                backgroundRes = R.drawable.background_rolepick,
-                onClick = onViewStudents
-            )
-
-            Spacer(Modifier.height(20.dp))
-
-            // Totals Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 8.dp)
-            ) {
-                // Shadow card
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 6.dp, top = 8.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFF2E7D4F))
-                        .height(IntrinsicSize.Min)
-                ) {
-                    Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-                        StatRow("Total Students",             totalStudents,    ghost = true)
-                        HorizontalDivider(color = Color.Transparent, thickness = 1.dp)
-                        StatRow("Total Announcements",        totalAnnouncements, ghost = true)
-                        HorizontalDivider(color = Color.Transparent, thickness = 1.dp)
-                        StatRow("Total Unread Announcements", totalUnread,       ghost = true)
-                    }
-                }
-
-                // Front card
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(end = 6.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFFD5FFDE))
-                        .border(
-                            width = 1.dp,
-                            color = Color(0xFF1B5E20),
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                ) {
-                    Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-                        StatRow("Total Students", totalStudents)
-                        HorizontalDivider(color = Color(0xFF78C48A), thickness = 1.dp)
-                        StatRow("Total Announcements", totalAnnouncements)
-                        HorizontalDivider(color = Color(0xFF78C48A), thickness = 1.dp)
-                        StatRow("Total Unread Announcements", totalUnread)
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(28.dp))
         }
     }
 }
 
-// ── Action Item ───────────────────────────────────────────────────────────────
 @Composable
-private fun ActionItem(
-    icon: ImageVector,
-    label: String,
-    backgroundRes: Int,
-    onClick: () -> Unit,
+private fun TeacherDashboardTopBar(
+    role: String,
+    onLogout: () -> Unit,
+    menuExpanded: Boolean,
+    onToggleMenu: (Boolean) -> Unit
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .border(1.dp, Color(0XFF56A566), RoundedCornerShape(14.dp))
-            .height(64.dp)
+            .height(65.dp)
+            .background(Brush.horizontalGradient(listOf(Color(0xFF7CA786), Color(0xFFE2F1C6))))
+            .statusBarsPadding()
     ) {
-        Image(
-            painter = painterResource(id = backgroundRes),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop,
-            alpha = 0.80f
-        )
-
-        Surface(
-            onClick = onClick,
-            modifier = Modifier.fillMaxSize(),
-            color = Color.Transparent
+        Row(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(GreenLight),
-                    contentAlignment = Alignment.Center
+            Text(
+                text = role,
+                color = GreenDark,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = Poppins
+            )
+
+            Box {
+                IconButton(onClick = { onToggleMenu(true) }) {
+                    Icon(Icons.Default.AccountCircle, "Profile", tint = GreenDark, modifier = Modifier.size(32.dp))
+                }
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { onToggleMenu(false) },
+                    modifier = Modifier.background(Color.White).width(160.dp)
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = GreenDark,
-                        modifier = Modifier.size(22.dp)
+                    DropdownMenuItem(
+                        text = { Text("Logout", fontFamily = Poppins, fontSize = 14.sp, color = Color(0xFFD32F2F)) },
+                        leadingIcon = { Icon(Icons.AutoMirrored.Outlined.Logout, null, tint = Color(0xFFD32F2F), modifier = Modifier.size(20.dp)) },
+                        onClick = {
+                            onToggleMenu(false)
+                            onLogout()
+                        }
                     )
                 }
-                Spacer(Modifier.width(14.dp))
-                Text(
-                    text = label,
-                    fontFamily = Poppins,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 15.sp,
-                    color = Color(0xFF2B4B49),
-                    modifier = Modifier.weight(1f)
-                )
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = null,
-                    tint = GreenDark,
-                    modifier = Modifier.size(22.dp)
-                )
             }
         }
     }
 }
 
-// ── Stat Row ──────────────────────────────────────────────────────────────────
 @Composable
-private fun StatRow(label: String, value: Int, ghost: Boolean = false) {
-    val textAlpha = if (ghost) 0f else 1f
-    Row(
+fun TeacherDashboardBottomNavigationBar(
+    currentRoute: String,
+    onDashboardClick: () -> Unit,
+    onDraftsClick: () -> Unit,
+    onArchiveClick: () -> Unit,
+    onSettingsClick: () -> Unit
+) {
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 18.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .padding(16.dp)
+            .height(64.dp),
+        shape = RoundedCornerShape(32.dp),
+        color = Color(0xFF1B5E20),
+        shadowElevation = 8.dp
     ) {
-        Text(
-            text = label,
-            fontFamily = Poppins,
-            fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
-            color = Color(0xFF245B3D).copy(alpha = textAlpha)
-        )
-        Text(
-            text = value.toString(),
-            fontFamily = Poppins,
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 34.sp,
-            color = Color(0xFF1B5E20).copy(alpha = textAlpha)
-        )
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BottomNavItem(Icons.Default.Home, "Home", currentRoute == "dashboard", onDashboardClick)
+            BottomNavItem(Icons.Default.Description, "Drafts", currentRoute == "drafts", onDraftsClick)
+            BottomNavItem(Icons.Default.Archive, "Archive", currentRoute == "archive", onArchiveClick)
+            BottomNavItem(Icons.Default.Settings, "Settings", currentRoute == "settings", onSettingsClick)
+        }
     }
 }
 
-// ── Preview ───────────────────────────────────────────────────────────────────
-@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun TeacherDashboardPreview() {
-    MaterialTheme {
-        TeacherDashboardScreen(
-            userName = "Prof. Jane Doe",
-            totalStudents = 0,
-            totalAnnouncements = 0,
-            totalUnread = 0
-        )
+private fun ActionItem(icon: ImageVector, label: String, onClick: () -> Unit) {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 6.dp).height(64.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = if (isDark) Color(0xFF242424) else Color(0xFFF1F8F1)),
+        border = BorderStroke(1.dp, if (isDark) Color.DarkGray else Color(0xFFDDE9E1))
+    ) {
+        Row(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(if (isDark) Color(0xFF1B5E20) else GreenLight), contentAlignment = Alignment.Center) {
+                Icon(icon, null, tint = if (isDark) Color.White else GreenDark, modifier = Modifier.size(22.dp))
+            }
+            Spacer(Modifier.width(16.dp))
+            Text(label, fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 15.sp, color = if (isDark) Color.White else Color(0xFF2B4B49), modifier = Modifier.weight(1f))
+            Icon(Icons.Default.ChevronRight, null, tint = if (isDark) Color.Gray else GreenDark)
+        }
+    }
+}
+
+@Composable
+private fun StatRow(label: String, value: Int) {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Text(label, fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = if (isDark) Color.LightGray else Color(0xFF245B3D))
+        Text(value.toString(), fontFamily = Poppins, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp, color = if (isDark) MaterialTheme.colorScheme.primary else GreenDark)
     }
 }

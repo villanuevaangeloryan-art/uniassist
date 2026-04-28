@@ -17,52 +17,48 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.uniassist.R
+import com.example.uniassist.ui.viewmodel.CampusViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageCampusDepartmentScreen(
+    viewModel: CampusViewModel,
     onBackClick: () -> Unit = {},
     onAddDepartmentClick: () -> Unit = {},
     onEditDepartmentClick: (Int) -> Unit = {}
 ) {
-    var departments by remember {
-        mutableStateOf(
-            listOf(
-                Department(
-                    name = "College of Computer Studies / Information Technology",
-                    representative = "Mr. Alvin M. Dimaunahan",
-                    email = "alvinccsdimauanahan@gmail.com",
-                    phone = "+639829901987",
-                    logoRes = R.drawable.ccsdeptlogo
-                ),
-                Department(
-                    name = "College of Engineering",
-                    representative = "Ms. Jennelyn V. Tan",
-                    email = "tanjennelyncoe@gmail.com",
-                    phone = "+639549932855",
-                    logoRes = R.drawable.coedeptlogo
-                ),
-                Department(
-                    name = "College of Business Administration / Accountancy",
-                    representative = "Ms. Vilma R. Cacho",
-                    email = "rcachocbaa@gmail.com",
-                    phone = "+639549932855",
-                    logoRes = R.drawable.cbaadeptlogo
-                ),
-                Department(
-                    name = "College of Education",
-                    representative = "Ms. George C. Bacsa",
-                    email = "geocalmacoedue@gmail.com",
-                    phone = "+639877718241",
-                    logoRes = R.drawable.coedudeptlogo
-                )
-            )
+    // 1. COLLECT DATA FROM THE DATABASE
+    val dbDepartments by viewModel.departments.collectAsState()
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+
+    // 2. Map the Database Entity to your UI Data Class with LOGO LOGIC
+    val uiDepartments = dbDepartments.map { entity ->
+        val details = entity.description.split(" | ")
+        val rep = details.getOrElse(0) { "Unknown Rep" }
+        val email = details.getOrElse(1) { "No Email" }
+        val phone = details.getOrElse(2) { "No Phone" }
+
+        val rawName = entity.departmentName.lowercase()
+        val correctLogo = when {
+            rawName.contains("engineering") || rawName.contains("coe") -> R.drawable.coedeptlogo
+            rawName.contains("business") || rawName.contains("accountancy") || rawName.contains("cbaa") -> R.drawable.cbaadeptlogo
+            rawName.contains("education") || rawName.contains("coed") -> R.drawable.coedudeptlogo
+            else -> R.drawable.ccsdeptlogo
+        }
+
+        Department(
+            name = entity.departmentName,
+            representative = rep,
+            email = email,
+            phone = phone,
+            logoRes = correctLogo
         )
     }
 
@@ -73,51 +69,66 @@ fun ManageCampusDepartmentScreen(
             .fillMaxSize()
             .statusBarsPadding(),
         topBar = {
-            ManageCampusHeaderSection(onBackClick = onBackClick)
+            ManageCampusHeaderSection(onBackClick = onBackClick, isDark = isDark)
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddDepartmentClick,
-                containerColor = Color(0xFF245B3D),
-                contentColor = Color.White
+                containerColor = if (isDark) MaterialTheme.colorScheme.primary else Color(0xFF245B3D),
+                contentColor = if (isDark) Color.Black else Color.White
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Department")
             }
         },
-        containerColor = Color(0xFFF5F5F5)
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(departments.size) { index ->
-                val dept = departments[index]
-                ManageDepartmentCard(
-                    department = dept,
-                    isMenuExpanded = expandedMenuIndex == index,
-                    onMenuClick = { expandedMenuIndex = if (expandedMenuIndex == index) null else index },
-                    onEdit = {
-                        onEditDepartmentClick(index)
-                        expandedMenuIndex = null
-                    },
-                    onDelete = {
-                        departments = departments.filterIndexed { i, _ -> i != index }
-                        expandedMenuIndex = null
-                    },
-                    onArchive = {
-                        expandedMenuIndex = null
-                    }
-                )
+
+        // Show a message if the database is empty
+        if (uiDepartments.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No departments found. Click + to add one!", color = if (isDark) Color.LightGray else Color.Gray)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(uiDepartments.size) { index ->
+                    val dept = uiDepartments[index]
+                    ManageDepartmentCard(
+                        department = dept,
+                        isMenuExpanded = expandedMenuIndex == index,
+                        onMenuClick = { expandedMenuIndex = if (expandedMenuIndex == index) null else index },
+                        onEdit = {
+                            onEditDepartmentClick(dbDepartments[index].id)
+                            expandedMenuIndex = null
+                        },
+                        onDelete = {
+                            viewModel.deleteDepartment(dbDepartments[index].id)
+                            expandedMenuIndex = null
+                        },
+                        onArchive = {
+                            viewModel.deleteDepartment(dbDepartments[index].id)
+                            expandedMenuIndex = null
+                        },
+                        isDark = isDark
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun ManageCampusHeaderSection(onBackClick: () -> Unit) {
+fun ManageCampusHeaderSection(onBackClick: () -> Unit, isDark: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -172,14 +183,17 @@ fun ManageDepartmentCard(
     onMenuClick: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    onArchive: () -> Unit
+    onArchive: () -> Unit,
+    isDark: Boolean
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(2.dp, Color(0xFF66BB6A), RoundedCornerShape(12.dp)),
+            .border(2.dp, if (isDark) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else Color(0xFF66BB6A), RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark) Color(0xFF2C2C2C) else Color.White
+        )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -200,23 +214,23 @@ fun ManageDepartmentCard(
                         text = department.name,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
-                        color = Color.Black
+                        color = if (isDark) Color.White else Color.Black
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Department representative: ${department.representative}",
                         fontSize = 12.sp,
-                        color = Color(0xFF666666)
+                        color = if (isDark) Color.LightGray else Color(0xFF666666)
                     )
                     Text(
                         text = "Email: ${department.email}",
                         fontSize = 12.sp,
-                        color = Color(0xFF666666)
+                        color = if (isDark) Color.LightGray else Color(0xFF666666)
                     )
                     Text(
                         text = "Phone number: ${department.phone}",
                         fontSize = 12.sp,
-                        color = Color(0xFF666666)
+                        color = if (isDark) Color.LightGray else Color(0xFF666666)
                     )
                 }
                 Box {
@@ -224,25 +238,26 @@ fun ManageDepartmentCard(
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = "Menu",
-                            tint = Color(0xFF1B5E20)
+                            tint = if (isDark) MaterialTheme.colorScheme.primary else Color(0xFF1B5E20)
                         )
                     }
                     DropdownMenu(
                         expanded = isMenuExpanded,
-                        onDismissRequest = onMenuClick
+                        onDismissRequest = onMenuClick,
+                        modifier = Modifier.background(if (isDark) Color(0xFF1E1E1E) else Color.White)
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Edit") },
+                            text = { Text("Edit", color = if (isDark) Color.White else Color.Unspecified) },
                             leadingIcon = { Icon(Icons.Default.Edit, null, tint = Color(0xFF1B5E20)) },
                             onClick = onEdit
                         )
                         DropdownMenuItem(
-                            text = { Text("Delete") },
+                            text = { Text("Delete", color = if (isDark) Color.White else Color.Unspecified) },
                             leadingIcon = { Icon(Icons.Default.Delete, null, tint = Color(0xFFD32F2F)) },
                             onClick = onDelete
                         )
                         DropdownMenuItem(
-                            text = { Text("Archive") },
+                            text = { Text("Archive", color = if (isDark) Color.White else Color.Unspecified) },
                             leadingIcon = { Icon(Icons.Default.Archive, null, tint = Color(0xFF666666)) },
                             onClick = onArchive
                         )
@@ -251,63 +266,4 @@ fun ManageDepartmentCard(
             }
         }
     }
-}
-
-@Composable
-fun EditDepartmentDialog(
-    department: Department,
-    onDismiss: () -> Unit,
-    onConfirm: (String, String, String, String) -> Unit
-) {
-    var name by remember { mutableStateOf(department.name) }
-    var representative by remember { mutableStateOf(department.representative) }
-    var email by remember { mutableStateOf(department.email) }
-    var phone by remember { mutableStateOf(department.phone) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Edit Department", fontWeight = FontWeight.Bold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Department Name") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = representative,
-                    onValueChange = { representative = it },
-                    label = { Text("Representative") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text("Phone") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onConfirm(name, representative, email, phone) },
-                enabled = name.isNotBlank() && representative.isNotBlank() && 
-                         email.isNotBlank() && phone.isNotBlank()
-            ) {
-                Text("Save", color = Color(0xFF245B3D))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel", color = Color(0xFF666666))
-            }
-        }
-    )
 }

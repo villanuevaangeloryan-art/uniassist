@@ -9,28 +9,59 @@ import kotlinx.coroutines.flow.map
 
 class AnnouncementRepository(private val dao: AnnouncementDao) {
 
-    // Live stream of all announcements as UI models, newest first.
+    // All announcements (teacher side — includes archived)
     val announcements: Flow<List<Announcement>> = dao.getAllFlow().map { entities ->
         entities.map { it.toUiModel() }
     }
 
-    // Live count of unread announcements
+    // Only non-archived, non-draft announcements (student side)
+    val activeAnnouncements: Flow<List<Announcement>> = dao.getActiveFlow().map { entities ->
+        entities.map { it.toUiModel() }
+    }
+
+    // ── NEW: Draft announcements ──────────────────────────────────────────────
+    val draftAnnouncements: Flow<List<Announcement>> = dao.getDraftsFlow().map { entities ->
+        entities.map { it.toUiModel() }
+    }
+
+    // ── NEW: Archived announcements ───────────────────────────────────────────
+    val archivedAnnouncements: Flow<List<Announcement>> = dao.getArchivedFlow().map { entities ->
+        entities.map { it.toUiModel() }
+    }
+
     val unreadCount: Flow<Int> = dao.getUnreadCountFlow()
 
-    // Called when the teacher taps PUBLISH.
+    // PUBLISH (saves as non-draft)
     suspend fun publish(announcement: Announcement, category: String, isPriority: Boolean) {
-        dao.insert(announcement.toEntity(category = category, isPriority = isPriority))
+        dao.insert(announcement.toEntity(category = category, isPriority = isPriority, isDraft = false))
     }
+
+    // ── NEW: Save as draft ────────────────────────────────────────────────────
+    suspend fun saveDraft(announcement: Announcement, category: String, isPriority: Boolean) {
+        dao.insert(announcement.toEntity(category = category, isPriority = isPriority, isDraft = true))
+    }
+
+    // ── NEW: Update existing draft (by id — Room REPLACE handles it via @Insert) ──
+    suspend fun updateDraft(announcement: Announcement, category: String, isPriority: Boolean) {
+        dao.insert(announcement.toEntity(category = category, isPriority = isPriority, isDraft = true))
+    }
+
+    // ── NEW: Publish a draft that already exists in the DB ────────────────────
+    suspend fun publishDraft(id: Int) = dao.publishDraft(id)
+
+    // ── NEW: Restore archived announcement to active ──────────────────────────
+    suspend fun unarchive(id: Int) = dao.unarchive(id)
 
     suspend fun markAsRead(id: Int) = dao.markAsRead(id)
 
     suspend fun markAllAsRead() = dao.markAllAsRead()
 
     suspend fun delete(entity: AnnouncementEntity) = dao.delete(entity)
+
+    suspend fun archive(id: Int) = dao.archive(id)
 }
 
 
-// Converts a Room entity to the Announcement UI model used by DashboardScreen.
 fun AnnouncementEntity.toUiModel(): Announcement {
     val bullets = if (bulletsRaw.isBlank()) {
         emptyList()
@@ -41,24 +72,34 @@ fun AnnouncementEntity.toUiModel(): Announcement {
         }
     }
     return Announcement(
-        title   = title,
-        date    = date,
-        content = content,
-        bullets = bullets,
-        footer  = footer
+        id         = id,
+        title      = title,
+        date       = date,
+        content    = content,
+        bullets    = bullets,
+        footer     = footer,
+        category   = category,
+        isRead     = isRead,
+        isArchived = isArchived,
+        isDraft    = isDraft
     )
 }
 
-// Converts the UI Announcement model back to a Room entity for storage.
-fun Announcement.toEntity(category: String, isPriority: Boolean): AnnouncementEntity {
+fun Announcement.toEntity(
+    category: String,
+    isPriority: Boolean,
+    isDraft: Boolean = false
+): AnnouncementEntity {
     val bulletsRaw = bullets.joinToString("||") { "${it.first}|${it.second}" }
     return AnnouncementEntity(
+        id         = id,          // 0 = new insert; non-zero = update via REPLACE
         title      = title,
         date       = date,
         content    = content,
         bulletsRaw = bulletsRaw,
         footer     = footer,
         category   = category,
-        isPriority = isPriority
+        isPriority = isPriority,
+        isDraft    = isDraft
     )
 }

@@ -3,14 +3,20 @@ package com.example.uniassist.ui.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,73 +36,60 @@ import com.example.uniassist.R
 fun RolePickScreen(
     navController: NavController
 ) {
-
     var selectedRole by remember { mutableStateOf("Student") }
-
-    val primaryGreen = Color(0xFF2E7D32)
-    val selectedGreen = Color(0xFF2D9E60)
-    val overlayColor = Color(0xAAE8F5E9)
+    val scrollState = rememberScrollState()
+    val primaryGreen = Color(0xFF1B5E3C)
 
     Box(modifier = Modifier.fillMaxSize()) {
-
         // ✅ Background Image
         Image(
             painter = painterResource(id = R.drawable.background_rolepick),
-            contentDescription = "Background",
+            contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
-        )
-
-        // ✅ Overlay
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp),
+                .statusBarsPadding()
+                .padding(horizontal = 24.dp)
+                .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // ✅ Back Arrow - RESTORED TO ORIGINAL
-            Row (
+            // ✅ Back Arrow Button
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 30.dp, vertical = 40.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ){
-                IconButton(
-                    onClick = {
-                        navController.navigate("get_started")
-                    },
-                    modifier = Modifier
-                        .background(Color.White.copy(alpha = 0.6f), shape = RoundedCornerShape(50))
-                        .padding(8.dp)
-                        .size(40.dp)
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.Start
+            ) {
+                Surface(
+                    onClick = { navController.popBackStack() },
+                    shape = CircleShape,
+                    color = Color.White.copy(alpha = 0.7f),
+                    modifier = Modifier.size(44.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color(0xFF1B5E3C),
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = primaryGreen,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(3.dp))
+            Spacer(modifier = Modifier.height(50.dp))
 
             // ✅ Title
             Text(
                 text = "Continue as",
                 fontFamily = FontFamily(Font(R.font.poppins_bold)),
-                fontSize = 27.sp,
+                fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF31663F)
+                color = primaryGreen
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -105,28 +98,26 @@ fun RolePickScreen(
             Text(
                 text = "Select your role to personalize your experience",
                 fontFamily = FontFamily(Font(R.font.poppins_medium)),
-                fontSize = 14.sp,
-                color = Color(0xFF31663F),
-                textAlign = TextAlign.Center
+                fontSize = 15.sp,
+                color = primaryGreen.copy(alpha = 0.8f),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 20.dp)
             )
 
-            Spacer(modifier = Modifier.height(45.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
             // ✅ Role Cards Row
             Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
                 RoleCard(
                     title = "Student",
-                    description = "View announcements,\nmanage tasks, track schedules",
+                    description = "View announcements,\nmanage tasks, track\nschedules",
                     imageRes = R.drawable.uniassist_student,
                     isSelected = selectedRole == "Student",
                     onClick = { selectedRole = "Student" },
-                    modifier = Modifier.weight(1f),
-                    selectedColor = selectedGreen
+                    modifier = Modifier.weight(1f)
                 )
 
                 RoleCard(
@@ -135,45 +126,39 @@ fun RolePickScreen(
                     imageRes = R.drawable.uniassist_teacher,
                     isSelected = selectedRole == "Teacher",
                     onClick = { selectedRole = "Teacher" },
-                    modifier = Modifier.weight(1f),
-                    selectedColor = selectedGreen
+                    modifier = Modifier.weight(1f)
                 )
             }
 
-            Spacer(modifier = Modifier.height(90.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
-            // ✅ Continue Button - MODIFIED to pass role
+            // ✅ Continue Button
             Button(
-                onClick  = {
-                    // Pass the selected role to login_register screen
-                    navController.navigate("login_register/$selectedRole")
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF245B3D)),
-                shape = RoundedCornerShape(50),
+                onClick = { navController.navigate("login_register/$selectedRole") },
+                colors = ButtonDefaults.buttonColors(containerColor = primaryGreen),
+                shape = RoundedCornerShape(28.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .size(290.dp , 54.dp)
+                    .height(56.dp)
             ) {
                 Text(
                     text = "Continue",
                     fontFamily = FontFamily(Font(R.font.poppins_bold)),
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
             }
 
-            Spacer(modifier = Modifier.weight(0.5f))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // ✅ Footer
             Text(
                 text = "By TechSpace",
+                fontFamily = FontFamily(Font(R.font.poppins_bold)),
                 fontSize = 12.sp,
-                color = Color.Gray,
-                fontFamily = FontFamily(Font(R.font.poppins_bold))
+                color = Color.Gray
             )
 
-            Spacer(modifier = Modifier.height(35.dp))
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
@@ -185,104 +170,94 @@ fun RoleCard(
     imageRes: Int,
     isSelected: Boolean,
     onClick: () -> Unit,
-    selectedColor: Color,
     modifier: Modifier = Modifier
 ) {
-
-    val primaryGreen = Color(0xFF2E7D32)
+    val primaryGreen = Color(0xFF2E5940)
+    val cardBackground = Color(0xFFF4F8F4).copy(alpha = 0.95f)
 
     Box(modifier = modifier) {
-
         Card(
             modifier = Modifier
-                .height(350.dp)
-                .clickable { onClick() },
-            shape = RoundedCornerShape(15.dp),
-            border = if (isSelected)
-                BorderStroke(2.dp, selectedColor)
-            else
-                BorderStroke(1.dp, Color.LightGray),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFDFDF7)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .then(
+                    if (isSelected) Modifier.border(2.dp, primaryGreen, RoundedCornerShape(20.dp))
+                    else Modifier
+                ),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = cardBackground),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(25.dp),
+                    .padding(16.dp)
+                    .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
-                // ✅ Mascot Image
                 Image(
                     painter = painterResource(id = imageRes),
-                    contentDescription = title,
-                    modifier = Modifier.size(165.dp),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(130.dp)
+                        .padding(bottom = 12.dp),
                     contentScale = ContentScale.Fit
                 )
 
-                // ✅ Role Title
                 Text(
                     text = title,
                     fontFamily = FontFamily(Font(R.font.poppins_bold)),
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 18.sp,
-                    color = Color(0xFF31663F)
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // ✅ Description
-                Text(
-                    text = description,
-                    fontFamily = FontFamily(Font(R.font.poppins_regular)),
-                    fontSize = 9.sp,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 17.sp,
-                    color = Color(0xFF31663F)
+                    fontSize = 20.sp,
+                    color = primaryGreen
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // ✅ Bottom Pill Button - Now changes color when selected
+                Text(
+                    text = description,
+                    fontFamily = FontFamily(Font(R.font.poppins_regular)),
+                    fontSize = 10.sp,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 14.sp,
+                    color = primaryGreen.copy(alpha = 0.7f),
+                    minLines = 3
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 OutlinedButton(
-                    onClick = { onClick() },
-                    shape = RoundedCornerShape(18),
-                    border = BorderStroke(
-                        1.dp,
-                        if (isSelected) selectedColor else Color.LightGray
-                    ),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (isSelected) selectedColor else Color.DarkGray,
-                        containerColor = Color.Transparent
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(40.dp)
+                    onClick = onClick,
+                    modifier = Modifier.fillMaxWidth().height(36.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, if (isSelected) primaryGreen else Color.LightGray),
+                    contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(
                         text = title,
                         fontSize = 12.sp,
-                        color = if (isSelected) selectedColor else Color.DarkGray
+                        color = if (isSelected) primaryGreen else Color.Gray,
+                        fontFamily = FontFamily(Font(R.font.poppins_medium))
                     )
                 }
             }
         }
 
-        // ✅ Checkmark Badge (Selected Only) - Now using image placeholder
         if (isSelected) {
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .offset(x = (-16).dp, y = (-16).dp)
-                    .size(26.dp)
-                    .clip(CircleShape),
+                    .offset(x = 4.dp, y = 4.dp)
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(Color.White)
+                    .padding(2.dp)
+                    .background(Color(0xFF4CAF50), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                // Using image placeholder for checkmark
-                Image(
-                    painter = painterResource(id = R.drawable.ic_check), // You'll need to add this drawable
-                    contentDescription = "Selected",
-                    modifier = Modifier.size(27.5.dp)
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }

@@ -1,0 +1,86 @@
+package com.example.uniassist.data
+
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
+
+data class AuthResult(
+    val uid: String,
+    val email: String,
+    val role: String,
+    val firstName: String,
+    val lastName: String
+)
+
+class FirebaseAuthRepository(
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+) {
+
+    // Create account with email and password
+    suspend fun signUp(email: String, password: String): String {
+        val result = auth.createUserWithEmailAndPassword(email, password).await()
+        return result.user?.uid ?: throw Exception("Sign up failed")
+    }
+
+    // Save extra info (names, role) to Firestore
+    suspend fun saveProfile(uid: String, profileData: Map<String, Any>) {
+        firestore.collection("users").document(uid).set(profileData).await()
+    }
+
+    // Sign in with email/password and verify role
+    suspend fun signIn(email: String, password: String, expectedRole: String): AuthResult {
+        val authResult = auth.signInWithEmailAndPassword(email, password).await()
+        val user = authResult.user ?: throw Exception("Login failed")
+        val doc = firestore.collection("users").document(user.uid).get().await()
+
+        val actualRole = doc.getString("role") ?: "Student"
+
+        if (actualRole != expectedRole) {
+            auth.signOut()
+            throw Exception("Access Denied: You are registered as a $actualRole, not a $expectedRole.")
+        }
+
+        return AuthResult(
+            uid = user.uid,
+            email = email,
+            role = actualRole,
+            firstName = doc.getString("firstName") ?: "",
+            lastName = doc.getString("lastName") ?: ""
+        )
+    }
+
+    // Sign in with Google — creates Firestore profile if first time
+    suspend fun signInWithGoogle(idToken: String): String {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        val result = auth.signInWithCredential(credential).await()
+        val user = result.user ?: throw Exception("Google Auth Failed")
+
+        // Only create a Firestore profile if one doesn't already exist
+        val isNew = !isUserRegistered(user.uid)
+        if (isNew) {
+            val nameParts = user.displayName?.split(" ") ?: emptyList()
+            saveProfile(
+                uid = user.uid,
+                profileData = mapOf(
+                    "email" to (user.email ?: ""),
+                    "firstName" to (nameParts.firstOrNull() ?: ""),
+                    "lastName" to (if (nameParts.size > 1) nameParts.last() else ""),
+                    "role" to "Student"
+                )
+            )
+        }
+
+        return user.email ?: throw Exception("Google Auth Failed")
+    }
+
+    suspend fun isUserRegistered(uid: String): Boolean {
+        return try {
+            val document = firestore.collection("users").document(uid).get().await()
+            document.exists()
+        } catch (e: Exception) {
+            false
+        }
+    }
+}

@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -46,6 +47,7 @@ fun ScheduleAndTaskScreen(
     onSettingsClick: () -> Unit = {}
 ) {
     val datePickerState = rememberDatePickerState()
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
     // Derive the selected date key from the calendar picker.
     val selectedDateKey by remember(datePickerState.selectedDateMillis) {
@@ -91,7 +93,7 @@ fun ScheduleAndTaskScreen(
                 }
             }
         },
-        containerColor = Color.White,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             ScheduleBottomNavigationBar(
                 onDashboardClick = onDashboardClick,
@@ -105,7 +107,7 @@ fun ScheduleAndTaskScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = screenContentPadding)
-                .background(Color.White),
+                .background(MaterialTheme.colorScheme.background),
             verticalArrangement = Arrangement.spacedBy(screenContentPadding),
             contentPadding = PaddingValues(
                 top = screenContentPadding,
@@ -124,7 +126,7 @@ fun ScheduleAndTaskScreen(
                     ) {
                         Icon(Icons.Default.CalendarMonth, null, tint = Color.White, modifier = Modifier.size(24.dp))
                     }
-                    Text("Schedule & Tasks", color = DarkGreenText, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+                    Text("Schedule & Tasks", color = if (isDark) MaterialTheme.colorScheme.primary else DarkGreenText, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
                 }
             }
 
@@ -139,7 +141,7 @@ fun ScheduleAndTaskScreen(
                 }
                 Text(
                     text = "Tasks for $selectedDateText",
-                    color = DarkGreenText,
+                    color = if (isDark) MaterialTheme.colorScheme.onSurface else DarkGreenText,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -162,7 +164,8 @@ fun ScheduleAndTaskScreen(
                             }
                             taskInputText = ""
                         }
-                    }
+                    },
+                    isDark = isDark
                 )
             }
 
@@ -170,7 +173,7 @@ fun ScheduleAndTaskScreen(
                 item {
                     Text(
                         text = "No tasks for this day yet.",
-                        color = GreyText,
+                        color = Color.Gray,
                         fontSize = 14.sp
                     )
                 }
@@ -180,7 +183,7 @@ fun ScheduleAndTaskScreen(
                     val totalCount     = tasksForSelectedDate.size
                     Text(
                         text = "$completedCount of $totalCount tasks completed",
-                        color = DarkGreenText,
+                        color = if (isDark) MaterialTheme.colorScheme.secondary else DarkGreenText,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -200,7 +203,8 @@ fun ScheduleAndTaskScreen(
                         onDeleteClick = {
                             // Delete from Room — list updates automatically.
                             taskViewModel.deleteTask(task.id)
-                        }
+                        },
+                        isDark = isDark
                     )
                 }
             }
@@ -215,9 +219,9 @@ fun ScheduleBottomNavigationBar(
     onSettingsClick: () -> Unit
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth().padding(16.dp).height(65.dp),
-        shape = RoundedCornerShape(35.dp),
-        color = Color(0xFF245B3D),
+        modifier = Modifier.fillMaxWidth().padding(16.dp).height(64.dp),
+        shape = RoundedCornerShape(32.dp),
+        color = Color(0xFF1B5E20),
         shadowElevation = 8.dp
     ) {
         Row(
@@ -225,7 +229,7 @@ fun ScheduleBottomNavigationBar(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomNavItem(Icons.Default.Home,          "Dashboard", false, onDashboardClick)
+            BottomNavItem(Icons.Default.Home,          "Home", false, onDashboardClick)
             BottomNavItem(Icons.Default.CalendarMonth, "Schedules", true,  {})
             BottomNavItem(Icons.Default.Info,          "Campus",    false, onCampusClick)
             BottomNavItem(Icons.Default.Settings,      "Settings",  false, onSettingsClick)
@@ -237,29 +241,30 @@ fun ScheduleBottomNavigationBar(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CalendarCard(datePickerState: DatePickerState) {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(LightGreyBackground)
-            .border(2.dp, GreenAccent, RoundedCornerShape(12.dp))
+            .background(if (isDark) Color(0xFF2C2C2C) else LightGreyBackground)
+            .border(2.dp, if (isDark) MaterialTheme.colorScheme.primary else GreenAccent, RoundedCornerShape(12.dp))
     ) {
         DatePicker(
             state = datePickerState,
             showModeToggle = false,
             colors = DatePickerDefaults.colors(
-                containerColor = Color.White,
-                titleContentColor = DarkGreenText,
-                headlineContentColor = DarkGreenText,
-                weekdayContentColor = DarkGreenText,
-                subheadContentColor = DarkGreenText,
-                dayContentColor = DarkGreenText,
-                disabledDayContentColor = GreyText,
-                selectedDayContainerColor = GreenAccent,
-                selectedDayContentColor = Color.White,
-                todayDateBorderColor = GreenAccent,
+                containerColor = if (isDark) Color(0xFF2C2C2C) else Color.White,
+                titleContentColor = if (isDark) Color.White else DarkGreenText,
+                headlineContentColor = if (isDark) Color.White else DarkGreenText,
+                weekdayContentColor = if (isDark) Color.LightGray else DarkGreenText,
+                subheadContentColor = if (isDark) Color.LightGray else DarkGreenText,
+                dayContentColor = if (isDark) Color.White else DarkGreenText,
+                disabledDayContentColor = Color.Gray,
+                selectedDayContainerColor = if (isDark) MaterialTheme.colorScheme.primary else GreenAccent,
+                selectedDayContentColor = Color.Black,
+                todayDateBorderColor = if (isDark) MaterialTheme.colorScheme.primary else GreenAccent,
                 dayInSelectionRangeContainerColor = GreenAccent.copy(alpha = 0.3f),
-                dayInSelectionRangeContentColor = DarkGreenText
+                dayInSelectionRangeContentColor = if (isDark) Color.White else DarkGreenText
             )
         )
     }
@@ -271,7 +276,8 @@ private fun TaskInputRow(
     taskText: String,
     onTaskTextChange: (String) -> Unit,
     onAddClick: () -> Unit,
-    buttonLabel: String
+    buttonLabel: String,
+    isDark: Boolean
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -284,25 +290,25 @@ private fun TaskInputRow(
             modifier = Modifier
                 .weight(1f)
                 .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, LightGreyBorder, RoundedCornerShape(8.dp))
-                .background(Color.White)
+                .border(1.dp, if (isDark) Color.DarkGray else LightGreyBorder, RoundedCornerShape(8.dp))
+                .background(if (isDark) Color(0xFF2C2C2C) else Color.White)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             singleLine = true,
-            textStyle = TextStyle(color = Color.Black, fontSize = 16.sp),
+            textStyle = TextStyle(color = if (isDark) Color.White else Color.Black, fontSize = 16.sp),
             decorationBox = { innerTextField ->
-                if (taskText.isEmpty()) Text("Add a task for this day", color = GreyText)
+                if (taskText.isEmpty()) Text("Add a task for this day", color = Color.Gray)
                 innerTextField()
             }
         )
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
-                .background(BottomNavGreen)
+                .background(if (isDark) MaterialTheme.colorScheme.primary else BottomNavGreen)
                 .clickable { onAddClick() }
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(buttonLabel, color = Color.White, fontWeight = FontWeight.Bold)
+            Text(buttonLabel, color = if (isDark) Color.Black else Color.White, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -313,34 +319,35 @@ private fun TaskRow(
     task: TaskItem,
     onCheckedChange: (Boolean) -> Unit,
     onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    isDark: Boolean
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .border(2.dp, GreenAccent, RoundedCornerShape(8.dp))
-            .background(LightGreyBackground)
+            .border(2.dp, if (isDark) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else GreenAccent, RoundedCornerShape(8.dp))
+            .background(if (isDark) Color(0xFF2C2C2C) else LightGreyBackground)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
             checked = task.completed,
             onCheckedChange = onCheckedChange,
-            colors = CheckboxDefaults.colors(checkedColor = BottomNavGreen)
+            colors = CheckboxDefaults.colors(checkedColor = if (isDark) MaterialTheme.colorScheme.primary else BottomNavGreen)
         )
         Text(
             text = task.title,
             modifier = Modifier.weight(1f),
             fontWeight = FontWeight.Bold,
-            color = if (task.completed) GreyText else DarkGreenText,
+            color = if (task.completed) Color.Gray else if (isDark) Color.White else DarkGreenText,
             textDecoration = if (task.completed) TextDecoration.LineThrough else null
         )
         IconButton(onClick = onEditClick) {
-            Icon(Icons.Default.Edit, "Edit", tint = OrangeAccent)
+            Icon(Icons.Default.Edit, "Edit", tint = if (isDark) MaterialTheme.colorScheme.primary else OrangeAccent)
         }
         IconButton(onClick = onDeleteClick) {
-            Icon(Icons.Default.Delete, "Delete", tint = RedAccent)
+            Icon(Icons.Default.Delete, "Delete", tint = if (isDark) Color(0xFFEF5350) else RedAccent)
         }
     }
 }

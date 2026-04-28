@@ -18,6 +18,9 @@ data class RegisterState(
     val passwordError: String = "",
     val confirmPasswordError: String = "",
 
+    // Auth/Server Error
+    val authError: String = "",
+
     // UI State
     val isLoading: Boolean = false,
 
@@ -31,11 +34,11 @@ data class RegisterState(
     // User Type (student or admin)
     val userType: String = "student"
 ) {
-    // Helper computed properties
     val hasFirstNameError: Boolean get() = firstNameError.isNotEmpty()
     val hasLastNameError: Boolean get() = lastNameError.isNotEmpty()
     val hasEmailError: Boolean get() = emailError.isNotEmpty()
     val hasUsernameError: Boolean get() = usernameError.isNotEmpty()
     val hasPasswordError: Boolean get() = passwordError.isNotEmpty()
     val hasConfirmPasswordError: Boolean get() = confirmPasswordError.isNotEmpty()
+    val hasAuthError: Boolean get() = authError.isNotEmpty()
 }

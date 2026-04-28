@@ -33,6 +33,10 @@ class LoginReducer {
                     isLoading = emailValid.isValid && passwordValid.isValid
                 ).validateForm()
             }
+            is LoginAction.GoogleSignInClicked -> {
+                // Just show the loader while LoginStore handles the actual sign-in
+                state.copy(isLoading = true, authError = "")
+            }
             is LoginAction.NavigateToDashboard -> {
                 state.copy(navigateToDashboard = true)
             }
@@ -57,10 +61,7 @@ class LoginReducer {
                 )
             }
             is LoginAction.LoadingComplete -> {
-                // Keep isLoading true to avoid showing login UI during navigation
-                state.copy(
-                    navigateToDashboard = true
-                )
+                state.copy(navigateToDashboard = true)
             }
         }
     }
